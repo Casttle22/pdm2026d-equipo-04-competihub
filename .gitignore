@@ -1,15 +1,18 @@
 # Miscellaneous
 *.class
-*.lock
 *.log
 *.pyc
 *.swp
 .buildlog/
 .history
 
+# Keep pubspec.lock for Flutter app
+!pubspec.lock
+
 # IDE
 .idea/
 .metadata
+*.iml
 
 
 
