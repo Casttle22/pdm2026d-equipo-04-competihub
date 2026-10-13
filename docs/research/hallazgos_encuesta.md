@@ -62,5 +62,3 @@ Además, hizo más relevante la necesidad de:
 - Tener información clave suficiente.
 
 *(Nota: Esta evidencia no valida a CompetiHub como solución, únicamente valida la existencia del problema).*
-
-
