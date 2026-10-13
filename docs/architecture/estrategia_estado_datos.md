@@ -86,7 +86,7 @@ A partir del flujo aprobado (**Explorar → Filtrar → Seleccionar → Consulta
 | `contacto` | String? | No | Fuente de datos | Email/organizador para dudas (complementa instrucciones) |
 | `imagenUrl` | String? | No | Fuente de datos | Imagen principal |
 
-**Total: 14 campos (11 obligatorios, 3 opcionales).**
+**Total: 14 campos (10 obligatorios, 4 opcionales).**
 
 **Relación Feed → Detalle:** El `id` de la competencia seleccionada en el Feed es la clave para buscar y mostrar el detalle completo.
 
@@ -108,6 +108,8 @@ A partir del flujo aprobado (**Explorar → Filtrar → Seleccionar → Consulta
 
 **La lista filtrada se deriva** de `todasLasCompetencias` aplicando el filtro de `categoriaSeleccionada`; no se mantiene una segunda copia.
 
+**Nota sobre `final List<Competencia>`:** declarar la variable como `final` impide reasignarla, pero no impide modificar el contenido de la lista (agregar/eliminar elementos). Si se desea una colección de solo lectura para el consumidor, se puede exponer `List.unmodifiable(todasLasCompetencias)` o `UnmodifiableListView(todasLasCompetencias)`.
+
 ## 6. Alternativas técnicas evaluadas
 
 ### 6.1 Fuente de datos para M1
@@ -115,7 +117,7 @@ A partir del flujo aprobado (**Explorar → Filtrar → Seleccionar → Consulta
 | Opción | Descripción | Ventajas | Desventajas | Veredicto |
 |--------|-------------|----------|-------------|-----------|
 | **Datos ficticios en Dart (`final List`)** | `List<Competencia>` definida en un archivo `.dart` como `final` | Cero dependencias, tipo seguro, recarga en hot reload, sin I/O, ideal para M1 | No persiste entre sesiones, requiere recompilar para cambiar datos | **Recomendada para M1** |
-| Archivo JSON local (`assets/data/competencias.json`) | JSON en `assets/`, leído con `rootBundle.loadString` | Separación datos/código, editable sin recompilar | Requiere `async`/`await`, parsing manual, manejo de errores; los assets no se actualizan sin nueva build | Viable para M2+ |
+| Archivo JSON local (`assets/data/competencias.json`) | JSON en `assets/`, leído con `rootBundle.loadString` | Separación datos/código, editable sin recompilar | Requiere `async`/`await`, parsing manual, manejo de errores; los assets empaquetados no se actualizan sin nueva compilación y distribución de la app | Viable para M2+ |
 | Paquete `json_asset` / `flutter_assets` | Helpers para cargar JSON tipado | Menos boilerplate | Dependencia externa, no necesaria para dataset pequeño | Innecesaria |
 | API remota (Firebase, REST, GraphQL) | Backend real | Realista, escalable | Requiere infraestructura, red, autenticación, manejo de errores de red, fuera de alcance M1 | **Fuera de alcance M1** |
 | Base de datos local (sqflite, drift, hive) | Persistencia en dispositivo | Offline, consultas | Complejidad excesiva para M1, migraciones, esquema | **Fuera de alcance M1** |
@@ -127,13 +129,13 @@ A partir del flujo aprobado (**Explorar → Filtrar → Seleccionar → Consulta
 | Opción | Descripción | Ventajas | Desventajas | Veredicto |
 |--------|-------------|----------|-------------|-----------|
 | **`setState` + `StatefulWidget`** | Estado local en widgets que lo necesitan | Nativo, sin dependencias, comprensible, suficiente para 2 variables simples | No escala bien si el estado crece o se comparte entre ramas del árbol | **Recomendada para M1** |
-| `ValueNotifier` / `ChangeNotifier` | Observable nativo de Flutter | Reactivo, separa estado de UI, sin paquetes externos | Requiere `AnimatedBuilder` o `ValueListenableBuilder`, ligera curva | Alternativa si el equipo prefiere separar lógica |
+| `ValueNotifier` / `ChangeNotifier` | Observable nativo de Flutter | Reactivo, separa estado de UI, sin paquetes externos | Requiere `AnimatedBuilder` o `ListenableBuilder`, ligera curva | Alternativa si el equipo prefiere separar lógica |
 | `Provider` (`ChangeNotifierProvider`) | Inyección de dependencias + notificación | Estándar de facto, buen equilibrio | Dependencia externa, `context.watch/read`, overkill para 2 variables | M2+ si el estado crece |
 | `Riverpod` | Provider tipado, compile-time safe | Tipado fuerte, testing fácil, sin `context` | Curva de aprendizaje, dependencia, overkill para M1 | M2+ |
 | `Bloc` / `Cubit` | Eventos/estados, separación estricta | Escalable, testeable, documentación viva | Verboso, curva pronunciada, overkill para M1 | Fuera de alcance M1 |
 | `get_it` + `singleton` | Service locator | Desacopla | No reactivo por sí solo, patrón anti-Flutter para estado simple | No recomendado |
 
-**Conclusión:** Para M1, **`setState` en un `StatefulWidget` raíz** (p. ej., `HomeScreen`) es la estrategia recomendada. El estado global cabe en dos variables (`categoriaSeleccionada` y `todasLasCompetencias`). No hay justificación concreta para añadir paquetes externos. La simplicidad y la alineación con los fundamentos del curso priman.
+**Conclusión:** Para M1, **`setState` en `StatefulWidget`** es la estrategia recomendada. El estado global cabe en dos variables (`categoriaSeleccionada` y `todasLasCompetencias`). Cada Issue implementará el estado donde resulte apropiado; no se impone un único `StatefulWidget` raíz como requisito absoluto. No hay justificación concreta para añadir paquetes externos. La simplicidad y la alineación con los fundamentos del curso priman.
 
 ### 6.3 Persistencia en M1
 
@@ -202,7 +204,7 @@ class Competencia {
 
 ### 7.3 Dataset de ejemplo
 
-El dataset mock debe contener al menos 8-10 competencias cubriendo 3-4 categorías (p. ej., `Esports`, `Académica`, `Deportiva`, `Otras`), con fechas pasadas y futuras, modalidades variadas, costos diversos y combinaciones de campos opcionales.
+El dataset mock debe contener varias competencias ficticias suficientes para verificar el feed, cubriendo 3-4 categorías (p. ej., `Esports`, `Académica`, `Deportiva`, `Otras`), con fechas pasadas y futuras, modalidades variadas, costos diversos y combinaciones de campos opcionales.
 
 ## 8. Propuesta de manejo de estado
 
@@ -231,7 +233,7 @@ CompetihubApp (StatelessWidget)
 
 ### 8.2 Detalle de la estrategia recomendada
 
-- **`HomeScreen`** es el único `StatefulWidget` que mantiene estado.
+- **`HomeScreen`** (o widget equivalente) mantiene el estado global M1 mediante `setState`.
 - **`todasLasCompetencias`** se inicializa una vez (p. ej., en `initState` o como `late final`) a partir de `competenciasMock`.
 - **`categoriaSeleccionada`** cambia con `setState(() => categoriaSeleccionada = nueva)`.
 - **Lista filtrada** se computa en `build` o en un método auxiliar; no hay segunda fuente de verdad.
@@ -259,7 +261,7 @@ class FeedState extends ChangeNotifier {
 }
 ```
 
-Uso: `FeedState(competenciasMock)` provisto via `ChangeNotifierProvider` o `ValueListenableBuilder`. **No es obligatoria para M1**; `setState` es suficiente y más simple.
+Uso: `FeedState(competenciasMock)` provisto via `ChangeNotifierProvider` o consumido con `AnimatedBuilder` / `ListenableBuilder` (sin paquetes externos). **No es obligatoria para M1**; `setState` es suficiente y más simple.
 
 ## 9. Flujo de datos desde la fuente hasta la UI
 
@@ -274,7 +276,7 @@ flowchart TD
     E --> F[Usuario toca tarjeta]
     F --> G[Navegación con id<br/>(mecanismo definido en #8)]
     G --> H[DetalleScreen<br/>busca por id en todasLasCompetencias]
-    H --> I[Muestra 14 campos]
+    H --> I[Muestra información relevante del detalle]
     I --> J[Usuario pulsa Volver]
     J --> K[Navigator.pop]
     K --> E
@@ -290,7 +292,7 @@ flowchart TD
 2. **Carga inicial:** `HomeScreen` asigna `todasLasCompetencias = competenciasMock` (una sola vez).
 3. **Filtrado:** Al cambiar categoría, `setState(() => categoriaSeleccionada = nueva)` → la lista filtrada se deriva en el build → `FeedScreen` se reconstruye.
 4. **Selección:** Usuario toca tarjeta → navegación con el `id` de la competencia (mecanismo definido en Issue #8).
-5. **Detalle:** `DetalleScreen` recibe el `id`, busca en `todasLasCompetencias`, renderiza los 14 campos.
+5. **Detalle:** `DetalleScreen` recibe el `id`, busca en `todasLasCompetencias`, renderiza la información relevante.
 6. **Regreso:** `Navigator.pop()` → `FeedScreen` muestra la misma lista filtrada (estado en `HomeScreen` intacto).
 
 ## 10. Manejo de categoría y competencia seleccionada
@@ -318,7 +320,7 @@ flowchart TD
 |----------|---------------|
 | Datos ficticios en Dart (no JSON) | Cero I/O, tipo seguro en compile-time, hot reload funcional, sin dependencias, dataset pequeño. JSON añade async/parsing sin beneficio en M1. |
 | Sin persistencia (SharedPreferences) | M1 no necesita conservar preferencias entre sesiones; añadir persistencia introduce complejidad (async, ciclo de vida, testing) sin valor para el MVP. |
-| `setState` / `StatefulWidget` único | Estado global cabe en 2 variables. No hay árbol profundo compartiendo estado. Paquetes externos introducen conceptos (context, providers, streams) que distraen de los fundamentos Flutter del curso. |
+| `setState` / `StatefulWidget` | Estado global cabe en 2 variables. No hay árbol profundo compartiendo estado. Paquetes externos introducen conceptos (context, providers, streams) que distraen de los fundamentos Flutter del curso. |
 | Modelo `Competencia` inmutable (`final` fields) | Seguridad de tipos, rendimiento, compatibilidad con `ListView.builder` y claves estables. Constructor `const` cuando los argumentos lo permiten. |
 | `id` como String (no int) | Flexible para futuras APIs (UUID, slugs), evita colisiones, legible en logs/debug. |
 | Categorías como String (no enum) | Extensible sin recompilar modelo; dataset mock define las categorías reales. Enum sería prematuro sin backend. |
@@ -346,7 +348,7 @@ flowchart TD
 | **#6** | Ricardo | Modelo de competencia, datos ficticios y feed visible | **Consumidor directo.** Usa `Competencia`, `competenciasMock`, lista filtrada derivada. Este doc define el contrato de datos. |
 | **#7** | Wesley | Filtro por categoría | Implementa la UI de filtro que modifica `categoriaSeleccionada` y maneja estado vacío. Estado base ya definido aquí. |
 | **#8** | Ricardo | Navegación del feed al detalle | Define el mecanismo de navegación (cómo pasar el `id` y volver). Estrategia de conservación de filtro ya definida aquí. |
-| **#9** | José | Información completa del detalle | Usa los 14 campos de `Competencia` (11 obligatorios). `instruccionesParticipacion` garantiza "cómo participar". |
+| **#9** | José | Información completa del detalle | Usa los 14 campos de `Competencia` (10 obligatorios). `instruccionesParticipacion` garantiza "cómo participar". |
 | **#10** | José | QA y evidencia del flujo | Valida que el flujo completo funcione con los datos y estado definidos aquí. |
 
 ## 13. Decisiones pendientes y condiciones para aprobación
