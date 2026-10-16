@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'data/competencia.dart';
+import 'data/mock_competencias.dart';
+
 void main() {
   runApp(const CompetihubApp());
 }
@@ -15,14 +18,16 @@ class CompetihubApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(competitions: competenciasMock),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required this.competitions});
+
+  final List<Competencia> competitions;
 
   @override
   Widget build(BuildContext context) {
@@ -32,43 +37,82 @@ class HomeScreen extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.emoji_events,
-                size: 80,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'CompetiHub',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+      body: SafeArea(
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: competitions.length + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Explora competencias',
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Encuentra y comprende competencias',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Competencias ficticias para desarrollo y pruebas. No son eventos reales.',
                     ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'MVP en desarrollo\nFeed • Filtro por categoría • Detalle',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+                  ],
+                ),
+              );
+            }
+
+            final competition = competitions[index - 1];
+            return CompetitionCard(
+              key: ValueKey(competition.id),
+              competition: competition,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class CompetitionCard extends StatelessWidget {
+  const CompetitionCard({super.key, required this.competition});
+
+  final Competencia competition;
+
+  String _formatDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$day/$month/${date.year} · $hour:$minute';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              competition.titulo,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                Chip(label: Text(competition.categoria)),
+                Chip(label: Text(competition.modalidad)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text('Inicio: ${_formatDate(competition.fechaInicio)}'),
+            const SizedBox(height: 4),
+            Text('Ubicación: ${competition.ubicacion}'),
+          ],
         ),
       ),
     );
