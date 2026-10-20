@@ -120,4 +120,213 @@ void main() {
       }
     },
   );
+
+  testWidgets('El filtro Esports y Todas actualizan el feed', (tester) async {
+    await tester.pumpWidget(const CompetihubApp());
+
+    final esportsCount = competenciasMock
+        .where((competencia) => competencia.categoria == 'Esports')
+        .length;
+
+    // Seleccionar Esports.
+    final chipEsports = find.widgetWithText(ChoiceChip, 'Esports');
+
+    await tester.tap(chipEsports);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ChoiceChip>(chipEsports).selected, isTrue);
+
+    expect(find.text('$esportsCount competencias disponibles'), findsOneWidget);
+
+    // Regresar a Todas.
+    final chipTodas = find.widgetWithText(ChoiceChip, 'Todas');
+
+    await tester.tap(chipTodas);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ChoiceChip>(chipTodas).selected, isTrue);
+
+    expect(
+      find.text('${competenciasMock.length} competencias disponibles'),
+      findsOneWidget,
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('El feed muestra un estado vacío cuando no hay competencias', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: HomeScreen(competitions: [])),
+    );
+
+    // Verificar que el contador indique cero resultados.
+    expect(find.text('0 competencias disponibles'), findsOneWidget);
+
+    // Verificar que aparezca el mensaje de estado vacío.
+    expect(find.text('No se encontraron competencias'), findsOneWidget);
+
+    expect(
+      find.text('Todavía no hay competencias disponibles.'),
+      findsOneWidget,
+    );
+
+    // No deben existir tarjetas de competencias.
+    expect(find.byType(CompetitionCard), findsNothing);
+
+    // La opción Todas debe permanecer disponible.
+    expect(find.widgetWithText(ChoiceChip, 'Todas'), findsOneWidget);
+
+    // No deben producirse excepciones.
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final categoria in ['Esports', 'Académica', 'Deportiva', 'Otras']) {
+    testWidgets('El feed filtra correctamente la categoría $categoria', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const CompetihubApp());
+
+      final competenciasEsperadas = competenciasMock
+          .where((competencia) => competencia.categoria == categoria)
+          .toList();
+
+      // Seleccionar la categoría.
+      final filtro = find.widgetWithText(ChoiceChip, categoria);
+
+      await tester.tap(filtro);
+      await tester.pumpAndSettle();
+
+      // Comprobar que quedó seleccionada.
+      expect(tester.widget<ChoiceChip>(filtro).selected, isTrue);
+
+      // Comprobar el contador.
+      final cantidad = competenciasEsperadas.length;
+
+      expect(
+        find.text(
+          cantidad == 1
+              ? '1 competencia disponible'
+              : '$cantidad competencias disponibles',
+        ),
+        findsOneWidget,
+      );
+
+      // Verificar la cantidad de elementos del feed.
+      final lista = tester.widget<ListView>(find.byType(ListView));
+
+      expect(lista.childrenDelegate.estimatedChildCount, cantidad + 1);
+
+      // Comprobar que aparecen las competencias esperadas.
+      for (final competencia in competenciasEsperadas) {
+        await tester.scrollUntilVisible(
+          find.byKey(ValueKey(competencia.id)),
+          150,
+        );
+
+        final tarjeta = find.byKey(ValueKey(competencia.id));
+
+        expect(
+          find.descendant(of: tarjeta, matching: find.text(competencia.titulo)),
+          findsOneWidget,
+        );
+      }
+
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('El filtro excluye otras categorias sin alterar los datos', (
+    tester,
+  ) async {
+    // Utilizamos una pantalla amplia para visualizar todas
+    // las tarjetas filtradas durante la prueba.
+    tester.view.physicalSize = const Size(1000, 1800);
+    tester.view.devicePixelRatio = 1;
+
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // Guardamos los identificadores originales.
+    final idsOriginales = competenciasMock
+        .map((competencia) => competencia.id)
+        .toList();
+
+    await tester.pumpWidget(const CompetihubApp());
+
+    // Seleccionamos la categoria Academica.
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Académica'));
+    await tester.pumpAndSettle();
+
+    final competenciasEsperadas = competenciasMock
+        .where((competencia) => competencia.categoria == 'Académica')
+        .toList();
+
+    final competenciasExcluidas = competenciasMock
+        .where((competencia) => competencia.categoria != 'Académica')
+        .toList();
+
+    // Solo deben existir las tarjetas de la categoria elegida.
+    expect(
+      find.byType(CompetitionCard),
+      findsNWidgets(competenciasEsperadas.length),
+    );
+
+    // Las competencias Academicas deben aparecer.
+    for (final competencia in competenciasEsperadas) {
+      expect(find.byKey(ValueKey(competencia.id)), findsOneWidget);
+    }
+
+    // Las competencias de otras categorias no deben aparecer.
+    for (final competencia in competenciasExcluidas) {
+      expect(find.byKey(ValueKey(competencia.id)), findsNothing);
+    }
+
+    // La coleccion original debe permanecer sin modificaciones.
+    expect(
+      competenciasMock.map((competencia) => competencia.id).toList(),
+      idsOriginales,
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('El estado vacío se adapta a pantallas pequeñas', (tester) async {
+    // Simular una pantalla móvil de 320 x 640.
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(1.5)),
+          child: child!,
+        ),
+        home: const HomeScreen(competitions: []),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Verificar el contador.
+    expect(find.text('0 competencias disponibles'), findsOneWidget);
+
+    // Verificar los mensajes del estado vacío.
+    expect(find.text('No se encontraron competencias'), findsOneWidget);
+
+    expect(
+      find.text('Todavía no hay competencias disponibles.'),
+      findsOneWidget,
+    );
+
+    // Comprobar que Flutter no registre errores
+    // de diseño, como desbordamientos.
+    expect(tester.takeException(), isNull);
+  });
 }
