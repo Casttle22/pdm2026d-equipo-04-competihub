@@ -27,13 +27,27 @@ class CompetihubApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.competitions});
 
   final List<Competencia> competitions;
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String? categoriaSeleccionada;
+
+  @override
   Widget build(BuildContext context) {
+    final competitions = categoriaSeleccionada == null
+        ? widget.competitions
+        : widget.competitions
+              .where(
+                (competencia) => competencia.categoria == categoriaSeleccionada,
+              )
+              .toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text('CompetiHub'),
@@ -65,6 +79,43 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    Text(
+                      'Filtrar por categoría',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Todas'),
+                          selected: categoriaSeleccionada == null,
+                          onSelected: (_) {
+                            setState(() {
+                              categoriaSeleccionada = null;
+                            });
+                          },
+                        ),
+                        ...widget.competitions
+                            .map((competencia) => competencia.categoria)
+                            .toSet()
+                            .map(
+                              (categoria) => ChoiceChip(
+                                label: Text(categoria),
+                                selected: categoriaSeleccionada == categoria,
+                                onSelected: (_) {
+                                  setState(() {
+                                    categoriaSeleccionada = categoria;
+                                  });
+                                },
+                              ),
+                            ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Icon(
@@ -75,7 +126,9 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${competitions.length} competencias disponibles',
+                            competitions.length == 1
+                                ? '1 competencia disponible'
+                                : '${competitions.length} competencias disponibles',
                             style: Theme.of(context).textTheme.labelLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
@@ -109,6 +162,35 @@ class HomeScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (competitions.isEmpty) ...[
+                      const SizedBox(height: 24),
+                      Center(
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.search_off_outlined,
+                              size: 48,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No se encontraron competencias',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              categoriaSeleccionada == null
+                                  ? 'Todavía no hay competencias disponibles.'
+                                  : 'Prueba otra categoría o selecciona Todas.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               );
