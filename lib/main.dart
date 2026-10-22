@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'data/competencia.dart';
 import 'data/mock_competencias.dart';
+import 'screens/competition_detail_screen.dart';
 
 void main() {
   runApp(const CompetihubApp());
@@ -200,6 +201,16 @@ class _HomeScreenState extends State<HomeScreen> {
             return CompetitionCard(
               key: ValueKey(competition.id),
               competition: competition,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => CompetitionDetailScreen(
+                      competitionId: competition.id,
+                      competitions: widget.competitions,
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),
@@ -209,9 +220,14 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class CompetitionCard extends StatelessWidget {
-  const CompetitionCard({super.key, required this.competition});
+  const CompetitionCard({
+    super.key,
+    required this.competition,
+    required this.onTap,
+  });
 
   final Competencia competition;
+  final VoidCallback onTap;
 
   String _formatDate(DateTime date) {
     final day = date.day.toString().padLeft(2, '0');
@@ -252,67 +268,74 @@ class CompetitionCard extends StatelessWidget {
         side: BorderSide(color: scheme.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    competition.titulo,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      height: 1.15,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      competition.titulo,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        height: 1.15,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Icon(category.icon, color: category.color, size: 26),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                Chip(
-                  avatar: Icon(category.icon, size: 17, color: category.color),
-                  label: Text(competition.categoria),
-                  visualDensity: VisualDensity.compact,
-                  backgroundColor: category.color.withValues(alpha: 0.12),
-                  side: BorderSide.none,
-                  labelStyle: TextStyle(
-                    color: category.color,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(width: 10),
+                  Icon(category.icon, color: category.color, size: 26),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  Chip(
+                    avatar: Icon(
+                      category.icon,
+                      size: 17,
+                      color: category.color,
+                    ),
+                    label: Text(competition.categoria),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: category.color.withValues(alpha: 0.12),
+                    side: BorderSide.none,
+                    labelStyle: TextStyle(
+                      color: category.color,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                Chip(
-                  label: Text(competition.modalidad),
-                  visualDensity: VisualDensity.compact,
-                  backgroundColor: scheme.surfaceContainerHighest,
-                  side: BorderSide.none,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _InfoRow(
-              icon: Icons.calendar_today_outlined,
-              text: 'Inicio: ${_formatDate(competition.fechaInicio)}',
-            ),
-            const SizedBox(height: 7),
-            _InfoRow(
-              icon: Icons.schedule_outlined,
-              text: _formatTime(competition.fechaInicio),
-            ),
-            const SizedBox(height: 7),
-            _InfoRow(
-              icon: Icons.location_on_outlined,
-              text: 'Ubicación: ${competition.ubicacion}',
-            ),
-          ],
+                  Chip(
+                    label: Text(competition.modalidad),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: scheme.surfaceContainerHighest,
+                    side: BorderSide.none,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _InfoRow(
+                icon: Icons.calendar_today_outlined,
+                text: 'Inicio: ${_formatDate(competition.fechaInicio)}',
+              ),
+              const SizedBox(height: 7),
+              _InfoRow(
+                icon: Icons.schedule_outlined,
+                text: _formatTime(competition.fechaInicio),
+              ),
+              const SizedBox(height: 7),
+              _InfoRow(
+                icon: Icons.location_on_outlined,
+                text: 'Ubicación: ${competition.ubicacion}',
+              ),
+            ],
+          ),
         ),
       ),
     );
