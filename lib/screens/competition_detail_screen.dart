@@ -151,9 +151,9 @@ class CompetitionDetailScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'Información general',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             IntrinsicHeight(
@@ -203,10 +203,7 @@ class CompetitionDetailScreen extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: scheme.onSecondaryContainer,
-                  ),
+                  Icon(Icons.info_outline, color: scheme.onSecondaryContainer),
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
@@ -256,16 +253,16 @@ class _DetailInfoCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 5),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
