@@ -17,6 +17,22 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-10-26 · @ALECARRIUMES — Repositorio compartido, providers y estados del Feed (S14 Parte B)
+
+- **Herramienta:** Claude Code (Claude Opus 5.5) para auditar el paquete de coordinación S14 v2.1 y el estado de GitHub, implementar los cambios, ejecutar las comprobaciones y hacer los commits locales. ChatGPT: Alejandro lo usó como asistente técnico para redactar las instrucciones de esta tarea (detalle a completar por Alejandro).
+- **Especificación:** "Implementar localmente un repositorio asíncrono único sobre `competenciasMock`, providers Riverpod 3 para lista y detalle por id con `retry: (_, _) => null`, el Feed con cargando/error con Reintentar/vacío con acción/datos usando `AsyncValue.when`, y pruebas con repositorio falso por override. Nivel intermedio como `inkash_d` tag `s14-02-leer-async`; sin interfaces abstractas, generadores, API ni SQLite. No cambiar el constructor de `CompetitionDetailScreen` ni archivos del Detalle (#9, PR #20). Conservar las 18 pruebas existentes. No publicar."
+- **Resultado:** `lib/repositories/competencias_repository.dart`, `lib/providers/competencias_providers.dart`, `HomeScreen` como `ConsumerStatefulWidget` con cuatro estados, `test/fakes/fake_competencias_repository.dart`, `test/feed_states_test.dart` (4 pruebas), `test/competencias_repository_test.dart` (3 pruebas) y la sección 14 de `docs/architecture/estrategia_estado_datos.md`.
+- **Aceptado:** Clase concreta de repositorio y falso que la extiende con contador de llamadas (mismo patrón que la referencia docente). Categoría seleccionada como estado local. Feed que pasa la lista cargada al constructor actual del Detalle. Montaje de las pruebas de M1 con `ProviderScope` y falso, sin quitar verificaciones (41 y 20 `expect` antes y después en `widget_test.dart` y `navigation_test.dart`).
+- **Rechazado / corregido:**
+  - Se revisó el código fuente de Riverpod 3.4.3 instalado: `when` usa `skipLoadingOnRefresh: true` por defecto, lo que mantendría visible el error anterior al reintentar. Se usa `skipLoadingOnRefresh: false` y la prueba comprueba que, tras Reintentar, aparece la carga y desaparece el error.
+  - No se creó una interfaz abstracta para el repositorio: no hay una segunda implementación real.
+  - Los commits "integración del Feed" y "adaptación de pruebas" se unieron en uno: por separado, la suite no compilaba (`HomeScreen(competitions: ...)` dejó de existir).
+  - El vacío por filtro no puede provocarse solo con los chips (se derivan de los datos cargados); la prueba lo produce recargando el provider con otros datos.
+- **Verificación:** Línea base en `main` (`e363382`): `flutter analyze` sin observaciones, `flutter test` 18/18. Tras los cambios: `dart format --output=none --set-exit-if-changed lib test` exit 0, `flutter analyze` sin observaciones, `flutter test` 25/25, `git diff --check` sin observaciones. Prueba de mutación local: al quitar temporalmente `retry: (_, _) => null` de `competenciasProvider`, la prueba de error falló (11 consultas en lugar de 1); se restauró el archivo. Pendiente: verificación manual en emulador/navegador y CI en el PR.
+- **Commit / PR:** Commits locales en la rama `feat/s14-estados-feed-preparacion`, sin publicar hasta ratificar el contrato y acordar el Issue real con Wesley.
+
+---
+
 ## 2026-10-24 · @ALECARRIUMES — Sincronización local y preparación CI (S14 Parte A)
 
 - **Herramienta:** OpenCode (asistente de código) y ChatGPT (consultas puntuales) para la preparación inicial; Claude Code para la verificación de formato, la corrección de la bitácora, los commits y la apertura del PR.
@@ -30,3 +46,4 @@ qué especificaste, qué revisaste y qué rechazaste.
   - Los archivos `pr_body.md` y `pr_body_5.md` sin seguimiento se mantuvieron intactos.
 - **Verificación:** La primera corrida de `dart format --output=none --set-exit-if-changed lib test` terminó con **exit 1** (`lib/screens/competition_detail_screen.dart` y `test/navigation_test.dart` sin formato): el CI habría fallado. En `chore/ci` se aplicó `dart format` solo a esos dos archivos (cambios exclusivamente de formato, sin lógica). Después: formato exit 0, `flutter analyze` exit 0 (sin observaciones), `flutter test` exit 0 (18 pruebas pasadas).
 - **Commit / PR:** Pendiente - rama `chore/ci` creada localmente; commit y PR tras confirmar CODEOWNERS con el coordinador.
+- **Actualización 2026-10-26:** integrado en `main` mediante el PR #19 (https://github.com/Casttle22/pdm2026d-equipo-04-competihub/pull/19), aprobado por @Pabloricalderon. Check "Formato, análisis y pruebas" en verde en el PR y en `main` (18 pruebas). Se integró con *merge commit*, no con *Squash and merge* como indica el laboratorio; se deja constancia y no se reescribe el historial de `main`.
