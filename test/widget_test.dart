@@ -4,11 +4,23 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:competihub/main.dart';
 
+import 'fakes/fake_competencias_repository.dart';
+
+// Desde S14 el Feed carga sus datos de forma asíncrona. Estas pruebas de M1
+// conservan sus verificaciones; solo montan la app con un repositorio falso
+// que devuelve los mocks y esperan a que termine la carga.
+
 void main() {
   testWidgets('CompetiHub preserves its identity and labels fictional data', (
     tester,
   ) async {
-    await tester.pumpWidget(const CompetihubApp());
+    await tester.pumpWidget(
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        const CompetihubApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
     expect(find.widgetWithText(AppBar, 'CompetiHub'), findsOneWidget);
     expect(find.text('Explora competencias'), findsOneWidget);
     expect(
@@ -22,7 +34,13 @@ void main() {
   testWidgets('Feed shows distinct mock competitions and scrolls to the last', (
     tester,
   ) async {
-    await tester.pumpWidget(const CompetihubApp());
+    await tester.pumpWidget(
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        const CompetihubApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     for (final competition in [competenciasMock.first, competenciasMock.last]) {
       await tester.scrollUntilVisible(
@@ -59,16 +77,20 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      MaterialApp(
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(1.5)),
-          child: child!,
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: const HomeScreen(),
         ),
-        home: HomeScreen(competitions: competenciasMock),
       ),
     );
+    await tester.pumpAndSettle();
     for (final competition in competenciasMock) {
       await tester.scrollUntilVisible(
         find.byKey(ValueKey(competition.id)),
@@ -80,8 +102,12 @@ void main() {
 
   testWidgets('Feed uses the supplied collection', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(home: HomeScreen(competitions: [competenciasMock.last])),
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos([competenciasMock.last]),
+        const MaterialApp(home: HomeScreen()),
+      ),
     );
+    await tester.pumpAndSettle();
     expect(find.text(competenciasMock.last.titulo), findsOneWidget);
     expect(find.text(competenciasMock.first.titulo), findsNothing);
   });
@@ -122,7 +148,13 @@ void main() {
   );
 
   testWidgets('El filtro Esports y Todas actualizan el feed', (tester) async {
-    await tester.pumpWidget(const CompetihubApp());
+    await tester.pumpWidget(
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        const CompetihubApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     final esportsCount = competenciasMock
         .where((competencia) => competencia.categoria == 'Esports')
@@ -158,8 +190,12 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(home: HomeScreen(competitions: [])),
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos([]),
+        const MaterialApp(home: HomeScreen()),
+      ),
     );
+    await tester.pumpAndSettle();
 
     // Verificar que el contador indique cero resultados.
     expect(find.text('0 competencias disponibles'), findsOneWidget);
@@ -186,7 +222,13 @@ void main() {
     testWidgets('El feed filtra correctamente la categoría $categoria', (
       tester,
     ) async {
-      await tester.pumpWidget(const CompetihubApp());
+      await tester.pumpWidget(
+        conRepositorio(
+          FakeCompetenciasRepository.conDatos(competenciasMock),
+          const CompetihubApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
 
       final competenciasEsperadas = competenciasMock
           .where((competencia) => competencia.categoria == categoria)
@@ -253,7 +295,13 @@ void main() {
         .map((competencia) => competencia.id)
         .toList();
 
-    await tester.pumpWidget(const CompetihubApp());
+    await tester.pumpWidget(
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        const CompetihubApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     // Seleccionamos la categoria Academica.
     await tester.tap(find.widgetWithText(ChoiceChip, 'Académica'));
@@ -301,14 +349,17 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      MaterialApp(
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(1.5)),
-          child: child!,
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos([]),
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: const HomeScreen(),
         ),
-        home: const HomeScreen(competitions: []),
       ),
     );
 

@@ -4,11 +4,19 @@ import 'package:competihub/screens/competition_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fakes/fake_competencias_repository.dart';
+
 void main() {
   testWidgets(
     'Cada tarjeta navega al detalle de su competencia y permite regresar',
     (tester) async {
-      await tester.pumpWidget(const CompetihubApp());
+      await tester.pumpWidget(
+        conRepositorio(
+          FakeCompetenciasRepository.conDatos(competenciasMock),
+          const CompetihubApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
 
       for (final competition in competenciasMock) {
         await tester.scrollUntilVisible(
@@ -37,7 +45,13 @@ void main() {
   );
 
   testWidgets('El filtro se conserva al regresar del detalle', (tester) async {
-    await tester.pumpWidget(const CompetihubApp());
+    await tester.pumpWidget(
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        const CompetihubApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ChoiceChip, 'Esports'));
     await tester.pumpAndSettle();
 
