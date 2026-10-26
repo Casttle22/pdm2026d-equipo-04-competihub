@@ -83,7 +83,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-
   testWidgets('El detalle utiliza tarjetas visuales y datos de la selección', (
     tester,
   ) async {
@@ -122,9 +121,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: const TextScaler.linear(1.5),
-          ),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(1.5)),
           child: child!,
         ),
         home: CompetitionDetailScreen(
