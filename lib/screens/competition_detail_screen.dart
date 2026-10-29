@@ -14,6 +14,12 @@ class CompetitionDetailScreen extends StatelessWidget {
 
   String _twoDigits(int number) => number.toString().padLeft(2, '0');
 
+  String _formatDate(DateTime date) =>
+      '${_twoDigits(date.day)}/${_twoDigits(date.month)}/${date.year}';
+
+  String _formatTime(DateTime date) =>
+      '${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+
   @override
   Widget build(BuildContext context) {
     Competencia? selectedCompetition;
@@ -50,10 +56,14 @@ class CompetitionDetailScreen extends StatelessWidget {
       _ => (Colors.orange.shade800, Icons.emoji_events_outlined),
     };
 
-    final date = competition.fechaInicio;
-    final formattedDate =
-        '${_twoDigits(date.day)}/${_twoDigits(date.month)}/${date.year}';
-    final formattedTime = '${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+    final formattedDate = _formatDate(competition.fechaInicio);
+    final formattedTime = _formatTime(competition.fechaInicio);
+    final endDate = competition.fechaFin;
+    final formattedEnd = endDate == null
+        ? null
+        : '${_formatDate(endDate)} a las ${_formatTime(endDate)}';
+    final inscriptionUrl = competition.inscripcionUrl?.trim();
+    final contact = competition.contacto?.trim();
 
     return Scaffold(
       appBar: AppBar(
@@ -179,6 +189,15 @@ class CompetitionDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
+            if (formattedEnd != null) ...[
+              const SizedBox(height: 12),
+              _DetailInfoCard(
+                icon: Icons.event_outlined,
+                label: 'Finaliza',
+                value: formattedEnd,
+                accentColor: accentColor,
+              ),
+            ],
             const SizedBox(height: 12),
             _DetailInfoCard(
               icon: Icons.devices_outlined,
@@ -193,6 +212,59 @@ class CompetitionDetailScreen extends StatelessWidget {
               value: competition.ubicacion,
               accentColor: accentColor,
             ),
+            const SizedBox(height: 12),
+            _DetailInfoCard(
+              icon: Icons.description_outlined,
+              label: 'Descripción',
+              value: competition.descripcion,
+              accentColor: accentColor,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Información para participar',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            _DetailInfoCard(
+              icon: Icons.rule_outlined,
+              label: 'Requisitos y reglas',
+              value: competition.reglas,
+              accentColor: accentColor,
+            ),
+            const SizedBox(height: 12),
+            _DetailInfoCard(
+              icon: Icons.payments_outlined,
+              label: 'Costo',
+              value: competition.costo,
+              accentColor: accentColor,
+            ),
+            const SizedBox(height: 12),
+            _DetailInfoCard(
+              icon: Icons.how_to_reg_outlined,
+              label: 'Cómo participar',
+              value: competition.instruccionesParticipacion,
+              accentColor: accentColor,
+            ),
+            if (inscriptionUrl != null && inscriptionUrl.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _DetailInfoCard(
+                icon: Icons.link_outlined,
+                label: 'Enlace de referencia',
+                value: inscriptionUrl,
+                accentColor: accentColor,
+              ),
+            ],
+            if (contact != null && contact.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _DetailInfoCard(
+                icon: Icons.alternate_email_outlined,
+                label: 'Contacto',
+                value: contact,
+                accentColor: accentColor,
+              ),
+            ],
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(16),
@@ -207,9 +279,9 @@ class CompetitionDetailScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      'Estos datos son ficticios y se usan solo para desarrollo. '
-                      'El resto de la información de la competencia se añadirá '
-                      'en una siguiente etapa.',
+                      'Estos datos y los medios de contacto o inscripción son '
+                      'ficticios. Se usan solo para desarrollo y no permiten '
+                      'participar en eventos reales.',
                     ),
                   ),
                 ],
