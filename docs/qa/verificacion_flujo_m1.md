@@ -79,10 +79,14 @@ Son cosas que se ven en las capturas. Ninguna se corrigió aquí y ninguna impid
 
 - Solo Chrome en web, con una persona verificando. No se probó en un dispositivo real ni con texto ampliado.
 - Los datos son ficticios. Esta verificación no demuestra utilidad para usuarios.
-- Esta pasada es de M1. `main` todavía no incluye los estados de carga, error y vacío del Feed (S14, PR #23).
+- Esta pasada es de M1 y se hizo antes de integrar el PR #23: `main` en `41388e5` todavía no incluía los estados de carga, error y vacío del Feed (S14). Ver la sección Seguimiento.
 - Los casos 11 (pantalla estrecha) y la consola se registraron sobre `73a7826`, no sobre `41388e5`.
+
+## Seguimiento
+
+Actualizado el 29/10/2026. El PR #23 (Feed, estados asíncronos) se integró en `main` ese día a las 11:52, con el commit de merge `5b57c08`, después de esta verificación. Los resultados de arriba se conservan tal como se obtuvieron sobre `41388e5`, con sus fechas. Falta repetir los casos clave sobre `5b57c08` y documentarlos con su revisión. Hasta entonces el Issue #10 sigue abierto.
 
 ## Pendiente
 
-- Repetir los casos 1, 3, 5, 6, 9 y 10 sobre el `main` que resulte después de integrar el PR #23, con su SHA, porque cambia el flujo del Feed.
+- Repetir los casos 1, 3, 5, 6, 9 y 10 sobre `main` en `5b57c08` (con el PR #23 integrado), anotando el SHA que se pruebe, porque cambia el flujo del Feed.
 - Revisión independiente de este documento, a cargo de alguien que no sea su autor. El Issue #10 no se cierra antes.
