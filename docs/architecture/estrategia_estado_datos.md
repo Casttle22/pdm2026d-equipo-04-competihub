@@ -375,7 +375,9 @@ flowchart TD
 
 > Esta sección **no reemplaza** las secciones 1-13. La decisión de M1 (datos síncronos en memoria y `setState`) fue adecuada para su alcance y se conserva como historia. S14 añade un requisito nuevo y esta sección documenta cómo evoluciona la base.
 
-**Estado:** propuesta implementada localmente en la rama de preparación del Feed; el contrato de la sección 14.4 debe ratificarse con la pareja Detalle antes de publicarse.
+**Estado:** implementado en la rama `feat/21-estados-feed` (Issue #21, PR #23, en revisión). El contrato de la sección 14.4 fue ratificado por el equipo (ver 14.4).
+
+> Historial: el 26/10/2026 esta sección se redactó como propuesta implementada localmente en una rama de preparación, pendiente de ratificar el contrato con la pareja Detalle. El 27/10/2026 el contrato fue ratificado, se creó el Issue #21 y se publicó el PR #23. El 29/10/2026 la rama incorporó `main` con el PR #20 (detalle informativo del Issue #9).
 
 ### 14.1 Punto de partida (M1)
 
@@ -395,7 +397,9 @@ Recorrido de datos: **`competenciasMock` → `CompetenciasRepository` (Future) �
 - La categoría seleccionada sigue siendo estado local de `HomeScreen` (ahora `ConsumerStatefulWidget`); Riverpod se usa para la carga y la inyección, no para todo el estado de UI.
 - `when(skipLoadingOnRefresh: false, ...)`: en Riverpod 3.4.3 el valor por defecto es `true`, lo que mantendría visible el error anterior mientras se reintenta. Se cambió para que Reintentar muestre otra vez la carga.
 
-### 14.4 Contrato compartido Feed / Detalle (propuesto, pendiente de ratificación)
+### 14.4 Contrato compartido Feed / Detalle (ratificado)
+
+Propuesto el 26/10/2026 y aprobado por Wesley (@Casttle22, coordinador), Ricardo (@Pabloricalderon) y Alex (@AlexDLG1) el 27/10/2026. Quedan confirmadas también las reglas de `[]`, `null` y excepción, y la desactivación del reintento automático (`retry: (_, _) => null`) en ambos providers.
 
 | Elemento | Firma | Significado |
 |---|---|---|
@@ -422,7 +426,7 @@ Rutas: `lib/repositories/competencias_repository.dart`, `lib/providers/competenc
 
 - **Pantallas:** el Feed muestra cuatro estados. El vacío sin datos ofrece "Volver a cargar"; el vacío por filtro ofrece "Ver todas". Filtro, contador, tarjetas, navegación y conservación del filtro al regresar no cambian.
 - **Pruebas:** toda prueba que monte `CompetihubApp` o `HomeScreen` necesita `ProviderScope` con el repositorio falso y esperar la carga. Las pruebas de M1 conservaron sus verificaciones; solo cambió su montaje.
-- **Detalle:** `CompetitionDetailScreen` mantiene temporalmente su constructor (`competitionId` + `competitions`); el Feed le pasa la lista ya cargada. Su migración a `competenciaPorIdProvider(id)`, con sus propios estados y prueba, corresponde a la pareja Detalle (Ricardo y Alex) sobre esta base compartida, coordinando la línea que construye el detalle en `lib/main.dart`.
-- **Dependencia:** si la pareja Detalle pide cambios al contrato, se acuerdan antes de publicar; no se crea una segunda fuente de datos.
+- **Detalle:** `CompetitionDetailScreen` mantiene temporalmente su constructor (`competitionId` + `competitions`); el Feed le pasa la lista ya cargada. Su migración a `competenciaPorIdProvider(id)`, con sus propios estados y prueba, corresponde a la pareja Detalle (Ricardo y Alex) en el Issue #22 sobre esta base compartida, coordinando la línea que construye el detalle en `lib/main.dart`.
+- **Dependencia:** el contrato ya está ratificado; cualquier cambio posterior se acuerda entre ambas parejas antes de publicarse. No se crea una segunda fuente de datos.
 
 **Preparado por:** Alejandro (@ALECARRIUMES), con asistencia de Claude Code (ver `docs/bitacora-ia.md`).
