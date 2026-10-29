@@ -17,6 +17,25 @@ qué especificaste, qué revisaste y qué rechazaste.
 
 ---
 
+## 2026-10-29 · @AlexDLG1 — Issue #10: verificación del flujo principal de M1
+
+- **Herramienta:** Claude (Anthropic).
+- **Especificación:** Se pidió confirmar mi rol tras el cambio de parejas (Detalle con Ricardo, Issue #10), leer el estado del repositorio sin modificarlo, preparar una matriz de 11 casos para verificar el flujo principal de M1, extraer fotogramas de mis videos de pantalla y redactar el documento de verificación. Restricciones: registrar solo lo observado, no agregar funciones y no cerrar el #10 sin revisión independiente.
+- **Resultado:** Una matriz de casos, fotogramas recortados de dos videos (27/10 y 29/10) y el borrador de `docs/qa/verificacion_flujo_m1.md`.
+- **Aceptado:** La matriz de 11 casos y la estructura del documento (versión, comandos, casos, observaciones, límites). Los fotogramas recortados al área del navegador. La comparación de `73a7826` con `41388e5` por el hash del árbol de archivos, que muestra que lo probado el 27/10 es el mismo código que hoy está en `main`. Esa comparación no sustituye la repetición de hoy.
+- **Rechazado / corregido durante el trabajo:**
+  - El primer borrador de textos y rama fue para el Feed. Quedó obsoleto cuando mi pareja de S14 resultó ser Detalle (con Ricardo), y se reemplazó.
+  - Comandos que corrí dentro de la carpeta del ZIP en OneDrive, que no es un repositorio, dieron errores y no se usaron. Se repitieron en `C:/dev/pdm2026d-equipo-04-competihub`.
+  - Se descartaron capturas con una notificación de la Herramienta Recortes encima, con texto de otra ventana al fondo, de la pestaña Elements de DevTools y duplicadas.
+  - No se afirmó "sin errores" en la consola hasta abrir el panel Issues. Allí había un aviso de función obsoleta del SDK de Dart y un mensaje informativo del navegador, y los dos quedaron en el documento.
+  - La primera extracción de fotogramas del video de hoy salió desfasada en el tiempo y varias capturas no mostraban el paso que decían. Se descartó y se eligieron de nuevo viendo todos los fotogramas, uno cada 0,2 s.
+  - El caso 10 con Todas solo se había visto a mano el 27/10, sin captura. Quedó con captura al repetirlo hoy.
+  - Tras la revisión independiente de Alejandro se pidieron tres ajustes al PR #24: sincronizar la rama con `main` y resolver el conflicto de esta bitácora conservando las entradas de todos, agregar al documento la nota del PR #23 integrado (`5b57c08`) y no marcar la prueba en dispositivo o emulador, porque solo se probó en Chrome web. Se hicieron los tres.
+- **Verificación:** Comandos que ejecuté el 29/10/2026 sobre `main` en `41388e5`: formato sin cambios en 7 archivos, `flutter analyze` sin observaciones y `flutter test` con 21 pruebas aprobadas. Recorrido manual en Chrome grabado en video (casos 1 a 10). El hash del árbol de `73a7826` y el de `41388e5` es el mismo, comprobado con `git rev-parse` en un clon de solo lectura que usó el asistente, no yo. Se puede repetir con los comandos del documento. No se repitieron sobre `main` la pantalla estrecha ni la consola. El resultado del CI de este PR se ve en el propio PR.
+- **Commit / PR:** PR de documentación del Issue #10 (este PR). Issue #10: https://github.com/Casttle22/pdm2026d-equipo-04-competihub/issues/10.
+
+---
+
 ## 2026-10-29 · @ALECARRIUMES — Actualización del PR #23 (Feed, Issue #21) tras integrar el PR #20
 
 - **Herramienta:** Claude Code (Claude Opus 5.5), con instrucciones preparadas por Alejandro.
