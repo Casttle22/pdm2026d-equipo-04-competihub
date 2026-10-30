@@ -247,13 +247,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
-                // Se conserva la interfaz actual del detalle: recibe el
-                // id y la lista ya cargada. Su migración a
-                // competenciaPorIdProvider corresponde a la pareja Detalle.
-                builder: (_) => CompetitionDetailScreen(
-                  competitionId: competition.id,
-                  competitions: todas,
-                ),
+                // El Detalle consulta por id con competenciaPorIdProvider.
+                builder: (_) =>
+                    CompetitionDetailScreen(competitionId: competition.id),
               ),
             );
           },
