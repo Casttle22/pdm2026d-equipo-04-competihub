@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'data/competencia.dart';
 import 'providers/competencias_providers.dart';
 import 'screens/competition_detail_screen.dart';
+import 'screens/competition_form_screen.dart';
 
 void main() {
   // ProviderScope guarda los providers de toda la app. Las pruebas montan su
@@ -59,6 +60,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
         scrolledUnderElevation: 1,
+        actions: [
+          IconButton(
+            tooltip: 'Nueva competencia',
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              final actions = ref.read(competenciasActionsProvider);
+              Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (_) => CompetitionFormScreen(
+                    onSave: (draft) async {
+                      await actions.crear(draft);
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         // skipLoadingOnRefresh: false hace que, al reintentar, se vea otra vez
@@ -247,13 +266,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
-                // Se conserva la interfaz actual del detalle: recibe el
-                // id y la lista ya cargada. Su migración a
-                // competenciaPorIdProvider corresponde a la pareja Detalle.
-                builder: (_) => CompetitionDetailScreen(
-                  competitionId: competition.id,
-                  competitions: todas,
-                ),
+                // El Detalle consulta por id con competenciaPorIdProvider.
+                builder: (_) =>
+                    CompetitionDetailScreen(competitionId: competition.id),
               ),
             );
           },

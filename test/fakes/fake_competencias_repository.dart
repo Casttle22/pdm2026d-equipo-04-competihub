@@ -21,6 +21,17 @@ class FakeCompetenciasRepository extends CompetenciasRepository {
     llamadas++;
     return respuesta();
   }
+
+  @override
+  Future<Competencia?> obtenerCompetenciaPorId(String id) async {
+    final competencias = await respuesta();
+    for (final competencia in competencias) {
+      if (competencia.id == id) {
+        return competencia;
+      }
+    }
+    return null;
+  }
 }
 
 // Monta `child` con el repositorio falso en lugar del real.
