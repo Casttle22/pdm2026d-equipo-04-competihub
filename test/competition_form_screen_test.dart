@@ -10,9 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 Finder campo(String clave) => find.byKey(ValueKey('competition-form-$clave'));
 
-final Finder botonGuardar = find.byKey(
-  const ValueKey('competition-form-save'),
-);
+final Finder botonGuardar = find.byKey(const ValueKey('competition-form-save'));
 
 String textoDe(WidgetTester tester, String clave) {
   final editable = tester.widget<EditableText>(
@@ -132,11 +130,7 @@ void main() {
 
     testWidgets('La edición precarga los datos actuales', (tester) async {
       final competition = competenciasMock.first;
-      await abrirFormulario(
-        tester,
-        initial: competition,
-        onSave: (_) async {},
-      );
+      await abrirFormulario(tester, initial: competition, onSave: (_) async {});
 
       expect(find.text('Editar competencia'), findsOneWidget);
       expect(find.text('Guardar cambios'), findsOneWidget);
@@ -155,45 +149,46 @@ void main() {
       expect(find.text('20/10/2026 a las 21:00'), findsOneWidget);
     });
 
-    testWidgets('Guardar una edición entrega el borrador y cierra la pantalla', (
-      tester,
-    ) async {
-      final competition = competenciasMock.first;
-      CompetenciaDraft? recibido;
-      await abrirFormulario(
-        tester,
-        initial: competition,
-        onSave: (draft) async {
-          recibido = draft;
-        },
-      );
+    testWidgets(
+      'Guardar una edición entrega el borrador y cierra la pantalla',
+      (tester) async {
+        final competition = competenciasMock.first;
+        CompetenciaDraft? recibido;
+        await abrirFormulario(
+          tester,
+          initial: competition,
+          onSave: (draft) async {
+            recibido = draft;
+          },
+        );
 
-      await tester.enterText(campo('titulo'), '  Copa editada  ');
-      await tester.enterText(campo('costo'), 'Q25 por equipo');
-      await tocarGuardar(tester);
+        await tester.enterText(campo('titulo'), '  Copa editada  ');
+        await tester.enterText(campo('costo'), 'Q25 por equipo');
+        await tocarGuardar(tester);
 
-      final draft = recibido;
-      expect(draft, isNotNull);
-      expect(draft!.titulo, 'Copa editada');
-      expect(draft.costo, 'Q25 por equipo');
-      expect(draft.categoria, competition.categoria);
-      expect(draft.modalidad, competition.modalidad);
-      expect(draft.fechaInicio, competition.fechaInicio);
-      expect(draft.fechaFin, competition.fechaFin);
-      expect(draft.ubicacion, competition.ubicacion);
-      expect(draft.descripcion, competition.descripcion);
-      expect(draft.reglas, competition.reglas);
-      expect(
-        draft.instruccionesParticipacion,
-        competition.instruccionesParticipacion,
-      );
-      expect(draft.inscripcionUrl, competition.inscripcionUrl);
-      expect(draft.contacto, competition.contacto);
-      expect(draft.imagenUrl, competition.imagenUrl);
+        final draft = recibido;
+        expect(draft, isNotNull);
+        expect(draft!.titulo, 'Copa editada');
+        expect(draft.costo, 'Q25 por equipo');
+        expect(draft.categoria, competition.categoria);
+        expect(draft.modalidad, competition.modalidad);
+        expect(draft.fechaInicio, competition.fechaInicio);
+        expect(draft.fechaFin, competition.fechaFin);
+        expect(draft.ubicacion, competition.ubicacion);
+        expect(draft.descripcion, competition.descripcion);
+        expect(draft.reglas, competition.reglas);
+        expect(
+          draft.instruccionesParticipacion,
+          competition.instruccionesParticipacion,
+        );
+        expect(draft.inscripcionUrl, competition.inscripcionUrl);
+        expect(draft.contacto, competition.contacto);
+        expect(draft.imagenUrl, competition.imagenUrl);
 
-      expect(find.byType(CompetitionFormScreen), findsNothing);
-      expect(find.text('Abrir formulario'), findsOneWidget);
-    });
+        expect(find.byType(CompetitionFormScreen), findsNothing);
+        expect(find.text('Abrir formulario'), findsOneWidget);
+      },
+    );
 
     testWidgets('Se pueden limpiar los campos opcionales', (tester) async {
       CompetenciaDraft? recibido;
@@ -347,10 +342,7 @@ void main() {
       await tester.pump();
 
       expect(llamadas, 1);
-      expect(
-        tester.widget<FilledButton>(botonGuardar).onPressed,
-        isNull,
-      );
+      expect(tester.widget<FilledButton>(botonGuardar).onPressed, isNull);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.byType(CompetitionFormScreen), findsOneWidget);
 
@@ -447,9 +439,7 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(
-        find.byKey(const ValueKey('competition-delete-cancel')),
-      );
+      await tester.tap(find.byKey(const ValueKey('competition-delete-cancel')));
       await tester.pumpAndSettle();
 
       expect(find.byType(AlertDialog), findsNothing);

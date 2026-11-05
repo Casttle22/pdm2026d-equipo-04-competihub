@@ -243,9 +243,10 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
           labelText: 'Categoría *',
           border: OutlineInputBorder(),
         ),
-        items: _opcionesCon(_categorias, widget.initial?.categoria)
-            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-            .toList(),
+        items: _opcionesCon(
+          _categorias,
+          widget.initial?.categoria,
+        ).map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
         onChanged: habilitado
             ? (valor) => setState(() => _categoria = valor)
             : null,
@@ -260,9 +261,10 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
           labelText: 'Modalidad *',
           border: OutlineInputBorder(),
         ),
-        items: _opcionesCon(_modalidades, widget.initial?.modalidad)
-            .map((m) => DropdownMenuItem(value: m, child: Text(m)))
-            .toList(),
+        items: _opcionesCon(
+          _modalidades,
+          widget.initial?.modalidad,
+        ).map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
         onChanged: habilitado
             ? (valor) => setState(() => _modalidad = valor)
             : null,
@@ -371,10 +373,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         validator: _validarEnlaceOpcional,
       ),
       const SizedBox(height: 8),
-      Text(
-        '* Campo obligatorio',
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
+      Text('* Campo obligatorio', style: Theme.of(context).textTheme.bodySmall),
     ];
   }
 
@@ -476,7 +475,10 @@ class _MensajeError extends StatelessWidget {
           Icon(Icons.error_outline, color: scheme.onErrorContainer),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(texto, style: TextStyle(color: scheme.onErrorContainer)),
+            child: Text(
+              texto,
+              style: TextStyle(color: scheme.onErrorContainer),
+            ),
           ),
         ],
       ),
@@ -529,9 +531,7 @@ class _CampoFechaHora extends StatelessWidget {
                     )
                   : const Icon(Icons.calendar_today_outlined),
             ),
-            child: Text(
-              actual == null ? '' : _formatearFechaHora(actual),
-            ),
+            child: Text(actual == null ? '' : _formatearFechaHora(actual)),
           ),
         );
       },
