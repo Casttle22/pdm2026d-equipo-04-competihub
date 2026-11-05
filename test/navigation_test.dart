@@ -83,13 +83,14 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: CompetitionDetailScreen(
-          competitionId: 'no-existe',
-          competitions: competenciasMock,
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        const MaterialApp(
+          home: CompetitionDetailScreen(competitionId: 'no-existe'),
         ),
       ),
     );
+    await tester.pumpAndSettle();
     expect(
       find.text('No se encontró la competencia seleccionada.'),
       findsOneWidget,
@@ -107,13 +108,14 @@ void main() {
 
     final competition = competenciasMock[1];
     await tester.pumpWidget(
-      MaterialApp(
-        home: CompetitionDetailScreen(
-          competitionId: competition.id,
-          competitions: competenciasMock,
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        MaterialApp(
+          home: CompetitionDetailScreen(competitionId: competition.id),
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text(competition.titulo), findsOneWidget);
     expect(find.text(competition.categoria), findsOneWidget);
@@ -133,16 +135,18 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      MaterialApp(
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(1.5)),
-          child: child!,
-        ),
-        home: CompetitionDetailScreen(
-          competitionId: competenciasMock.first.id,
-          competitions: competenciasMock,
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: CompetitionDetailScreen(
+            competitionId: competenciasMock.first.id,
+          ),
         ),
       ),
     );

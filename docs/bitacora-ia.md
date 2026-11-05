@@ -16,6 +16,26 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-05 · @Pabloricalderon — Issue #22: pruebas de estados asíncronos del Detalle
+
+- **Herramienta:** ChatGPT (OpenAI).
+- **Especificación:** Se solicitó revisar la rama compartida `feat/22-estados-detalle` y preparar un patch para implementar las pruebas correspondientes al Issue #22. Se estableció como restricción respetar la implementación de Alex, no modificar el código de producción del Detalle y conservar las pruebas existentes del Feed, la navegación y el Issue #9.
+- **Resultado:** Patch con modificaciones en `test/fakes/fake_competencias_repository.dart`, `test/navigation_test.dart` y `test/competition_detail_content_test.dart`, además del nuevo archivo `test/detail_states_test.dart`.
+- **Aceptado:**
+  - Extensión de `FakeCompetenciasRepository` para controlar las respuestas por identificador y registrar las consultas realizadas.
+  - Cuatro pruebas de widget para verificar carga, error con recuperación mediante Reintentar, competencia no encontrada y presentación correcta de datos.
+  - Comprobación de que no se producen reintentos automáticos después de un error.
+  - Adaptación de las pruebas anteriores al constructor `CompetitionDetailScreen(competitionId: ...)` y al uso de `ProviderScope`, conservando las verificaciones existentes.
+- **Rechazado / corregido:**
+  - No se modificó `lib/main.dart` ni `lib/screens/competition_detail_screen.dart`, ya que su implementación corresponde a Alex.
+  - Se descartó crear una rama independiente desde `main`, utilizando la rama compartida `feat/22-estados-detalle`.
+  - No se incorporaron dependencias nuevas, servicios externos ni funcionalidades fuera del alcance del Issue #22.
+  - Se corrigió el formato de `test/detail_states_test.dart` después de aplicar el patch.
+  - No se realizó commit ni push antes de completar las verificaciones locales.
+- **Verificación:** Se aplicó el patch sin conflictos mediante `git apply`. `flutter analyze` y `dart analyze` finalizaron sin observaciones. `flutter test` terminó con **32 pruebas aprobadas**. `git diff --check` no mostró problemas. Las verificaciones corresponden a la rama local antes de incorporar las actualizaciones pendientes de `main`.
+- **Commit / PR:** Pendiente de commit, sincronización con `main` y publicación en `feat/22-estados-detalle`. Issue #22: https://github.com/Casttle22/pdm2026d-equipo-04-competihub/issues/22.
+
+---
 
 ## 2026-10-29 · @ALECARRIUMES — Actualización del PR #23 (Feed, Issue #21) tras integrar el PR #20
 

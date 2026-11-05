@@ -3,6 +3,8 @@ import 'package:competihub/screens/competition_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fakes/fake_competencias_repository.dart';
+
 Future<void> expectDetailText(WidgetTester tester, String value) async {
   await tester.scrollUntilVisible(
     find.text(value),
@@ -18,13 +20,14 @@ void main() {
   ) async {
     final competition = competenciasMock.first;
     await tester.pumpWidget(
-      MaterialApp(
-        home: CompetitionDetailScreen(
-          competitionId: competition.id,
-          competitions: competenciasMock,
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        MaterialApp(
+          home: CompetitionDetailScreen(competitionId: competition.id),
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text(competition.titulo), findsOneWidget);
     expect(find.text('Identificador: ${competition.id}'), findsOneWidget);
@@ -48,13 +51,14 @@ void main() {
   ) async {
     final competition = competenciasMock[1];
     await tester.pumpWidget(
-      MaterialApp(
-        home: CompetitionDetailScreen(
-          competitionId: competition.id,
-          competitions: competenciasMock,
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        MaterialApp(
+          home: CompetitionDetailScreen(competitionId: competition.id),
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text(competition.titulo), findsOneWidget);
     expect(find.text(competenciasMock.first.titulo), findsNothing);
@@ -78,13 +82,14 @@ void main() {
 
     final competition = competenciasMock[2];
     await tester.pumpWidget(
-      MaterialApp(
-        home: CompetitionDetailScreen(
-          competitionId: competition.id,
-          competitions: competenciasMock,
+      conRepositorio(
+        FakeCompetenciasRepository.conDatos(competenciasMock),
+        MaterialApp(
+          home: CompetitionDetailScreen(competitionId: competition.id),
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(competition.fechaFin, isNull);
     await expectDetailText(tester, competition.instruccionesParticipacion);
