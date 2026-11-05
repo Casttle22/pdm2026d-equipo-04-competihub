@@ -1,42 +1,42 @@
-# CI de CompetiHub (sección D): cada push y cada Pull Request se verifica en una máquina limpia.
-# "En mi compu sí funciona" deja de ser un argumento.
-name: CI
-
+# TEMPORAL: verificación de la rama tmp/verificar-crud-form. Se borra al terminar.
+name: Verificación temporal
 on:
-  pull_request:
-    branches: [main]
   push:
-    branches: [main]
-  workflow_dispatch: # botón "Run workflow" en la pestaña Actions
-
-# Si haces push dos veces seguidas a la misma rama, se cancela la corrida vieja.
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
+    branches: [tmp/verificar-crud-form]
+permissions:
+  contents: write
 jobs:
-  calidad:
-    name: Formato, análisis y pruebas
+  verificar:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
-      # Misma versión que en las computadoras del curso: builds reproducibles.
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: 3.44.8
           cache: true
-
-      - name: Dependencias
-        run: flutter pub get
-
-      - name: Formato (dart format)
+      - run: flutter pub get
+      - name: Formato original
+        id: formato
+        continue-on-error: true
         run: dart format --output=none --set-exit-if-changed lib test
-
-      - name: Análisis estático (flutter analyze)
-        run: flutter analyze
-
-      - name: Pruebas (flutter test)
-        run: flutter test --reporter expanded
+      - name: Aplicar formato
+        run: mkdir -p reportes && dart format lib test > reportes/format.txt 2>&1 || true
+      - name: Análisis
+        id: analisis
+        continue-on-error: true
+        run: flutter analyze > reportes/analyze.txt 2>&1
+      - name: Pruebas
+        id: pruebas
+        continue-on-error: true
+        run: flutter test --reporter expanded > reportes/test.txt 2>&1
+      - name: Publicar reportes
+        if: always()
+        run: |
+          flutter --version > reportes/version.txt 2>&1 || true
+          git config user.name "ci-verificacion"
+          git config user.email "ci@example.com"
+          git add -A
+          git commit -m "reportes de verificación" || true
+          git push origin HEAD:tmp/verificar-crud-form
