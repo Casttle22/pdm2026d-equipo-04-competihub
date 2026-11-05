@@ -1,6 +1,6 @@
 # Verificación del flujo principal de M1 (Issue #10)
 
-Autor: Alex (@AlexDLG1). Fecha de la verificación: 29/10/2026.
+Autor: Alex (@AlexDLG1). Fecha de la verificación: 29/10/2026. Verificación complementaria: 04/11/2026.
 
 Este documento registra lo que se probó y lo que se vio, con la versión exacta del código. No agrega funciones ni corrige defectos. No reemplaza la revisión independiente, y el Issue #10 sigue abierto hasta que exista.
 
@@ -75,18 +75,67 @@ Son cosas que se ven en las capturas. Ninguna se corrigió aquí y ninguna impid
 3. Las tarjetas siguen el orden de los datos de prueba, no el cronológico ([02a](evidencias/issue-10/main_41388e5/02a_caso02_tarjetas-parte-superior.png), [02b](evidencias/issue-10/main_41388e5/02b_caso02_tarjetas-parte-inferior.png)).
 4. Varias fechas de los datos de prueba ya pasaron: por ejemplo 20/10/2026 ([06](evidencias/issue-10/main_41388e5/06_caso06_detalle-esports-01.png)) y 24/10/2026 ([07a](evidencias/issue-10/main_41388e5/07a_caso07_detalle-academic-01.png)).
 
+## Verificación complementaria del 04/11/2026 sobre `b8d49a4`
+
+Se repitieron los casos 1, 3, 5, 6, 9 y 10 sobre `main` después de integrar el PR #23 (estados de carga, error y vacío del Feed) y el PR #24 (este documento). Esta pasada no reemplaza la revisión independiente.
+
+| Dato | Valor |
+| --- | --- |
+| Rama y commit | `main` en `b8d49a4` (merge del PR #24) |
+| Sistema | Windows, un solo verificador |
+| Navegador | Chrome (web), con `flutter run -d chrome` en modo debug, en `localhost` |
+| Ventana | Chrome en ventana ancha (escritorio) |
+| Evidencia | Fotogramas de tres videos de pantalla grabados el 04/11/2026 entre las 20:45 y las 20:52 (20 s, 10 s y 16 s), recortados al área del navegador |
+
+Los videos originales los conserva Alex y no se suben al repositorio.
+
+### Comprobaciones automáticas
+
+Ejecutadas por Alex el 04/11/2026 en su clon, con `main` en `b8d49a4`:
+
+| Comando | Salida |
+| --- | --- |
+| `git log -1 --oneline` | `b8d49a4 (HEAD -> main, origin/main, origin/HEAD) Merge pull request #24 from Casttle22/docs/10-verificacion-flujo-m1` |
+| `dart format --output=none --set-exit-if-changed .` | `Formatted 12 files (0 changed) in 0.10 seconds.` |
+| `flutter analyze` | `No issues found! (ran in 3.5s)` |
+| `flutter test` | `00:05 +28: All tests passed!` con 28 pruebas |
+
+### Casos manuales sobre `b8d49a4`
+
+Las capturas están en `evidencias/issue-10/main_b8d49a4/`.
+
+| Caso | Pasos | Esperado | Observado | Captura | Cumple |
+| --- | --- | --- | --- | --- | --- |
+| 1. Abrir la app | Recargar la página de la app en Chrome, que la inicia de nuevo | Aparece el Feed, con el estado de carga del PR #23 antes de los datos | Pantalla en blanco unos 7 s durante el arranque en modo debug, luego «Cargando competencias...» con un indicador circular y después el Feed con Todas seleccionado, «6 competencias disponibles» y el aviso de datos ficticios | [01a](evidencias/issue-10/main_b8d49a4/01a_caso01_arranque_cargando-competencias.png), [01b](evidencias/issue-10/main_b8d49a4/01b_caso01_arranque_feed-todas.png) | Sí |
+| 3. Filtrar por Esports | Elegir Esports | Solo esa categoría y contador coherente | «2 competencias disponibles»: Copa y Liga | [03](evidencias/issue-10/main_b8d49a4/03_caso03_filtro-esports.png) | Sí |
+| 5. Volver a Todas | Elegir Todas tras filtrar | Vuelven todas las tarjetas | «6 competencias disponibles» con Todas seleccionado | [05](evidencias/issue-10/main_b8d49a4/05_caso05_volver-a-todas.png) | Sí |
+| 6. Abrir una competencia | Tocar una tarjeta | Detalle de esa competencia | Detalle de «Copa ficticia de arena digital» (`mock-esports-01`) | [06](evidencias/issue-10/main_b8d49a4/06_caso06_detalle-esports-01.png) | Sí |
+| 9. Regreso | Usar la flecha de regreso | Vuelve al Feed | La flecha vuelve al Feed. Su letrero sigue diciendo «Back». El regreso se ve en las capturas 10b, 10d, 10f, 10h y 10j | [09](evidencias/issue-10/main_b8d49a4/09_caso09_flecha-regreso.png) | Sí |
+| 10. Filtro conservado | Filtrar, abrir un detalle, regresar | El filtro sigue aplicado | Al regresar siguen seleccionados el mismo filtro y el mismo contador: Esports (2), Académica (2), Deportiva (1), Otras (1) y Todas (6) | Esports: [10a](evidencias/issue-10/main_b8d49a4/10a_caso10_esports_detalle.png), [10b](evidencias/issue-10/main_b8d49a4/10b_caso10_esports_feed-conservado.png). Académica: [10c](evidencias/issue-10/main_b8d49a4/10c_caso10_academica_detalle.png), [10d](evidencias/issue-10/main_b8d49a4/10d_caso10_academica_feed-conservado.png). Deportiva: [10e](evidencias/issue-10/main_b8d49a4/10e_caso10_deportiva_detalle.png), [10f](evidencias/issue-10/main_b8d49a4/10f_caso10_deportiva_feed-conservado.png). Otras: [10g](evidencias/issue-10/main_b8d49a4/10g_caso10_otras_detalle.png), [10h](evidencias/issue-10/main_b8d49a4/10h_caso10_otras_feed-conservado.png). Todas: [10i](evidencias/issue-10/main_b8d49a4/10i_caso10_todas_detalle.png), [10j](evidencias/issue-10/main_b8d49a4/10j_caso10_todas_feed-conservado.png) | Sí |
+
+**Incumplimientos:** ninguno detectado en estos seis casos.
+
+### Observaciones de esta pasada
+
+Son cosas que se ven en las capturas. Ninguna se corrigió aquí y ninguna impide el flujo.
+
+1. Al recargar la página con un detalle abierto, la app vuelve al Feed. La dirección del navegador no cambia al entrar al detalle, así que un detalle no tiene dirección propia ([14a](evidencias/issue-10/main_b8d49a4/14a_extra_recarga-en-detalle-antes.png) antes de recargar, [01b](evidencias/issue-10/main_b8d49a4/01b_caso01_arranque_feed-todas.png) después).
+2. Se mantienen las observaciones 2 y 4 de la pasada anterior: el letrero «Back» sigue en inglés ([09](evidencias/issue-10/main_b8d49a4/09_caso09_flecha-regreso.png)) y la fecha de «Copa ficticia de arena digital» (20/10/2026) ya pasó ([06](evidencias/issue-10/main_b8d49a4/06_caso06_detalle-esports-01.png)).
+
 ## Límites
 
 - Solo Chrome en web, con una persona verificando. No se probó en un dispositivo real ni con texto ampliado.
 - Los datos son ficticios. Esta verificación no demuestra utilidad para usuarios.
 - Esta pasada es de M1 y se hizo antes de integrar el PR #23: `main` en `41388e5` todavía no incluía los estados de carga, error y vacío del Feed (S14). Ver la sección Seguimiento.
 - Los casos 11 (pantalla estrecha) y la consola se registraron sobre `73a7826`, no sobre `41388e5`.
+- La pasada del 04/11/2026 también fue solo en Chrome web, en modo debug y con una persona verificando. Los casos 2, 4, 7, 8 y 11 y la consola no se repitieron sobre `b8d49a4`. De los estados nuevos del Feed (PR #23) solo se observó el de carga: no se provocaron el error ni el vacío.
 
 ## Seguimiento
 
 Actualizado el 29/10/2026. El PR #23 (Feed, estados asíncronos) se integró en `main` ese día a las 11:52, con el commit de merge `5b57c08`, después de esta verificación. Los resultados de arriba se conservan tal como se obtuvieron sobre `41388e5`, con sus fechas. Falta repetir los casos clave sobre `5b57c08` y documentarlos con su revisión. Hasta entonces el Issue #10 sigue abierto.
 
+Actualizado el 04/11/2026. El PR #24 se integró en `main` con el commit de merge `b8d49a4`. Sobre esa versión, que incluye el PR #23, se repitieron los casos 1, 3, 5, 6, 9 y 10 y no se detectaron incumplimientos: ver la sección «Verificación complementaria del 04/11/2026 sobre `b8d49a4`». El Issue #10 sigue abierto hasta la revisión independiente.
+
 ## Pendiente
 
-- Repetir los casos 1, 3, 5, 6, 9 y 10 sobre `main` en `5b57c08` (con el PR #23 integrado), anotando el SHA que se pruebe, porque cambia el flujo del Feed.
 - Revisión independiente de este documento, a cargo de alguien que no sea su autor. El Issue #10 no se cierra antes.
