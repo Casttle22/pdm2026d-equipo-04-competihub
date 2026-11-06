@@ -33,7 +33,15 @@ qué especificaste, qué revisaste y qué rechazaste.
   - Se corrigió el formato de `test/detail_states_test.dart` después de aplicar el patch.
   - No se realizó commit ni push antes de completar las verificaciones locales.
 - **Verificación:** Se aplicó el patch sin conflictos mediante `git apply`. `flutter analyze` y `dart analyze` finalizaron sin observaciones. `flutter test` terminó con **32 pruebas aprobadas**. `git diff --check` no mostró problemas. Las verificaciones corresponden a la rama local antes de incorporar las actualizaciones pendientes de `main`.
-- **Commit / PR:** Pendiente de commit, sincronización con `main` y publicación en `feat/22-estados-detalle`. Issue #22: https://github.com/Casttle22/pdm2026d-equipo-04-competihub/issues/22.
+- **Commit / PR:** Commit de pruebas `8d4c698`, publicado en `feat/22-estados-detalle`. Integración de `main` mediante los commits `ddaf911` y `b4e141c`. Issue #22: https://github.com/Casttle22/pdm2026d-equipo-04-competihub/issues/22. PR pendiente de apertura.
+
+- **Actualización 2026-11-05 — Integración final con main:**
+  - **Especificación:** Se solicitó incorporar los cambios recientes de `main` a la rama compartida del Issue #22, resolver los conflictos provocados por los PR #28 y #29 y conservar tanto las pruebas del Detalle como las funcionalidades de CRUD, sin sobrescribir el trabajo de los compañeros.
+  - **Resultado:** Se integró `origin/main` mediante un merge normal y se resolvieron dos conflictos: `lib/screens/competition_detail_screen.dart` y `test/fakes/fake_competencias_repository.dart`.
+  - **Aceptado:** Se conservó la versión de `competition_detail_screen.dart` proveniente de `main`, que incluye los estados asíncronos y las funcionalidades recientes de edición y eliminación. En el repositorio falso se conservaron `respuestaPorId`, `llamadasPorId` e `idsConsultados`, manteniendo también la búsqueda por identificador utilizada en las pruebas del CRUD.
+  - **Rechazado / corregido:** No se reemplazó el repositorio falso únicamente con la versión de `main`, porque se habrían perdido las capacidades necesarias para simular errores, respuestas controladas y conteos de consultas. Tampoco se descartaron los cambios de producción del CRUD ni se realizó un push forzado. Se descartó una versión antigua con marcadores de conflicto que VS Code conservaba sin guardar, manteniendo el archivo correcto del disco.
+  - **Verificación local:** Después de resolver los conflictos, `flutter test` finalizó con **50 pruebas aprobadas**. `flutter analyze` y `dart analyze` terminaron sin observaciones. `dart format --output=none --set-exit-if-changed lib test` verificó 19 archivos sin cambios. `git diff --cached --check` no detectó problemas.
+  - **Publicación:** Merge `b4e141c` publicado correctamente en `feat/22-estados-detalle`. Queda pendiente la ejecución del CI del PR, la evidencia visual requerida y la revisión independiente.
 
 ---
 
