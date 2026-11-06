@@ -27,6 +27,7 @@ class FakeCompetenciasRepository extends CompetenciasRepository {
   }
 
   @override
+  @override
   Future<Competencia?> obtenerCompetenciaPorId(String id) {
     llamadasPorId++;
     idsConsultados.add(id);

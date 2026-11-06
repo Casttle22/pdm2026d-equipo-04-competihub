@@ -3,39 +3,100 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/competencia.dart';
 import '../providers/competencias_providers.dart';
+import '../widgets/competition_delete_dialog.dart';
+import 'competition_form_screen.dart';
 
 // Detalle de una competencia (S14): consulta por id con cuatro estados.
 // - Cargando: indicador de progreso.
 // - Error: mensaje para personas y Reintentar, que vuelve a consultar.
 // - No encontrada (null): texto y acción para volver. No es un error.
 // - Datos: el contenido informativo del Issue #9.
-class CompetitionDetailScreen extends ConsumerWidget {
+class CompetitionDetailScreen extends ConsumerStatefulWidget {
   const CompetitionDetailScreen({super.key, required this.competitionId});
 
   final String competitionId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final competenciaAsync = ref.watch(competenciaPorIdProvider(competitionId));
+  ConsumerState<CompetitionDetailScreen> createState() =>
+      _CompetitionDetailScreenState();
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalle de competencia'),
-        scrolledUnderElevation: 1,
-      ),
-      body: SafeArea(
-        // skipLoadingOnRefresh: false hace que, al reintentar, se vea otra vez
-        // el indicador de carga en lugar del error anterior.
-        child: competenciaAsync.when(
-          skipLoadingOnRefresh: false,
-          loading: () => const _DetalleCargando(),
-          error: (error, stackTrace) => _DetalleError(
-            onReintentar: () =>
-                ref.invalidate(competenciaPorIdProvider(competitionId)),
+class _CompetitionDetailScreenState
+    extends ConsumerState<CompetitionDetailScreen> {
+  bool _eliminando = false;
+
+  Future<void> _eliminar(Competencia competencia) async {
+    if (!await showCompetitionDeleteDialog(context, competencia.titulo) ||
+        !mounted) {
+      return;
+    }
+    setState(() => _eliminando = true);
+    try {
+      await ref.read(competenciasActionsProvider).eliminar(competencia.id);
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _eliminando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo eliminar la competencia.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final competitionId = widget.competitionId;
+    final competenciaAsync = ref.watch(competenciaPorIdProvider(competitionId));
+    final competencia = competenciaAsync.asData?.value;
+
+    return PopScope(
+      canPop: !_eliminando,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Detalle de competencia'),
+          scrolledUnderElevation: 1,
+          actions: [
+            if (competencia != null) ...[
+              IconButton(
+                tooltip: 'Editar competencia',
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: _eliminando
+                    ? null
+                    : () {
+                        final actions = ref.read(competenciasActionsProvider);
+                        Navigator.of(context).push<void>(
+                          MaterialPageRoute(
+                            builder: (_) => CompetitionFormScreen(
+                              initial: competencia,
+                              onSave: (draft) =>
+                                  actions.actualizar(competencia.id, draft),
+                            ),
+                          ),
+                        );
+                      },
+              ),
+              IconButton(
+                tooltip: 'Eliminar competencia',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: _eliminando ? null : () => _eliminar(competencia),
+              ),
+            ],
+          ],
+        ),
+        body: SafeArea(
+          // skipLoadingOnRefresh: false hace que, al reintentar, se vea otra vez
+          // el indicador de carga en lugar del error anterior.
+          child: competenciaAsync.when(
+            skipLoadingOnRefresh: false,
+            loading: () => const _DetalleCargando(),
+            error: (error, stackTrace) => _DetalleError(
+              onReintentar: () =>
+                  ref.invalidate(competenciaPorIdProvider(competitionId)),
+            ),
+            data: (competencia) => competencia == null
+                ? const _DetalleNoEncontrada()
+                : _DetalleContenido(competition: competencia),
           ),
-          data: (competencia) => competencia == null
-              ? const _DetalleNoEncontrada()
-              : _DetalleContenido(competition: competencia),
         ),
       ),
     );

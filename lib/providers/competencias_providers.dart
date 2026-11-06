@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/competencia.dart';
+import '../data/competencia_draft.dart';
 import '../repositories/competencias_repository.dart';
 
 // Provider del repositorio: es el punto que las pruebas reemplazan con
 // `competenciasRepositoryProvider.overrideWithValue(falso)`.
 final competenciasRepositoryProvider = Provider<CompetenciasRepository>((ref) {
-  return const CompetenciasRepository();
+  return CompetenciasRepository();
 });
 
 // Lista de competencias para el Feed.
@@ -19,8 +20,6 @@ final competenciasProvider = FutureProvider<List<Competencia>>((ref) {
 }, retry: (_, _) => null);
 
 // Una competencia por id, para el Detalle. Devuelve null si no existe.
-// Se deja preparado como parte del contrato compartido; la pantalla de
-// Detalle lo adoptará en el trabajo de su pareja.
 final competenciaPorIdProvider = FutureProvider.family<Competencia?, String>((
   ref,
   id,
@@ -28,3 +27,33 @@ final competenciaPorIdProvider = FutureProvider.family<Competencia?, String>((
   final repository = ref.watch(competenciasRepositoryProvider);
   return repository.obtenerCompetenciaPorId(id);
 }, retry: (_, _) => null);
+
+final competenciasActionsProvider = Provider<CompetenciasActions>((ref) {
+  return CompetenciasActions(ref, ref.watch(competenciasRepositoryProvider));
+});
+
+class CompetenciasActions {
+  CompetenciasActions(this._ref, this._repository);
+
+  final Ref _ref;
+  final CompetenciasRepository _repository;
+
+  Future<Competencia> crear(CompetenciaDraft draft) async {
+    final competencia = await _repository.crearCompetencia(draft);
+    _ref.invalidate(competenciasProvider);
+    _ref.invalidate(competenciaPorIdProvider(competencia.id));
+    return competencia;
+  }
+
+  Future<void> actualizar(String id, CompetenciaDraft draft) async {
+    await _repository.actualizarCompetencia(id, draft);
+    _ref.invalidate(competenciasProvider);
+    _ref.invalidate(competenciaPorIdProvider(id));
+  }
+
+  Future<void> eliminar(String id) async {
+    await _repository.eliminarCompetencia(id);
+    _ref.invalidate(competenciasProvider);
+    _ref.invalidate(competenciaPorIdProvider(id));
+  }
+}
