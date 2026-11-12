@@ -75,6 +75,12 @@ void main() {
     expect(find.text('6 competencias disponibles'), findsOneWidget);
     expect(find.text('1 por venir · 5 ya finalizaron'), findsOneWidget);
     // El rótulo separa las finalizadas de las que aún se pueden aprovechar.
+    // Con Destacados arriba, queda más abajo: se desplaza hasta verlo.
+    await tester.scrollUntilVisible(
+      find.text('Finalizadas'),
+      200,
+      scrollable: listaDeInicio,
+    );
     expect(find.text('Finalizadas'), findsOneWidget);
     expect(find.text('Finalizada'), findsWidgets);
     expect(tester.takeException(), isNull);

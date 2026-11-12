@@ -46,7 +46,7 @@ void main() {
       await tester.scrollUntilVisible(
         find.byKey(ValueKey(competition.id)),
         200,
-        scrollable: find.byType(Scrollable),
+        scrollable: listaDeInicio,
       );
       final card = find.byKey(ValueKey(competition.id));
       expect(
@@ -95,6 +95,7 @@ void main() {
       await tester.scrollUntilVisible(
         find.byKey(ValueKey(competition.id)),
         150,
+        scrollable: listaDeInicio,
       );
       expect(tester.takeException(), isNull);
     }
@@ -256,7 +257,9 @@ void main() {
       );
 
       // Verificar la cantidad de elementos del feed.
-      final lista = tester.widget<ListView>(find.byType(ListView));
+      final lista = tester.widget<ListView>(
+        find.byKey(const ValueKey('inicio-lista')),
+      );
 
       expect(lista.childrenDelegate.estimatedChildCount, cantidad + 1);
 
@@ -265,6 +268,7 @@ void main() {
         await tester.scrollUntilVisible(
           find.byKey(ValueKey(competencia.id)),
           150,
+          scrollable: listaDeInicio,
         );
 
         final tarjeta = find.byKey(ValueKey(competencia.id));

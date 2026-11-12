@@ -10,6 +10,7 @@ import '../utils/fechas.dart';
 import '../widgets/categoria_estilo.dart';
 import '../widgets/competition_delete_dialog.dart';
 import '../widgets/etiqueta.dart';
+import '../widgets/imagen_competencia.dart';
 import 'competition_form_screen.dart';
 
 // Detalle de una competencia (S14): consulta por id con cuatro estados.
@@ -298,6 +299,7 @@ class _DetalleContenido extends StatelessWidget {
         : '${_formatDate(endDate)} a las ${_formatTime(endDate)}';
     final inscriptionUrl = competition.inscripcionUrl?.trim();
     final contact = competition.contacto?.trim();
+    final tieneImagen = competition.imagenUrl?.trim().isNotEmpty ?? false;
 
     final fecha = _DetailInfoCard(
       icon: Icons.calendar_month_outlined,
@@ -315,9 +317,25 @@ class _DetalleContenido extends StatelessWidget {
     // El contenido se arma en tres bloques. En pantallas angostas van uno
     // debajo del otro; desde 600 dp, en dos columnas.
     final cabecera = <Widget>[
+      // Con imagen, va arriba (si no carga, queda el fondo de la
+      // categoría). Sin imagen, la cabecera de color ya cumple ese papel y
+      // lleva el ícono de la categoría de fondo.
+      if (tieneImagen) ...[
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: ImagenCompetencia(
+            key: const ValueKey('detalle-imagen'),
+            imagenUrl: competition.imagenUrl,
+            categoria: competition.categoria,
+            alto: 160,
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
       // Cabecera visual: misma pantalla para todas las competencias.
       Container(
         padding: const EdgeInsets.all(20),
+        foregroundDecoration: tieneImagen ? null : _IconoDeFondo(estilo.icono),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
@@ -572,6 +590,56 @@ class _DetalleContenido extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+// Dibuja el ícono de la categoría, grande y casi transparente, en la esquina
+// inferior derecha de la cabecera. Es decoración: no ocupa espacio ni cambia
+// el tamaño de la cabecera.
+class _IconoDeFondo extends Decoration {
+  const _IconoDeFondo(this.icono);
+
+  final IconData icono;
+
+  @override
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) =>
+      _PintorDeIcono(icono);
+}
+
+class _PintorDeIcono extends BoxPainter {
+  _PintorDeIcono(this.icono);
+
+  final IconData icono;
+
+  @override
+  void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
+    final size = configuration.size;
+    if (size == null) {
+      return;
+    }
+    const lado = 112.0;
+    final pintor = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(icono.codePoint),
+        style: TextStyle(
+          fontSize: lado,
+          fontFamily: icono.fontFamily,
+          package: icono.fontPackage,
+          color: Colors.white.withValues(alpha: 0.14),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    canvas.save();
+    canvas.clipRRect(
+      RRect.fromRectAndRadius(offset & size, const Radius.circular(24)),
+    );
+    pintor.paint(
+      canvas,
+      offset + Offset(size.width - lado + 12, size.height - lado + 16),
+    );
+    canvas.restore();
+    pintor.dispose();
   }
 }
 

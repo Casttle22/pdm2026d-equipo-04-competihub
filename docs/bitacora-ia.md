@@ -16,6 +16,26 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-11 · @AlexDLG1 — Módulo 3: Inicio nuevo (búsqueda, filtros con ícono, Destacados y Próximos)
+
+- **Herramienta:** Claude Code (Claude Fable 5.2).
+- **Especificación:** "Campo de búsqueda por título, ubicación y descripción, sin distinguir mayúsculas ni tildes. Filtros de categoría con ícono. Sección «Destacados» con las 3 próximas más cercanas en tarjetas horizontales. Sección «Próximos» con el resto y las finalizadas al final. Estado vacío para una búsqueda sin resultados. Si imagenUrl tiene valor, mostrar la imagen en Destacados y en el Detalle, con un marcador de posición si falla; si no, un fondo con el ícono de la categoría."
+- **Resultado:** `lib/screens/inicio_screen.dart` (el Inicio sale de `main.dart`), `lib/utils/busqueda.dart`, `lib/widgets/tarjeta_competencia.dart` (tarjeta de lista y tarjeta destacada), `lib/widgets/imagen_competencia.dart`, `lib/widgets/fila_info.dart` y dos archivos de pruebas.
+- **Aceptado:**
+  - Búsqueda como función pura (`coincideConBusqueda`): cada palabra debe aparecer en título, ubicación o descripción, ya normalizados.
+  - Destacados solo al explorar. Con una búsqueda o un filtro activo, la persona ya pidió algo concreto y ve la lista completa; así los resultados no se reparten entre dos secciones.
+  - La tarjeta destacada muestra los mismos datos clave que la de la lista (cuánto falta, fecha, lugar y costo), con el mismo resumen para lector de pantalla.
+  - Tres estados vacíos con salidas distintas: borrar la búsqueda, ver todas las categorías o volver a cargar.
+  - La imagen es decorativa (`excludeFromSemantics`); si no carga, queda el fondo de la categoría con un ícono pequeño de imagen rota.
+- **Rechazado / corregido:**
+  - Una primera versión ordenaba la lista dentro de la pantalla. Se quitó: el orden ya lo da la base de datos y ordenar dos veces rompía tres pruebas que entregan los datos en otro orden. La pantalla solo ordena para elegir las destacadas.
+  - En el Detalle sin imagen no se agregó un bloque nuevo: la cabecera de color ya era el fondo de la categoría, y ahora lleva su ícono dibujado detrás del texto sin cambiar de tamaño. Con imagen sí aparece una franja arriba.
+  - La búsqueda no mira reglas, costo ni instrucciones: no se pidió y daría resultados difíciles de explicar (hay una prueba que lo fija).
+  - Pruebas existentes ajustadas, sin quitar verificaciones: (1) `widget_test.dart` y `navigation_test.dart` indican qué área desplazar (`listaDeInicio`), porque el campo de búsqueda y la fila de Destacados también son desplazables y `scrollUntilVisible` exige una sola; (2) `feed_pulido_test.dart` se desplaza hasta el rótulo «Finalizadas», que ahora queda debajo de Destacados; (3) `conRepositorio` fija la hora en el 1 de diciembre de 2026: antes esas pruebas usaban la hora real y su resultado habría cambiado según el día (con el Inicio nuevo, una competencia próxima pasa a Destacados).
+- **Verificación:** `test/busqueda_test.dart` (6 pruebas) y `test/inicio_nuevo_test.dart` (15 pruebas: búsqueda por título, lugar y descripción, combinada con categoría, sin resultados y borrado; ícono de cada filtro; composición de Destacados y Próximos; finalizadas al final; Destacados oculto al filtrar; navegación desde una destacada; imagen con y sin URL en Inicio y Detalle; y 360 dp con texto 2.0). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 137/137. No se probó una descarga de imagen exitosa: en las pruebas no hay red.
+- **Commit / PR:** commit «feat: Inicio con búsqueda, Destacados y Próximos» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-11 · @AlexDLG1 — Módulo 2: tema azul y Detalle en dos columnas
 
 - **Herramienta:** Claude Code (Claude Fable 5.2).

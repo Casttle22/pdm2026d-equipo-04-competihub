@@ -22,6 +22,7 @@ void main() {
         await tester.scrollUntilVisible(
           find.byKey(ValueKey(competition.id)),
           200,
+          scrollable: listaDeInicio,
         );
         await tester.tap(find.byKey(ValueKey(competition.id)));
         await tester.pumpAndSettle();
@@ -58,7 +59,11 @@ void main() {
     final competition = competenciasMock.firstWhere(
       (item) => item.categoria == 'Esports',
     );
-    await tester.scrollUntilVisible(find.byKey(ValueKey(competition.id)), 200);
+    await tester.scrollUntilVisible(
+      find.byKey(ValueKey(competition.id)),
+      200,
+      scrollable: listaDeInicio,
+    );
     await tester.tap(find.byKey(ValueKey(competition.id)));
     await tester.pumpAndSettle();
     expect(find.text('Identificador: ${competition.id}'), findsOneWidget);
