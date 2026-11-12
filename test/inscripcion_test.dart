@@ -142,7 +142,8 @@ void main() {
     test('la fecha límite se guarda, se lee y se puede quitar', () async {
       final base = await BaseDePrueba.crear();
       final datos = CompetenciasDatabase(
-        openDatabase: () => base.abrir(version: 3, hoy: hoy),
+        // La capa de datos siempre trabaja con el esquema vigente.
+        openDatabase: () => base.abrir(version: versionEsquema, hoy: hoy),
         ahora: () => hoy,
       );
       final limite = DateTime(2026, 12, 15, 18, 30);

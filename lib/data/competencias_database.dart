@@ -13,7 +13,9 @@ import 'mock_competencias.dart';
 // 2: las fechas de los datos de ejemplo pasan a ser relativas al día de la
 //    migración, para que no queden todos como finalizados.
 // 3: columna fecha_limite_inscripcion (opcional).
-const int versionEsquema = 3;
+// 4: ficha de torneo: formato, tamaño de equipo, premios y organizador
+//    (todas opcionales).
+const int versionEsquema = 4;
 
 const String _tablaCompetencias = 'competencias';
 
@@ -100,6 +102,8 @@ Future<void> _migrar(
         await _migrarAV2(database, hoy);
       case 3:
         await _migrarAV3(database, hoy);
+      case 4:
+        await _migrarAV4(database);
     }
   }
 }
@@ -152,6 +156,39 @@ Future<void> _migrarAV3(Database database, DateTime hoy) async {
       },
       where: 'id = ?',
       whereArgs: [id],
+    );
+  }
+  await batch.commit(noResult: true);
+}
+
+// v4: ficha de torneo. Las columnas son opcionales: las competencias creadas
+// en la app quedan sin ficha, en lugar de suponer un formato. Los ejemplos la
+// toman de competenciasMock.
+Future<void> _migrarAV4(Database database) async {
+  for (final columna in [
+    'formato TEXT',
+    'tamano_equipo_min INTEGER',
+    'tamano_equipo_max INTEGER',
+    'premios TEXT',
+    'organizador TEXT',
+  ]) {
+    await database.execute(
+      'ALTER TABLE $_tablaCompetencias ADD COLUMN $columna',
+    );
+  }
+  final batch = database.batch();
+  for (final ejemplo in competenciasMock) {
+    batch.update(
+      _tablaCompetencias,
+      <String, Object?>{
+        'formato': ejemplo.formato?.name,
+        'tamano_equipo_min': ejemplo.tamanoEquipoMin,
+        'tamano_equipo_max': ejemplo.tamanoEquipoMax,
+        'premios': ejemplo.premios,
+        'organizador': ejemplo.organizador,
+      },
+      where: 'id = ?',
+      whereArgs: [ejemplo.id],
     );
   }
   await batch.commit(noResult: true);
@@ -281,6 +318,11 @@ class CompetenciasDatabase implements CompetenciasDataSource {
       'imagen_url': draft.imagenUrl,
       'fecha_limite_inscripcion':
           draft.fechaLimiteInscripcion?.millisecondsSinceEpoch,
+      'formato': draft.formato?.name,
+      'tamano_equipo_min': draft.tamanoEquipoMin,
+      'tamano_equipo_max': draft.tamanoEquipoMax,
+      'premios': draft.premios,
+      'organizador': draft.organizador,
     };
   }
 
@@ -307,6 +349,11 @@ class CompetenciasDatabase implements CompetenciasDataSource {
       contacto: map['contacto'] as String?,
       imagenUrl: map['imagen_url'] as String?,
       fechaLimiteInscripcion: _fechaONula(map['fecha_limite_inscripcion']),
+      formato: FormatoCompetencia.desdeTexto(map['formato'] as String?),
+      tamanoEquipoMin: map['tamano_equipo_min'] as int?,
+      tamanoEquipoMax: map['tamano_equipo_max'] as int?,
+      premios: map['premios'] as String?,
+      organizador: map['organizador'] as String?,
     );
   }
 }

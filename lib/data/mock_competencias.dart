@@ -1,6 +1,9 @@
 import 'competencia.dart';
 
 // Eventos inventados exclusivamente para desarrollo y pruebas.
+// La ficha de torneo (formato y tamaño de equipo) sale de las reglas de cada
+// ejemplo; premios y organizador también son ficticios y lo dicen. La
+// carrera no tiene ficha: sus reglas no dicen si es individual.
 // No representan eventos reales ni evidencia de investigación de usuarios.
 final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
   Competencia(
@@ -19,6 +22,11 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
         'En este escenario de prueba, completar el formulario ficticio con el nombre del equipo. No hay inscripción real.',
     inscripcionUrl: 'https://example.com/competihub/mock-esports-01',
     contacto: 'arena@example.com',
+    formato: FormatoCompetencia.equipos,
+    tamanoEquipoMin: 3,
+    tamanoEquipoMax: 3,
+    premios: 'Trofeo simbólico de prueba (ficticio)',
+    organizador: 'Club ficticio de arena digital',
   ),
   Competencia(
     id: 'mock-academic-01',
@@ -34,6 +42,8 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     costo: 'Q 25 ficticios',
     instruccionesParticipacion:
         'Para la simulación, preparar un alias y presentarse en el laboratorio de prueba. No asistir a un lugar real.',
+    formato: FormatoCompetencia.individual,
+    organizador: 'Laboratorio ficticio Prisma',
   ),
   Competencia(
     id: 'mock-sports-01',
@@ -66,6 +76,10 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     instruccionesParticipacion:
         'En la simulación, registrar una pareja y elegir modalidad mediante el enlace de ejemplo. No hay registro real.',
     inscripcionUrl: 'https://example.com/competihub/mock-academic-02',
+    formato: FormatoCompetencia.equipos,
+    tamanoEquipoMin: 2,
+    tamanoEquipoMax: 2,
+    premios: 'Diplomas simbólicos (ficticios)',
   ),
   Competencia(
     id: 'mock-other-01',
@@ -82,6 +96,7 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     instruccionesParticipacion:
         'En este escenario, enviar una ilustración al correo de ejemplo. No se reciben obras reales.',
     contacto: 'ilustracion@example.com',
+    formato: FormatoCompetencia.individual,
   ),
   Competencia(
     id: 'mock-esports-02',
@@ -97,6 +112,7 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     costo: 'Q 15 ficticios',
     instruccionesParticipacion:
         'Ejemplo de evento finalizado: se habría reservado un puesto en la sede imaginaria. No admite inscripciones reales.',
+    formato: FormatoCompetencia.individual,
   ),
 ]);
 

@@ -16,6 +16,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Módulo 5: ficha de torneo (base v4)
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Formato: individual o por equipos. Tamaño de equipo (mínimo y máximo, solo si es por equipos). Premios (texto opcional). Organizador (texto opcional). Mostrarlo en una sección «Formato y premios» del Detalle y agregarlo al formulario."
+- **Resultado:** `FormatoCompetencia` y `describirTamanoEquipo` en `lib/data/competencia.dart`, cinco columnas nuevas (migración v4), sección «Formato y premios» en el Detalle y sección del mismo nombre en el formulario.
+- **Aceptado:**
+  - Todo opcional, incluido el formato («Sin especificar»): las competencias que ya existían quedan sin ficha en lugar de suponer un formato.
+  - El tamaño de equipo solo se pide y se guarda con «Por equipos»; si se cambia a individual, no se guarda aunque los campos tuvieran valor.
+  - En el Detalle solo aparecen las filas con dato, y la sección completa se oculta si no hay ninguno.
+  - Mínimo y máximo van uno debajo del otro: lado a lado no caben a 360 dp con texto grande.
+- **Rechazado / corregido:**
+  - La ficha de los ejemplos no se inventó: formato y tamaño salen de sus propias reglas («Equipos de tres personas», «Parejas», «Participación individual»). La carrera queda sin ficha porque sus reglas no lo dicen. Premios y organizador de ejemplo dicen «ficticio».
+  - Una prueba del módulo 4 abría la base en v3 y usaba la capa de datos actual, que ya escribe las columnas de la v4. Se corrigió para abrir siempre en `versionEsquema`: las bases antiguas solo se usan para probar migraciones.
+- **Verificación:** `test/ficha_torneo_test.dart` (14 pruebas: descripción del tamaño, lectura del formato, ficha de los ejemplos, migración v3→v4 con una fila de usuario que solo gana columnas vacías, guardar y leer en SQLite, sección del Detalle completa, individual sin tamaño, sección oculta sin datos, formulario: aparición del tamaño, cambio a individual, validaciones y «Sin especificar», y 360 dp con texto 2.0 en Detalle y formulario). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 167/167.
+- **Commit / PR:** commit «feat: ficha de torneo (base v4)» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Módulo 4: fecha límite de inscripción (base v3)
 
 - **Herramienta:** Claude Code (Claude Fable 5.2 y Claude Opus 5.5).

@@ -1,3 +1,5 @@
+import 'competencia.dart' show FormatoCompetencia;
+
 class CompetenciaDraft {
   const CompetenciaDraft({
     required this.titulo,
@@ -14,6 +16,11 @@ class CompetenciaDraft {
     this.contacto,
     this.imagenUrl,
     this.fechaLimiteInscripcion,
+    this.formato,
+    this.tamanoEquipoMin,
+    this.tamanoEquipoMax,
+    this.premios,
+    this.organizador,
   });
 
   final String titulo;
@@ -30,6 +37,11 @@ class CompetenciaDraft {
   final String? contacto;
   final String? imagenUrl;
   final DateTime? fechaLimiteInscripcion;
+  final FormatoCompetencia? formato;
+  final int? tamanoEquipoMin;
+  final int? tamanoEquipoMax;
+  final String? premios;
+  final String? organizador;
 
   // Copia con otras fechas; el resto de los datos no cambia.
   CompetenciaDraft conFechas({
@@ -52,6 +64,11 @@ class CompetenciaDraft {
       contacto: contacto,
       imagenUrl: imagenUrl,
       fechaLimiteInscripcion: fechaLimiteInscripcion,
+      formato: formato,
+      tamanoEquipoMin: tamanoEquipoMin,
+      tamanoEquipoMax: tamanoEquipoMax,
+      premios: premios,
+      organizador: organizador,
     );
   }
 }

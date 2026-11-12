@@ -1,5 +1,44 @@
 import 'competencia_draft.dart';
 
+// Cómo se compite. Es opcional: si no se conoce, no se muestra.
+enum FormatoCompetencia {
+  individual('Individual'),
+  equipos('Por equipos');
+
+  const FormatoCompetencia(this.etiqueta);
+
+  final String etiqueta;
+
+  // Valor guardado en la base de datos (el nombre del enum).
+  static FormatoCompetencia? desdeTexto(String? valor) {
+    for (final formato in values) {
+      if (formato.name == valor) {
+        return formato;
+      }
+    }
+    return null;
+  }
+}
+
+// «3 personas por equipo», «De 2 a 5 personas por equipo», «Mínimo 2
+// personas por equipo» o «Hasta 5 personas por equipo». null si no hay
+// ningún dato.
+String? describirTamanoEquipo(int? minimo, int? maximo) {
+  String personas(int n) => n == 1 ? '1 persona' : '$n personas';
+  if (minimo != null && maximo != null) {
+    return minimo == maximo
+        ? '${personas(minimo)} por equipo'
+        : 'De $minimo a ${personas(maximo)} por equipo';
+  }
+  if (minimo != null) {
+    return 'Mínimo ${personas(minimo)} por equipo';
+  }
+  if (maximo != null) {
+    return 'Hasta ${personas(maximo)} por equipo';
+  }
+  return null;
+}
+
 class Competencia {
   const Competencia({
     required this.id,
@@ -17,6 +56,11 @@ class Competencia {
     this.contacto,
     this.imagenUrl,
     this.fechaLimiteInscripcion,
+    this.formato,
+    this.tamanoEquipoMin,
+    this.tamanoEquipoMax,
+    this.premios,
+    this.organizador,
   });
 
   // Une un id con los datos de un formulario. La usan las fuentes de datos
@@ -35,7 +79,12 @@ class Competencia {
       inscripcionUrl = draft.inscripcionUrl,
       contacto = draft.contacto,
       imagenUrl = draft.imagenUrl,
-      fechaLimiteInscripcion = draft.fechaLimiteInscripcion;
+      fechaLimiteInscripcion = draft.fechaLimiteInscripcion,
+      formato = draft.formato,
+      tamanoEquipoMin = draft.tamanoEquipoMin,
+      tamanoEquipoMax = draft.tamanoEquipoMax,
+      premios = draft.premios,
+      organizador = draft.organizador;
 
   final String id;
   final String titulo;
@@ -55,6 +104,19 @@ class Competencia {
   // Hasta cuándo se puede inscribir alguien. Es opcional: sin este dato la
   // app no muestra ningún estado de inscripción, en lugar de suponerlo.
   final DateTime? fechaLimiteInscripcion;
+
+  // Ficha de torneo, toda opcional. El tamaño de equipo solo tiene sentido
+  // cuando el formato es por equipos.
+  final FormatoCompetencia? formato;
+  final int? tamanoEquipoMin;
+  final int? tamanoEquipoMax;
+  final String? premios;
+  final String? organizador;
+
+  bool get tieneFichaDeTorneo =>
+      formato != null ||
+      (premios?.trim().isNotEmpty ?? false) ||
+      (organizador?.trim().isNotEmpty ?? false);
 
   // Las competencias sembradas desde mock_competencias.dart usan ids que
   // empiezan con «mock-». Las creadas en la app usan «local-». La interfaz
@@ -79,6 +141,11 @@ class Competencia {
       contacto: contacto,
       imagenUrl: imagenUrl,
       fechaLimiteInscripcion: fechaLimiteInscripcion,
+      formato: formato,
+      tamanoEquipoMin: tamanoEquipoMin,
+      tamanoEquipoMax: tamanoEquipoMax,
+      premios: premios,
+      organizador: organizador,
     );
   }
 

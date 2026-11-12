@@ -533,6 +533,10 @@ class _DetalleContenido extends StatelessWidget {
           ),
         ),
       ],
+      if (competition.tieneFichaDeTorneo) ...[
+        const SizedBox(height: 24),
+        _FormatoYPremios(competition: competition, accentColor: accentColor),
+      ],
       if (esEjemplo) ...[
         const SizedBox(height: 20),
         Container(
@@ -657,6 +661,79 @@ class _PintorDeIcono extends BoxPainter {
     );
     canvas.restore();
     pintor.dispose();
+  }
+}
+
+// Ficha de torneo: solo las filas con dato. Si no hay ninguno, la sección
+// completa no se dibuja (lo decide quien la usa con tieneFichaDeTorneo).
+class _FormatoYPremios extends StatelessWidget {
+  const _FormatoYPremios({
+    required this.competition,
+    required this.accentColor,
+  });
+
+  final Competencia competition;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final formato = competition.formato;
+    final tamano = formato == FormatoCompetencia.equipos
+        ? describirTamanoEquipo(
+            competition.tamanoEquipoMin,
+            competition.tamanoEquipoMax,
+          )
+        : null;
+    final premios = competition.premios?.trim();
+    final organizador = competition.organizador?.trim();
+    final filas = <Widget>[
+      if (formato != null)
+        _DetailInfoCard(
+          icon: formato == FormatoCompetencia.equipos
+              ? Icons.groups_outlined
+              : Icons.person_outline,
+          label: 'Formato',
+          value: formato.etiqueta,
+          accentColor: accentColor,
+        ),
+      if (tamano != null)
+        _DetailInfoCard(
+          icon: Icons.group_add_outlined,
+          label: 'Tamaño del equipo',
+          value: tamano,
+          accentColor: accentColor,
+        ),
+      if (premios != null && premios.isNotEmpty)
+        _DetailInfoCard(
+          icon: Icons.emoji_events_outlined,
+          label: 'Premios',
+          value: premios,
+          accentColor: accentColor,
+        ),
+      if (organizador != null && organizador.isNotEmpty)
+        _DetailInfoCard(
+          icon: Icons.apartment_outlined,
+          label: 'Organizador',
+          value: organizador,
+          accentColor: accentColor,
+        ),
+    ];
+    return Column(
+      key: const ValueKey('detalle-formato-premios'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            'Formato y premios',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ),
+        for (final fila in filas) ...[const SizedBox(height: 12), fila],
+      ],
+    );
   }
 }
 

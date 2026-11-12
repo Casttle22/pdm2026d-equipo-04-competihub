@@ -54,12 +54,17 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
   late final TextEditingController _inscripcionUrlController;
   late final TextEditingController _contactoController;
   late final TextEditingController _imagenUrlController;
+  late final TextEditingController _equipoMinController;
+  late final TextEditingController _equipoMaxController;
+  late final TextEditingController _premiosController;
+  late final TextEditingController _organizadorController;
 
   String? _categoria;
   String? _modalidad;
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
   DateTime? _fechaLimiteInscripcion;
+  FormatoCompetencia? _formato;
 
   bool _guardando = false;
   String? _errorGuardado;
@@ -93,6 +98,15 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     );
     _contactoController = TextEditingController(text: initial?.contacto);
     _imagenUrlController = TextEditingController(text: initial?.imagenUrl);
+    _equipoMinController = TextEditingController(
+      text: initial?.tamanoEquipoMin?.toString(),
+    );
+    _equipoMaxController = TextEditingController(
+      text: initial?.tamanoEquipoMax?.toString(),
+    );
+    _premiosController = TextEditingController(text: initial?.premios);
+    _organizadorController = TextEditingController(text: initial?.organizador);
+    _formato = initial?.formato;
     _categoria = initial?.categoria;
     _modalidad = initial?.modalidad;
     _fechaInicio = initial?.fechaInicio;
@@ -111,6 +125,10 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     _inscripcionUrlController.dispose();
     _contactoController.dispose();
     _imagenUrlController.dispose();
+    _equipoMinController.dispose();
+    _equipoMaxController.dispose();
+    _premiosController.dispose();
+    _organizadorController.dispose();
     super.dispose();
   }
 
@@ -174,6 +192,13 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         _inscripcionUrlController.text != (initial?.inscripcionUrl ?? '') ||
         _contactoController.text != (initial?.contacto ?? '') ||
         _imagenUrlController.text != (initial?.imagenUrl ?? '') ||
+        _equipoMinController.text !=
+            (initial?.tamanoEquipoMin?.toString() ?? '') ||
+        _equipoMaxController.text !=
+            (initial?.tamanoEquipoMax?.toString() ?? '') ||
+        _premiosController.text != (initial?.premios ?? '') ||
+        _organizadorController.text != (initial?.organizador ?? '') ||
+        _formato != initial?.formato ||
         _categoria != initial?.categoria ||
         _modalidad != initial?.modalidad ||
         _fechaInicio != initial?.fechaInicio ||
@@ -268,6 +293,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       return;
     }
 
+    final porEquipos = _formato == FormatoCompetencia.equipos;
     final draft = CompetenciaDraft(
       titulo: _tituloController.text.trim(),
       categoria: _categoria!,
@@ -283,6 +309,12 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       contacto: _opcionalONulo(_contactoController.text),
       imagenUrl: _opcionalONulo(_imagenUrlController.text),
       fechaLimiteInscripcion: _fechaLimiteInscripcion,
+      formato: _formato,
+      // El tamaño de equipo solo se guarda si el formato es por equipos.
+      tamanoEquipoMin: porEquipos ? _entero(_equipoMinController.text) : null,
+      tamanoEquipoMax: porEquipos ? _entero(_equipoMaxController.text) : null,
+      premios: _opcionalONulo(_premiosController.text),
+      organizador: _opcionalONulo(_organizadorController.text),
     );
 
     setState(() {
@@ -560,6 +592,78 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         capitalizacion: TextCapitalization.none,
         validator: _validarEnlaceOpcional,
       ),
+      const SizedBox(height: 24),
+      const _Seccion(titulo: 'Formato y premios'),
+      DropdownButtonFormField<FormatoCompetencia?>(
+        key: const ValueKey('competition-form-formato'),
+        initialValue: _formato,
+        isExpanded: true,
+        decoration: const InputDecoration(
+          labelText: 'Formato (opcional)',
+          errorMaxLines: _lineasDeError,
+          border: OutlineInputBorder(),
+        ),
+        items: const [
+          DropdownMenuItem(value: null, child: Text('Sin especificar')),
+          DropdownMenuItem(
+            value: FormatoCompetencia.individual,
+            child: Text('Individual'),
+          ),
+          DropdownMenuItem(
+            value: FormatoCompetencia.equipos,
+            child: Text('Por equipos'),
+          ),
+        ],
+        onChanged: habilitado
+            ? (valor) => setState(() => _formato = valor)
+            : null,
+      ),
+      if (_formato == FormatoCompetencia.equipos) ...[
+        separacion,
+        // Uno debajo del otro: con texto grande, dos campos lado a lado no
+        // caben en 360 dp.
+        _campoTexto(
+          clave: 'equipo-min',
+          controller: _equipoMinController,
+          etiqueta: 'Mínimo de personas por equipo (opcional)',
+          teclado: TextInputType.number,
+          capitalizacion: TextCapitalization.none,
+          validator: _validarTamano,
+        ),
+        separacion,
+        _campoTexto(
+          clave: 'equipo-max',
+          controller: _equipoMaxController,
+          etiqueta: 'Máximo de personas por equipo (opcional)',
+          teclado: TextInputType.number,
+          capitalizacion: TextCapitalization.none,
+          validator: (valor) {
+            final error = _validarTamano(valor);
+            if (error != null) {
+              return error;
+            }
+            final minimo = _entero(_equipoMinController.text);
+            final maximo = _entero(valor ?? '');
+            if (minimo != null && maximo != null && maximo < minimo) {
+              return 'El máximo no puede ser menor que el mínimo.';
+            }
+            return null;
+          },
+        ),
+      ],
+      separacion,
+      _campoTexto(
+        clave: 'premios',
+        controller: _premiosController,
+        etiqueta: 'Premios (opcional)',
+        multilinea: true,
+      ),
+      separacion,
+      _campoTexto(
+        clave: 'organizador',
+        controller: _organizadorController,
+        etiqueta: 'Organizador (opcional)',
+      ),
       const SizedBox(height: 8),
       Text('* Campo obligatorio', style: Theme.of(context).textTheme.bodySmall),
     ];
@@ -602,6 +706,21 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
               : null),
     );
   }
+}
+
+int? _entero(String texto) => int.tryParse(texto.trim());
+
+// Vacío es válido. Si hay texto, debe ser un número entero de 1 a 100.
+String? _validarTamano(String? valor) {
+  final texto = valor?.trim() ?? '';
+  if (texto.isEmpty) {
+    return null;
+  }
+  final numero = int.tryParse(texto);
+  if (numero == null || numero < 1 || numero > 100) {
+    return 'Escribe un número entero entre 1 y 100.';
+  }
+  return null;
 }
 
 String? _opcionalONulo(String texto) {
