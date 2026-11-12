@@ -11,14 +11,17 @@ class EstiloCategoria {
   final IconData icono;
 }
 
+// Esports usaba el color principal del tema. Con el tema azul se confundía
+// con Académica, así que ahora tiene su propio violeta.
+const Color colorEsports = Color(0xFF6A1B9A);
 const Color colorAcademica = Color(0xFF0D47A1);
 const Color colorDeportiva = Color(0xFF1B5E20);
 const Color colorOtras = Color(0xFF9A3F00);
 
 EstiloCategoria estiloDeCategoria(String categoria, ColorScheme scheme) {
   return switch (categoria) {
-    'Esports' => EstiloCategoria(
-      color: scheme.primary,
+    'Esports' => const EstiloCategoria(
+      color: colorEsports,
       icono: Icons.sports_esports_outlined,
     ),
     'Académica' => const EstiloCategoria(

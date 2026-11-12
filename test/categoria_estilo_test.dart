@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:competihub/tema.dart';
 import 'package:competihub/widgets/categoria_estilo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,11 +13,8 @@ double contraste(Color a, Color b) {
 }
 
 void main() {
-  // Mismo esquema de color que usa la app.
-  final scheme = ColorScheme.fromSeed(
-    seedColor: Colors.deepPurple,
-    brightness: Brightness.light,
-  );
+  // El esquema de color real de la app (lib/tema.dart).
+  final scheme = esquemaDeColor;
   const categorias = ['Esports', 'Académica', 'Deportiva', 'Otras'];
 
   for (final categoria in categorias) {
@@ -33,6 +31,14 @@ void main() {
       expect(contraste(Colors.white, estilo.color), greaterThanOrEqualTo(4.5));
     });
   }
+
+  test('cada categoría conocida tiene un color distinto', () {
+    final colores = {
+      for (final categoria in categorias)
+        estiloDeCategoria(categoria, scheme).color,
+    };
+    expect(colores.length, categorias.length);
+  });
 
   test('una categoría desconocida usa el estilo de Otras', () {
     final desconocida = estiloDeCategoria('Categoría nueva', scheme);

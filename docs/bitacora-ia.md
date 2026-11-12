@@ -16,6 +16,21 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-11 · @AlexDLG1 — Módulo 2: tema azul y Detalle en dos columnas
+
+- **Herramienta:** Claude Code (Claude Fable 5.2).
+- **Especificación:** "ColorScheme a partir de un azul (#1565C0 o similar) que mantenga contraste AA; test/categoria_estilo_test.dart debe seguir pasando. En el Detalle, dos columnas en pantallas de 600 dp o más."
+- **Resultado:** `lib/tema.dart` (esquema de color, tema y el ancho de corte), Detalle armado en tres bloques que se acomodan en una o dos columnas, y `test/tema_test.dart`.
+- **Aceptado:**
+  - `ColorScheme.fromSeed` con el azul #1565C0 fijado como color principal: `fromSeed` solo lo suaviza y se perdía el azul de marca.
+  - En dos columnas: a la izquierda cabecera, resumen e información general; a la derecha lo necesario para participar. Ancho máximo de 1100 dp.
+- **Rechazado / corregido:**
+  - Esports usaba el color principal del tema; con el tema azul quedaba casi igual a Académica. Ahora tiene un violeta propio (#6A1B9A) y hay una prueba de que las cuatro categorías usan colores distintos.
+  - `test/categoria_estilo_test.dart` construía su propio esquema morado («mismo esquema que usa la app»). Ahora importa el esquema real de `lib/tema.dart`: verifica lo mismo, pero ya no puede quedar desfasado del tema.
+- **Verificación:** `test/tema_test.dart` (15 pruebas: 9 pares texto/fondo con contraste AA, tema aplicado en la app, dos columnas a 900 dp, una columna a 360 dp, Detalle a 360 dp con texto 2.0 y dos columnas en el límite de 600 dp con texto 2.0). Las pruebas existentes del Detalle a 600 y 800 dp pasan sin cambios con el diseño de dos columnas. Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 116/116.
+- **Commit / PR:** commit «feat: tema azul y Detalle en dos columnas» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-11 · @AlexDLG1 — Módulo 1 (Issue 9): datos de ejemplo vigentes (base v2)
 
 - **Herramienta:** Claude Code (Claude Fable 5.2).

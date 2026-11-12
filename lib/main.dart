@@ -6,6 +6,7 @@ import 'providers/competencias_providers.dart';
 import 'providers/reloj_provider.dart';
 import 'screens/competition_detail_screen.dart';
 import 'screens/competition_form_screen.dart';
+import 'tema.dart';
 import 'utils/fechas.dart';
 import 'widgets/categoria_estilo.dart';
 import 'widgets/etiqueta.dart';
@@ -23,13 +24,7 @@ class CompetihubApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CompetiHub',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
+      theme: temaCompetihub(),
       home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
     );

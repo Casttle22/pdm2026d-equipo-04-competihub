@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/competencia.dart';
 import '../providers/competencias_providers.dart';
 import '../providers/reloj_provider.dart';
+import '../tema.dart';
 import '../utils/fechas.dart';
 import '../widgets/categoria_estilo.dart';
 import '../widgets/competition_delete_dialog.dart';
@@ -311,217 +312,265 @@ class _DetalleContenido extends StatelessWidget {
       accentColor: accentColor,
     );
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-      children: [
-        // Cabecera visual: misma pantalla para todas las competencias.
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                accentColor,
-                Color.lerp(accentColor, Colors.black, 0.48)!,
+    // El contenido se arma en tres bloques. En pantallas angostas van uno
+    // debajo del otro; desde 600 dp, en dos columnas.
+    final cabecera = <Widget>[
+      // Cabecera visual: misma pantalla para todas las competencias.
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [accentColor, Color.lerp(accentColor, Colors.black, 0.48)!],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                Etiqueta(
+                  texto: competition.categoria,
+                  icono: estilo.icono,
+                  colorTexto: accentColor,
+                  colorFondo: Colors.white,
+                ),
+                Etiqueta(
+                  texto: etiquetaTemporal(competition, ahora),
+                  icono: Icons.schedule_outlined,
+                  colorTexto: accentColor,
+                  colorFondo: Colors.white,
+                ),
               ],
             ),
+            const SizedBox(height: 20),
+            Text(
+              competition.titulo,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                height: 1.2,
+              ),
+            ),
+            // El rótulo y el identificador técnico solo acompañan a las
+            // competencias de ejemplo, no a las creadas en la app.
+            if (esEjemplo) ...[
+              const SizedBox(height: 10),
+              const Text(
+                'Competencia ficticia de prueba',
+                style: TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 14),
+              Divider(color: Colors.white.withValues(alpha: 0.28)),
+              const SizedBox(height: 6),
+              Text(
+                'Identificador: ${competition.id}',
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      _ResumenClave(competition: competition, accentColor: accentColor),
+    ];
+
+    final general = <Widget>[
+      Text(
+        'Información general',
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 12),
+      // Fecha y hora van lado a lado; en pantallas muy angostas, una
+      // debajo de la otra para que el texto no se parta.
+      LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 340) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [fecha, const SizedBox(height: 12), hora],
+            );
+          }
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: fecha),
+                const SizedBox(width: 12),
+                Expanded(child: hora),
+              ],
+            ),
+          );
+        },
+      ),
+      if (formattedEnd != null) ...[
+        const SizedBox(height: 12),
+        _DetailInfoCard(
+          icon: Icons.event_outlined,
+          label: 'Finaliza',
+          value: formattedEnd,
+          accentColor: accentColor,
+        ),
+      ],
+      const SizedBox(height: 12),
+      _DetailInfoCard(
+        icon: Icons.devices_outlined,
+        label: 'Modalidad',
+        value: competition.modalidad,
+        accentColor: accentColor,
+      ),
+      const SizedBox(height: 12),
+      _DetailInfoCard(
+        icon: Icons.location_on_outlined,
+        label: 'Ubicación o acceso',
+        value: competition.ubicacion,
+        accentColor: accentColor,
+      ),
+      const SizedBox(height: 12),
+      _DetailInfoCard(
+        icon: Icons.description_outlined,
+        label: 'Descripción',
+        value: competition.descripcion,
+        accentColor: accentColor,
+      ),
+    ];
+
+    final participar = <Widget>[
+      Text(
+        'Información para participar',
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 12),
+      _DetailInfoCard(
+        icon: Icons.rule_outlined,
+        label: 'Requisitos y reglas',
+        value: competition.reglas,
+        accentColor: accentColor,
+      ),
+      const SizedBox(height: 12),
+      _DetailInfoCard(
+        icon: Icons.payments_outlined,
+        label: 'Costo',
+        value: competition.costo,
+        accentColor: accentColor,
+      ),
+      const SizedBox(height: 12),
+      _DetailInfoCard(
+        icon: Icons.how_to_reg_outlined,
+        label: 'Cómo participar',
+        value: competition.instruccionesParticipacion,
+        accentColor: accentColor,
+      ),
+      if (inscriptionUrl != null && inscriptionUrl.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        _DetailInfoCard(
+          icon: Icons.link_outlined,
+          label: 'Enlace de referencia',
+          value: inscriptionUrl,
+          accentColor: accentColor,
+          action: IconButton(
+            tooltip: 'Copiar enlace',
+            icon: const Icon(Icons.copy_outlined),
+            onPressed: () =>
+                _copiar(context, inscriptionUrl, 'Enlace copiado.'),
           ),
-          child: Column(
+        ),
+      ],
+      if (contact != null && contact.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        _DetailInfoCard(
+          icon: Icons.alternate_email_outlined,
+          label: 'Contacto',
+          value: contact,
+          accentColor: accentColor,
+          action: IconButton(
+            tooltip: 'Copiar contacto',
+            icon: const Icon(Icons.copy_outlined),
+            onPressed: () => _copiar(context, contact, 'Contacto copiado.'),
+          ),
+        ),
+      ],
+      if (esEjemplo) ...[
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: scheme.secondaryContainer,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  Etiqueta(
-                    texto: competition.categoria,
-                    icono: estilo.icono,
-                    colorTexto: accentColor,
-                    colorFondo: Colors.white,
-                  ),
-                  Etiqueta(
-                    texto: etiquetaTemporal(competition, ahora),
-                    icono: Icons.schedule_outlined,
-                    colorTexto: accentColor,
-                    colorFondo: Colors.white,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Text(
-                competition.titulo,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
+              Icon(Icons.info_outline, color: scheme.onSecondaryContainer),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Estos datos y los medios de contacto o inscripción son '
+                  'ficticios. Se usan solo para desarrollo y no permiten '
+                  'participar en eventos reales.',
+                  style: TextStyle(color: scheme.onSecondaryContainer),
                 ),
               ),
-              // El rótulo y el identificador técnico solo acompañan a las
-              // competencias de ejemplo, no a las creadas en la app.
-              if (esEjemplo) ...[
-                const SizedBox(height: 10),
-                const Text(
-                  'Competencia ficticia de prueba',
-                  style: TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 14),
-                Divider(color: Colors.white.withValues(alpha: 0.28)),
-                const SizedBox(height: 6),
-                Text(
-                  'Identificador: ${competition.id}',
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ],
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        _ResumenClave(competition: competition, accentColor: accentColor),
-        const SizedBox(height: 24),
-        Text(
-          'Información general',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        // Fecha y hora van lado a lado; en pantallas muy angostas, una
-        // debajo de la otra para que el texto no se parta.
-        LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 340) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [fecha, const SizedBox(height: 12), hora],
-              );
-            }
-            return IntrinsicHeight(
+      ],
+    ];
+
+    const separacion = SizedBox(height: 24);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < anchoDosColumnas) {
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+            children: [
+              ...cabecera,
+              separacion,
+              ...general,
+              separacion,
+              ...participar,
+            ],
+          );
+        }
+        // Dos columnas: a la izquierda lo que identifica al evento; a la
+        // derecha lo necesario para participar. El ancho se limita para que
+        // las líneas de texto no queden demasiado largas.
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                key: const ValueKey('detalle-dos-columnas'),
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: fecha),
-                  const SizedBox(width: 12),
-                  Expanded(child: hora),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [...cabecera, separacion, ...general],
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: participar,
+                    ),
+                  ),
                 ],
               ),
-            );
-          },
-        ),
-        if (formattedEnd != null) ...[
-          const SizedBox(height: 12),
-          _DetailInfoCard(
-            icon: Icons.event_outlined,
-            label: 'Finaliza',
-            value: formattedEnd,
-            accentColor: accentColor,
-          ),
-        ],
-        const SizedBox(height: 12),
-        _DetailInfoCard(
-          icon: Icons.devices_outlined,
-          label: 'Modalidad',
-          value: competition.modalidad,
-          accentColor: accentColor,
-        ),
-        const SizedBox(height: 12),
-        _DetailInfoCard(
-          icon: Icons.location_on_outlined,
-          label: 'Ubicación o acceso',
-          value: competition.ubicacion,
-          accentColor: accentColor,
-        ),
-        const SizedBox(height: 12),
-        _DetailInfoCard(
-          icon: Icons.description_outlined,
-          label: 'Descripción',
-          value: competition.descripcion,
-          accentColor: accentColor,
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Información para participar',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        _DetailInfoCard(
-          icon: Icons.rule_outlined,
-          label: 'Requisitos y reglas',
-          value: competition.reglas,
-          accentColor: accentColor,
-        ),
-        const SizedBox(height: 12),
-        _DetailInfoCard(
-          icon: Icons.payments_outlined,
-          label: 'Costo',
-          value: competition.costo,
-          accentColor: accentColor,
-        ),
-        const SizedBox(height: 12),
-        _DetailInfoCard(
-          icon: Icons.how_to_reg_outlined,
-          label: 'Cómo participar',
-          value: competition.instruccionesParticipacion,
-          accentColor: accentColor,
-        ),
-        if (inscriptionUrl != null && inscriptionUrl.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          _DetailInfoCard(
-            icon: Icons.link_outlined,
-            label: 'Enlace de referencia',
-            value: inscriptionUrl,
-            accentColor: accentColor,
-            action: IconButton(
-              tooltip: 'Copiar enlace',
-              icon: const Icon(Icons.copy_outlined),
-              onPressed: () =>
-                  _copiar(context, inscriptionUrl, 'Enlace copiado.'),
             ),
           ),
-        ],
-        if (contact != null && contact.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          _DetailInfoCard(
-            icon: Icons.alternate_email_outlined,
-            label: 'Contacto',
-            value: contact,
-            accentColor: accentColor,
-            action: IconButton(
-              tooltip: 'Copiar contacto',
-              icon: const Icon(Icons.copy_outlined),
-              onPressed: () => _copiar(context, contact, 'Contacto copiado.'),
-            ),
-          ),
-        ],
-        if (esEjemplo) ...[
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: scheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.info_outline, color: scheme.onSecondaryContainer),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Estos datos y los medios de contacto o inscripción son '
-                    'ficticios. Se usan solo para desarrollo y no permiten '
-                    'participar en eventos reales.',
-                    style: TextStyle(color: scheme.onSecondaryContainer),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
+        );
+      },
     );
   }
 }
