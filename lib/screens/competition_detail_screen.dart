@@ -11,6 +11,7 @@ import '../tema.dart';
 import '../utils/fechas.dart';
 import '../servicios/abridor_de_mapas.dart';
 import '../widgets/boton_como_llegar.dart';
+import '../widgets/boton_compartir.dart';
 import '../widgets/boton_guardar.dart';
 import '../widgets/categoria_estilo.dart';
 import '../widgets/competition_delete_dialog.dart';
@@ -417,6 +418,7 @@ class _DetalleContenido extends StatelessWidget {
           BotonGuardar(competencia: competition, conTexto: true),
           if (admiteComoLlegar(competition.modalidad))
             BotonComoLlegar(competencia: competition),
+          BotonCompartir(competencia: competition),
         ],
       ),
     ];

@@ -16,6 +16,22 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Módulo 11: compartir
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Botón en el Detalle con share_plus. Comparte un texto con título, fecha, lugar, costo, cómo participar y enlace si lo hay. En las de ejemplo, el texto dice que es ficticia."
+- **Resultado:** dependencia `share_plus` 13.3.1, `lib/servicios/compartir.dart` (`textoParaCompartir` y `Compartidor` con su provider) y `lib/widgets/boton_compartir.dart` en la fila de acciones del Detalle.
+- **Aceptado:**
+  - El texto se arma en una función pura y se prueba completo, línea por línea.
+  - En los datos de ejemplo, la primera línea es «Competencia FICTICIA de ejemplo (no es un evento real).»: es lo que se ve en la vista previa de un chat, y así el texto no circula como si fuera real.
+  - El título va como asunto (lo usan las apps de correo). Si compartir falla, se avisa.
+  - Compartir está en todas las modalidades, a diferencia de «Cómo llegar».
+- **Rechazado / corregido:**
+  - `test/navigation_test.dart` («El detalle utiliza tarjetas visuales…») esperaba ver la tarjeta de Modalidad sin desplazarse en 430×960. Con tres botones la fila de acciones ocupa dos líneas y la empuja; ahora se desplaza hasta ella, igual que ya hacía con Ubicación. Verifica lo mismo.
+- **Verificación:** `test/compartir_test.dart` (7 pruebas: texto completo, sin enlace, primera línea en los ejemplos y no en las propias, botón con texto y asunto, botón en virtuales, error, y 360 dp con texto 2.0 con los tres botones). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 233/233. Pendiente en el emulador: que se abra la hoja de compartir de Android.
+- **Commit / PR:** commit «feat: compartir competencias con share_plus» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Módulo 10: mapa interactivo con OpenStreetMap (base v7)
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

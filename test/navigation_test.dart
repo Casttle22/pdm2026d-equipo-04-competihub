@@ -131,6 +131,10 @@ void main() {
     expect(find.text(competition.titulo), findsOneWidget);
     expect(find.text(competition.categoria), findsOneWidget);
     expect(find.text('Información general'), findsOneWidget);
+    // La fila de acciones (Guardar, Cómo llegar, Compartir) empuja los
+    // datos hacia abajo: se desplaza hasta la modalidad, como con la
+    // ubicación.
+    await tester.scrollUntilVisible(find.text(competition.modalidad), 150);
     expect(find.text(competition.modalidad), findsOneWidget);
     await tester.scrollUntilVisible(find.text(competition.ubicacion), 150);
     expect(find.text(competition.ubicacion), findsOneWidget);
