@@ -30,4 +30,9 @@ class Competencia {
   final String? inscripcionUrl;
   final String? contacto;
   final String? imagenUrl;
+
+  // Las competencias sembradas desde mock_competencias.dart usan ids que
+  // empiezan con «mock-». Las creadas en la app usan «local-». La interfaz
+  // solo rotula como ficticias a las de ejemplo.
+  bool get esDeEjemplo => id.startsWith('mock-');
 }

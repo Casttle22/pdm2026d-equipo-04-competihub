@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/competencia.dart';
 import '../providers/competencias_providers.dart';
+import '../providers/reloj_provider.dart';
+import '../utils/fechas.dart';
+import '../widgets/categoria_estilo.dart';
 import '../widgets/competition_delete_dialog.dart';
+import '../widgets/etiqueta.dart';
 import 'competition_form_screen.dart';
 
 // Detalle de una competencia (S14): consulta por id con cuatro estados.
@@ -26,6 +31,10 @@ class _CompetitionDetailScreenState
   bool _eliminando = false;
 
   Future<void> _eliminar(Competencia competencia) async {
+    // El mensaje de confirmación se muestra en la pantalla anterior, por eso
+    // se toman el navegador y el mensajero antes de cerrar esta.
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     if (!await showCompetitionDeleteDialog(context, competencia.titulo) ||
         !mounted) {
       return;
@@ -33,12 +42,39 @@ class _CompetitionDetailScreenState
     setState(() => _eliminando = true);
     try {
       await ref.read(competenciasActionsProvider).eliminar(competencia.id);
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      navigator.pop();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Competencia eliminada.')),
+      );
     } catch (_) {
       if (!mounted) return;
       setState(() => _eliminando = false);
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text('No se pudo eliminar la competencia.')),
+      );
+    }
+  }
+
+  // Abre el formulario de edición y confirma con un mensaje si se guardó.
+  Future<void> _editar(Competencia competencia) async {
+    final actions = ref.read(competenciasActionsProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    var guardada = false;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => CompetitionFormScreen(
+          initial: competencia,
+          onSave: (draft) async {
+            await actions.actualizar(competencia.id, draft);
+            guardada = true;
+          },
+        ),
+      ),
+    );
+    if (guardada) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Cambios guardados.')),
       );
     }
   }
@@ -48,6 +84,7 @@ class _CompetitionDetailScreenState
     final competitionId = widget.competitionId;
     final competenciaAsync = ref.watch(competenciaPorIdProvider(competitionId));
     final competencia = competenciaAsync.asData?.value;
+    final ahora = ref.watch(relojProvider)();
 
     return PopScope(
       canPop: !_eliminando,
@@ -60,28 +97,40 @@ class _CompetitionDetailScreenState
               IconButton(
                 tooltip: 'Editar competencia',
                 icon: const Icon(Icons.edit_outlined),
-                onPressed: _eliminando
-                    ? null
-                    : () {
-                        final actions = ref.read(competenciasActionsProvider);
-                        Navigator.of(context).push<void>(
-                          MaterialPageRoute(
-                            builder: (_) => CompetitionFormScreen(
-                              initial: competencia,
-                              onSave: (draft) =>
-                                  actions.actualizar(competencia.id, draft),
-                            ),
-                          ),
-                        );
-                      },
+                onPressed: _eliminando ? null : () => _editar(competencia),
               ),
-              IconButton(
-                tooltip: 'Eliminar competencia',
-                icon: const Icon(Icons.delete_outline),
-                onPressed: _eliminando ? null : () => _eliminar(competencia),
+              // Eliminar va en un menú aparte para no quedar a un toque de
+              // distancia de Editar.
+              PopupMenuButton<String>(
+                tooltip: 'Más opciones',
+                enabled: !_eliminando,
+                onSelected: (opcion) {
+                  if (opcion == 'eliminar') {
+                    _eliminar(competencia);
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem<String>(
+                    value: 'eliminar',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline),
+                        SizedBox(width: 12),
+                        Text('Eliminar competencia'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
+          // Barra de progreso mientras se elimina.
+          bottom: _eliminando
+              ? const PreferredSize(
+                  preferredSize: Size.fromHeight(4),
+                  child: LinearProgressIndicator(),
+                )
+              : null,
         ),
         body: SafeArea(
           // skipLoadingOnRefresh: false hace que, al reintentar, se vea otra vez
@@ -95,7 +144,7 @@ class _CompetitionDetailScreenState
             ),
             data: (competencia) => competencia == null
                 ? const _DetalleNoEncontrada()
-                : _DetalleContenido(competition: competencia),
+                : _DetalleContenido(competition: competencia, ahora: ahora),
           ),
         ),
       ),
@@ -200,12 +249,16 @@ class _DetalleNoEncontrada extends StatelessWidget {
   }
 }
 
-// Contenido informativo del Issue #9, sin cambios: ahora recibe la
-// competencia ya resuelta por el provider.
+// Contenido informativo del Issue #9. Recibe la competencia ya resuelta por
+// el provider y la hora actual para el aviso de tiempo.
+//
+// Orden: cabecera, resumen con lo que más se pregunta (cuándo, dónde y
+// costo) y después el resto de la información, en el mismo orden de siempre.
 class _DetalleContenido extends StatelessWidget {
-  const _DetalleContenido({required this.competition});
+  const _DetalleContenido({required this.competition, required this.ahora});
 
   final Competencia competition;
+  final DateTime ahora;
 
   String _twoDigits(int number) => number.toString().padLeft(2, '0');
 
@@ -215,15 +268,24 @@ class _DetalleContenido extends StatelessWidget {
   String _formatTime(DateTime date) =>
       '${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
 
+  Future<void> _copiar(
+    BuildContext context,
+    String valor,
+    String mensaje,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    await Clipboard.setData(ClipboardData(text: valor));
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(mensaje)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final (accentColor, categoryIcon) = switch (competition.categoria) {
-      'Esports' => (scheme.primary, Icons.sports_esports_outlined),
-      'Académica' => (Colors.blue.shade700, Icons.school_outlined),
-      'Deportiva' => (Colors.green.shade700, Icons.sports_soccer_outlined),
-      _ => (Colors.orange.shade800, Icons.emoji_events_outlined),
-    };
+    final estilo = estiloDeCategoria(competition.categoria, scheme);
+    final accentColor = estilo.color;
+    final esEjemplo = competition.esDeEjemplo;
 
     final formattedDate = _formatDate(competition.fechaInicio);
     final formattedTime = _formatTime(competition.fechaInicio);
@@ -234,12 +296,25 @@ class _DetalleContenido extends StatelessWidget {
     final inscriptionUrl = competition.inscripcionUrl?.trim();
     final contact = competition.contacto?.trim();
 
+    final fecha = _DetailInfoCard(
+      icon: Icons.calendar_month_outlined,
+      label: 'Fecha',
+      value: formattedDate,
+      accentColor: accentColor,
+    );
+    final hora = _DetailInfoCard(
+      icon: Icons.schedule_outlined,
+      label: 'Hora',
+      value: formattedTime,
+      accentColor: accentColor,
+    );
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: [
         // Cabecera visual: misma pantalla para todas las competencias.
         Container(
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             gradient: LinearGradient(
@@ -254,45 +329,25 @@ class _DetalleContenido extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
-                  Flexible(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(categoryIcon, color: Colors.white, size: 20),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              competition.categoria,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  Etiqueta(
+                    texto: competition.categoria,
+                    icono: estilo.icono,
+                    colorTexto: accentColor,
+                    colorFondo: Colors.white,
                   ),
-                  const Spacer(),
-                  const Icon(
-                    Icons.emoji_events_outlined,
-                    color: Colors.white,
-                    size: 38,
+                  Etiqueta(
+                    texto: etiquetaTemporal(competition, ahora),
+                    icono: Icons.schedule_outlined,
+                    colorTexto: accentColor,
+                    colorFondo: Colors.white,
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
               Text(
                 competition.titulo,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -301,24 +356,27 @@ class _DetalleContenido extends StatelessWidget {
                   height: 1.2,
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Competencia ficticia de prueba',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.88)),
-              ),
-              const SizedBox(height: 20),
-              Divider(color: Colors.white.withValues(alpha: 0.28)),
-              const SizedBox(height: 8),
-              Text(
-                'Identificador: ${competition.id}',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.90),
-                  fontSize: 12,
+              // El rótulo y el identificador técnico solo acompañan a las
+              // competencias de ejemplo, no a las creadas en la app.
+              if (esEjemplo) ...[
+                const SizedBox(height: 10),
+                const Text(
+                  'Competencia ficticia de prueba',
+                  style: TextStyle(color: Colors.white),
                 ),
-              ),
+                const SizedBox(height: 14),
+                Divider(color: Colors.white.withValues(alpha: 0.28)),
+                const SizedBox(height: 6),
+                Text(
+                  'Identificador: ${competition.id}',
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        _ResumenClave(competition: competition, accentColor: accentColor),
         const SizedBox(height: 24),
         Text(
           'Información general',
@@ -327,28 +385,27 @@ class _DetalleContenido extends StatelessWidget {
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        IntrinsicHeight(
-          child: Row(
-            children: [
-              Expanded(
-                child: _DetailInfoCard(
-                  icon: Icons.calendar_month_outlined,
-                  label: 'Fecha',
-                  value: formattedDate,
-                  accentColor: accentColor,
-                ),
+        // Fecha y hora van lado a lado; en pantallas muy angostas, una
+        // debajo de la otra para que el texto no se parta.
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 340) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [fecha, const SizedBox(height: 12), hora],
+              );
+            }
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: fecha),
+                  const SizedBox(width: 12),
+                  Expanded(child: hora),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _DetailInfoCard(
-                  icon: Icons.schedule_outlined,
-                  label: 'Hora',
-                  value: formattedTime,
-                  accentColor: accentColor,
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
         if (formattedEnd != null) ...[
           const SizedBox(height: 12),
@@ -415,6 +472,12 @@ class _DetalleContenido extends StatelessWidget {
             label: 'Enlace de referencia',
             value: inscriptionUrl,
             accentColor: accentColor,
+            action: IconButton(
+              tooltip: 'Copiar enlace',
+              icon: const Icon(Icons.copy_outlined),
+              onPressed: () =>
+                  _copiar(context, inscriptionUrl, 'Enlace copiado.'),
+            ),
           ),
         ],
         if (contact != null && contact.isNotEmpty) ...[
@@ -424,28 +487,131 @@ class _DetalleContenido extends StatelessWidget {
             label: 'Contacto',
             value: contact,
             accentColor: accentColor,
+            action: IconButton(
+              tooltip: 'Copiar contacto',
+              icon: const Icon(Icons.copy_outlined),
+              onPressed: () => _copiar(context, contact, 'Contacto copiado.'),
+            ),
           ),
         ],
-        const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: scheme.secondaryContainer,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.info_outline, color: scheme.onSecondaryContainer),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Estos datos y los medios de contacto o inscripción son '
-                  'ficticios. Se usan solo para desarrollo y no permiten '
-                  'participar en eventos reales.',
+        if (esEjemplo) ...[
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: scheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, color: scheme.onSecondaryContainer),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Estos datos y los medios de contacto o inscripción son '
+                    'ficticios. Se usan solo para desarrollo y no permiten '
+                    'participar en eventos reales.',
+                    style: TextStyle(color: scheme.onSecondaryContainer),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// Lo que más se pregunta antes de decidir (cuándo, dónde y cuánto cuesta),
+// visible sin desplazarse. Cada fila es un solo texto con etiqueta y valor,
+// así un lector de pantalla lo anuncia completo.
+class _ResumenClave extends StatelessWidget {
+  const _ResumenClave({required this.competition, required this.accentColor});
+
+  final Competencia competition;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _FilaResumen(
+            icon: Icons.event_outlined,
+            etiqueta: 'Cuándo',
+            valor: formatearFechaHoraLegible(competition.fechaInicio),
+            accentColor: accentColor,
+          ),
+          const SizedBox(height: 10),
+          _FilaResumen(
+            icon: Icons.location_on_outlined,
+            etiqueta: 'Dónde',
+            valor: '${competition.ubicacion} (${competition.modalidad})',
+            accentColor: accentColor,
+          ),
+          const SizedBox(height: 10),
+          _FilaResumen(
+            icon: Icons.payments_outlined,
+            etiqueta: 'Costo',
+            valor: competition.costo,
+            accentColor: accentColor,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilaResumen extends StatelessWidget {
+  const _FilaResumen({
+    required this.icon,
+    required this.etiqueta,
+    required this.valor,
+    required this.accentColor,
+  });
+
+  final IconData icon;
+  final String etiqueta;
+  final String valor;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: accentColor, size: 22),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '$etiqueta: ',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                TextSpan(
+                  text: valor,
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -453,48 +619,64 @@ class _DetalleContenido extends StatelessWidget {
   }
 }
 
+// Fila de información: ícono a la izquierda, etiqueta y valor a la derecha.
+// `action` permite agregar un botón al final (por ejemplo, Copiar).
 class _DetailInfoCard extends StatelessWidget {
   const _DetailInfoCard({
     required this.icon,
     required this.label,
     required this.value,
     required this.accentColor,
+    this.action,
   });
 
   final IconData icon;
   final String label;
   final String value;
   final Color accentColor;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final action = this.action;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         border: Border.all(color: scheme.outlineVariant),
         borderRadius: BorderRadius.circular(18),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: accentColor, size: 25),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant),
+          Icon(icon, color: accentColor, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            // Etiqueta y valor se anuncian juntos en un lector de pantalla.
+            child: MergeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
+          if (action != null) ...[const SizedBox(width: 4), action],
         ],
       ),
     );

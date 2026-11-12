@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:sqflite/sqflite.dart';
 
+import '../utils/fechas.dart';
 import 'competencia.dart';
 import 'competencia_draft.dart';
 import 'mock_competencias.dart';
@@ -19,13 +20,17 @@ abstract class CompetenciasDataSource {
 }
 
 class CompetenciasDatabase implements CompetenciasDataSource {
-  CompetenciasDatabase({Future<Database> Function()? openDatabase})
-    : _openDatabase = openDatabase ?? _openDefaultDatabase;
+  CompetenciasDatabase({
+    Future<Database> Function()? openDatabase,
+    DateTime Function()? ahora,
+  }) : _openDatabase = openDatabase ?? _openDefaultDatabase,
+       _ahora = ahora ?? DateTime.now;
 
   static const _databaseName = 'competihub.db';
   static const _tableName = 'competencias';
 
   final Future<Database> Function() _openDatabase;
+  final DateTime Function() _ahora;
   Future<Database>? _database;
 
   Future<Database> get _db => _database ??= _openDatabase();
@@ -68,7 +73,10 @@ class CompetenciasDatabase implements CompetenciasDataSource {
   Future<List<Competencia>> obtenerCompetencias() async {
     final database = await _db;
     final rows = await database.query(_tableName, orderBy: 'rowid ASC');
-    return rows.map(_fromMap).toList(growable: false);
+    // Próximas primero y finalizadas al final (ver lib/utils/fechas.dart).
+    return List<Competencia>.unmodifiable(
+      ordenarPorCercania(rows.map(_fromMap), _ahora()),
+    );
   }
 
   @override

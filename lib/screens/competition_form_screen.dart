@@ -14,11 +14,24 @@ const String _campoObligatorio = 'Este campo es obligatorio.';
 // competencia. No guarda nada por sí mismo: arma un CompetenciaDraft y se lo
 // entrega a onSave. Si onSave termina bien, cierra la pantalla; si lanza una
 // excepción, conserva lo escrito y permite reintentar.
+//
+// Cuida dos casos en que se pierde trabajo: si la validación falla, lleva la
+// pantalla al primer campo con error; y si se intenta salir con cambios sin
+// guardar, pregunta antes de descartarlos.
 class CompetitionFormScreen extends StatefulWidget {
-  const CompetitionFormScreen({super.key, this.initial, required this.onSave});
+  const CompetitionFormScreen({
+    super.key,
+    this.initial,
+    required this.onSave,
+    this.ahora,
+  });
 
   final Competencia? initial;
   final Future<void> Function(CompetenciaDraft) onSave;
+
+  // Hora actual, para avisar si el inicio elegido ya pasó. Las pruebas
+  // pueden fijarla; por defecto es DateTime.now.
+  final DateTime Function()? ahora;
 
   @override
   State<CompetitionFormScreen> createState() => _CompetitionFormScreenState();
@@ -47,6 +60,15 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   bool get _esEdicion => widget.initial != null;
+
+  bool get _inicioYaPaso {
+    final inicio = _fechaInicio;
+    if (inicio == null) {
+      return false;
+    }
+    final ahora = (widget.ahora ?? DateTime.now)();
+    return inicio.isBefore(ahora);
+  }
 
   @override
   void initState() {
@@ -94,8 +116,13 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     return [...base, actual];
   }
 
-  Future<DateTime?> _elegirFechaHora(DateTime? actual) async {
-    final base = actual ?? DateTime.now();
+  // `actual` es el valor que ya tiene el campo; `sugerida` solo sirve como
+  // punto de partida de los selectores cuando el campo está vacío.
+  Future<DateTime?> _elegirFechaHora(
+    DateTime? actual, {
+    DateTime? sugerida,
+  }) async {
+    final base = actual ?? sugerida ?? DateTime.now();
     final fecha = await showDatePicker(
       context: context,
       initialDate: base,
@@ -110,9 +137,108 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       initialTime: TimeOfDay.fromDateTime(base),
     );
     if (hora == null) {
-      return null;
+      // Se canceló la hora. Si el campo ya tenía un valor, se conserva la
+      // fecha recién elegida con la hora anterior; si estaba vacío, no se
+      // inventa una hora.
+      if (actual == null) {
+        return null;
+      }
+      return DateTime(
+        fecha.year,
+        fecha.month,
+        fecha.day,
+        actual.hour,
+        actual.minute,
+      );
     }
     return DateTime(fecha.year, fecha.month, fecha.day, hora.hour, hora.minute);
+  }
+
+  // Compara lo que hay en pantalla con los datos iniciales.
+  bool _hayCambios() {
+    final initial = widget.initial;
+    return _tituloController.text != (initial?.titulo ?? '') ||
+        _ubicacionController.text != (initial?.ubicacion ?? '') ||
+        _descripcionController.text != (initial?.descripcion ?? '') ||
+        _reglasController.text != (initial?.reglas ?? '') ||
+        _costoController.text != (initial?.costo ?? '') ||
+        _instruccionesController.text !=
+            (initial?.instruccionesParticipacion ?? '') ||
+        _inscripcionUrlController.text != (initial?.inscripcionUrl ?? '') ||
+        _contactoController.text != (initial?.contacto ?? '') ||
+        _imagenUrlController.text != (initial?.imagenUrl ?? '') ||
+        _categoria != initial?.categoria ||
+        _modalidad != initial?.modalidad ||
+        _fechaInicio != initial?.fechaInicio ||
+        _fechaFin != initial?.fechaFin;
+  }
+
+  // Atrás (botón de la barra o del sistema): sale directo si no hay cambios;
+  // si los hay, pregunta antes de descartarlos.
+  Future<void> _intentarSalir() async {
+    if (_guardando) {
+      return;
+    }
+    final navigator = Navigator.of(context);
+    if (!_hayCambios()) {
+      navigator.pop();
+      return;
+    }
+    final descartar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('¿Descartar cambios?'),
+        content: const Text('Lo que escribiste todavía no se ha guardado.'),
+        actions: [
+          TextButton(
+            key: const ValueKey('competition-form-discard-cancel'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Seguir editando'),
+          ),
+          FilledButton(
+            key: const ValueKey('competition-form-discard-confirm'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Descartar'),
+          ),
+        ],
+      ),
+    );
+    if (descartar == true && mounted) {
+      navigator.pop();
+    }
+  }
+
+  // Desplaza la pantalla hasta el campo con error que esté más arriba.
+  void _mostrarPrimerError(Set<FormFieldState<Object?>> invalidos) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      BuildContext? destino;
+      double? menorY;
+      for (final campo in invalidos) {
+        if (!campo.mounted) {
+          continue;
+        }
+        final render = campo.context.findRenderObject();
+        if (render is! RenderBox || !render.hasSize) {
+          continue;
+        }
+        final y = render.localToGlobal(Offset.zero).dy;
+        if (menorY == null || y < menorY) {
+          menorY = y;
+          destino = campo.context;
+        }
+      }
+      if (destino != null) {
+        Scrollable.ensureVisible(
+          destino,
+          alignment: 0.1,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   Future<void> _guardar() async {
@@ -121,11 +247,16 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       return;
     }
     final formState = _formKey.currentState;
-    if (formState == null || !formState.validate()) {
+    if (formState == null) {
+      return;
+    }
+    final invalidos = formState.validateGranularly();
+    if (invalidos.isNotEmpty) {
       setState(() {
         _autovalidateMode = AutovalidateMode.always;
         _errorGuardado = null;
       });
+      _mostrarPrimerError(invalidos);
       return;
     }
 
@@ -176,7 +307,14 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: !_guardando,
+      // Siempre se intercepta el regreso: _intentarSalir decide si sale
+      // directo, pregunta por los cambios o espera a que termine de guardar.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _intentarSalir();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           title: Text(_esEdicion ? 'Editar competencia' : 'Nueva competencia'),
@@ -283,6 +421,8 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
             setState(() => _fechaInicio = elegida);
           }
         },
+        // Aviso que no bloquea: se puede registrar un evento ya ocurrido.
+        ayuda: _inicioYaPaso ? 'Esta fecha ya pasó.' : null,
         validator: (_) =>
             _fechaInicio == null ? 'Selecciona la fecha de inicio.' : null,
       ),
@@ -293,7 +433,10 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         valor: _fechaFin,
         habilitado: habilitado,
         onElegir: () async {
-          final elegida = await _elegirFechaHora(_fechaFin ?? _fechaInicio);
+          final elegida = await _elegirFechaHora(
+            _fechaFin,
+            sugerida: _fechaInicio,
+          );
           if (elegida != null) {
             setState(() => _fechaFin = elegida);
           }
@@ -355,6 +498,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         etiqueta: 'Enlace de inscripción (opcional)',
         ayuda: 'https://…',
         teclado: TextInputType.url,
+        capitalizacion: TextCapitalization.none,
         validator: _validarEnlaceOpcional,
       ),
       separacion,
@@ -362,6 +506,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         clave: 'contacto',
         controller: _contactoController,
         etiqueta: 'Contacto (opcional)',
+        capitalizacion: TextCapitalization.none,
       ),
       separacion,
       _campoTexto(
@@ -370,6 +515,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         etiqueta: 'Enlace de imagen (opcional)',
         ayuda: 'https://…',
         teclado: TextInputType.url,
+        capitalizacion: TextCapitalization.none,
         validator: _validarEnlaceOpcional,
       ),
       const SizedBox(height: 8),
@@ -385,12 +531,14 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     bool obligatorio = false,
     bool multilinea = false,
     TextInputType? teclado,
+    TextCapitalization capitalizacion = TextCapitalization.sentences,
     FormFieldValidator<String>? validator,
   }) {
     return TextFormField(
       key: ValueKey('competition-form-$clave'),
       controller: controller,
       enabled: !_guardando,
+      textCapitalization: capitalizacion,
       keyboardType: multilinea ? TextInputType.multiline : teclado,
       minLines: multilinea ? 2 : 1,
       maxLines: multilinea ? 5 : 1,
@@ -497,6 +645,7 @@ class _CampoFechaHora extends StatelessWidget {
     required this.onElegir,
     required this.validator,
     this.onLimpiar,
+    this.ayuda,
   });
 
   final String etiqueta;
@@ -505,6 +654,7 @@ class _CampoFechaHora extends StatelessWidget {
   final VoidCallback onElegir;
   final VoidCallback? onLimpiar;
   final FormFieldValidator<DateTime> validator;
+  final String? ayuda;
 
   @override
   Widget build(BuildContext context) {
@@ -521,6 +671,7 @@ class _CampoFechaHora extends StatelessWidget {
               labelText: etiqueta,
               enabled: habilitado,
               errorText: field.errorText,
+              helperText: ayuda,
               border: const OutlineInputBorder(),
               suffixIcon: actual != null && onLimpiar != null
                   ? IconButton(
