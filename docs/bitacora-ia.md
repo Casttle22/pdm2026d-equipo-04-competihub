@@ -16,6 +16,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Módulo 8: Mis eventos (base v6)
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Guardar o quitar una competencia con un botón en la tarjeta y en el Detalle, con descripción para lector de pantalla. Tabla local de guardados. Pestaña «Mis eventos» con las guardadas, próximas primero, y un estado vacío que explique cómo guardar."
+- **Resultado:** tabla `guardados` (migración v6) con borrado en cascada, métodos en la fuente de datos y el repositorio, `guardadosProvider` y `alternarGuardado`, `lib/widgets/boton_guardar.dart` y la pestaña `MisEventosScreen` completa.
+- **Aceptado:**
+  - El botón dice qué hará y con qué competencia («Guardar «Copa…» en Mis eventos» / «Quitar … de Mis eventos») y se anuncia como seleccionado. En la tarjeta va fuera del resumen agrupado para que el lector lo ofrezca como un control aparte.
+  - Mensaje al guardar, al quitar y si falla; mientras se guarda, el botón espera para no mandar dos cambios.
+  - Estado vacío con instrucciones y un botón «Explorar competencias» que lleva a la pestaña Inicio.
+  - Si se borra una competencia guardada, la base borra el guardado y la pestaña se actualiza.
+- **Rechazado / corregido:**
+  - Primero se puso Guardar en la barra superior del Detalle; la prueba del módulo 0 detectó que con tres botones el título «Detalle» se volvía a cortar a 360 dp con texto 2.0. Se movió a una fila de acciones bajo el resumen, como botón con texto; ahí también irán «Cómo llegar» y «Compartir».
+  - Para no dejar a medias la interfaz de datos, los métodos de guardados se agregaron a `CompetenciasDataSource`; el doble de prueba en memoria de `test/competencias_repository_test.dart` los implementa (solo se agregaron métodos, sin tocar sus verificaciones). El repositorio falso guarda en memoria y puede simular un fallo.
+- **Verificación:** `test/mis_eventos_test.dart` (10 pruebas: migración v5→v6 sin tocar datos, guardar, duplicado, quitar y cascada en SQLite, estado vacío con salida al Inicio, orden próximas primero, error con reintento, guardar desde la tarjeta, guardar y quitar desde el Detalle con la pestaña actualizada, fallo al guardar, anuncios para lector de pantalla, y 360 dp con texto 2.0). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 198/198.
+- **Commit / PR:** commit «feat: Mis eventos con competencias guardadas (base v6)» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Módulo 7: barra inferior
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

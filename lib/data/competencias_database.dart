@@ -17,10 +17,12 @@ import 'mock_competencias.dart';
 // 4: ficha de torneo: formato, tamaño de equipo, premios y organizador
 //    (todas opcionales).
 // 5: tabla etapas (cronograma), que se borra junto con su competencia.
-const int versionEsquema = 5;
+// 6: tabla guardados (Mis eventos), que también se borra con su competencia.
+const int versionEsquema = 6;
 
 const String _tablaCompetencias = 'competencias';
 const String _tablaEtapas = 'etapas';
+const String _tablaGuardados = 'guardados';
 
 // Abre la base de datos y la lleva a `version`. Recibe la fábrica y la hora
 // para poder probar las migraciones con sqflite_common_ffi y una fecha fija;
@@ -112,6 +114,8 @@ Future<void> _migrar(
         await _migrarAV4(database);
       case 5:
         await _migrarAV5(database);
+      case 6:
+        await _migrarAV6(database);
     }
   }
 }
@@ -260,8 +264,27 @@ Future<void> _guardarEtapas(
   }
 }
 
+// v6: competencias guardadas en «Mis eventos». Una fila por competencia
+// guardada; si la competencia se borra, deja de estar guardada. Empieza vacía.
+Future<void> _migrarAV6(Database database) async {
+  await database.execute('''
+    CREATE TABLE $_tablaGuardados (
+      competencia_id TEXT PRIMARY KEY NOT NULL
+        REFERENCES $_tablaCompetencias (id) ON DELETE CASCADE,
+      guardado_en INTEGER NOT NULL
+    )
+  ''');
+}
+
 abstract class CompetenciasDataSource {
   Future<List<Competencia>> obtenerCompetencias();
+
+  // Ids de las competencias guardadas en «Mis eventos».
+  Future<Set<String>> obtenerIdsGuardados();
+
+  Future<void> guardarCompetencia(String id);
+
+  Future<void> quitarGuardado(String id);
 
   Future<Competencia?> obtenerCompetenciaPorId(String id);
 
@@ -304,6 +327,36 @@ class CompetenciasDatabase implements CompetenciasDataSource {
     // Próximas primero y finalizadas al final (ver lib/utils/fechas.dart).
     return List<Competencia>.unmodifiable(
       ordenarPorCercania(rows.map(_fromMap), _ahora()),
+    );
+  }
+
+  @override
+  Future<Set<String>> obtenerIdsGuardados() async {
+    final database = await _db;
+    final filas = await database.query(
+      _tablaGuardados,
+      columns: ['competencia_id'],
+    );
+    return {for (final fila in filas) fila['competencia_id']! as String};
+  }
+
+  @override
+  Future<void> guardarCompetencia(String id) async {
+    final database = await _db;
+    // Guardar dos veces no es un error: se ignora la segunda.
+    await database.insert(_tablaGuardados, <String, Object?>{
+      'competencia_id': id,
+      'guardado_en': _ahora().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  @override
+  Future<void> quitarGuardado(String id) async {
+    final database = await _db;
+    await database.delete(
+      _tablaGuardados,
+      where: 'competencia_id = ?',
+      whereArgs: [id],
     );
   }
 

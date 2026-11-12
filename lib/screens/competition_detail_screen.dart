@@ -7,6 +7,7 @@ import '../providers/competencias_providers.dart';
 import '../providers/reloj_provider.dart';
 import '../tema.dart';
 import '../utils/fechas.dart';
+import '../widgets/boton_guardar.dart';
 import '../widgets/categoria_estilo.dart';
 import '../widgets/competition_delete_dialog.dart';
 import '../widgets/etiqueta.dart';
@@ -400,6 +401,15 @@ class _DetalleContenido extends StatelessWidget {
       ),
       const SizedBox(height: 16),
       _ResumenClave(competition: competition, accentColor: accentColor),
+      const SizedBox(height: 12),
+      // Acciones principales. En un Wrap: con texto grande pasan a otra
+      // línea en vez de desbordarse.
+      Wrap(
+        key: const ValueKey('detalle-acciones'),
+        spacing: 8,
+        runSpacing: 8,
+        children: [BotonGuardar(competencia: competition, conTexto: true)],
+      ),
     ];
 
     final general = <Widget>[

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/competencia.dart';
 import '../utils/fechas.dart';
+import 'boton_guardar.dart';
 import 'categoria_estilo.dart';
 import 'etiqueta.dart';
 import 'fila_info.dart';
@@ -132,66 +133,90 @@ class CompetitionCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       // Un lector de pantalla anuncia la tarjeta como un solo botón con sus
       // datos clave, en lugar de leer cada etiqueta por separado.
-      child: Semantics(
-        container: true,
-        button: true,
-        excludeSemantics: true,
-        onTap: onTap,
-        label: resumenAccesible(competition, ahora),
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  competition.titulo,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    height: 1.15,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
+      // El botón Guardar queda fuera del resumen agrupado para que el
+      // lector de pantalla lo ofrezca como un control aparte.
+      child: Stack(
+        children: [
+          Semantics(
+            container: true,
+            button: true,
+            excludeSemantics: true,
+            onTap: onTap,
+            label: resumenAccesible(competition, ahora),
+            child: InkWell(
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    EtiquetaDeEstado(competition: competition, ahora: ahora),
-                    if (competition.fechaLimiteInscripcion != null)
-                      EtiquetaDeInscripcion(
-                        competition: competition,
-                        ahora: ahora,
+                    // Deja lugar al botón Guardar de la esquina.
+                    Padding(
+                      padding: const EdgeInsets.only(right: 36),
+                      child: Text(
+                        competition.titulo,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          height: 1.15,
+                        ),
                       ),
-                    Etiqueta(
-                      texto: competition.categoria,
-                      icono: category.icono,
-                      colorTexto: category.color,
-                      colorFondo: fondoSuave(category.color, scheme.surface),
                     ),
-                    Etiqueta(
-                      texto: competition.modalidad,
-                      colorTexto: scheme.onSurfaceVariant,
-                      colorFondo: scheme.surfaceContainerHighest,
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        EtiquetaDeEstado(
+                          competition: competition,
+                          ahora: ahora,
+                        ),
+                        if (competition.fechaLimiteInscripcion != null)
+                          EtiquetaDeInscripcion(
+                            competition: competition,
+                            ahora: ahora,
+                          ),
+                        Etiqueta(
+                          texto: competition.categoria,
+                          icono: category.icono,
+                          colorTexto: category.color,
+                          colorFondo: fondoSuave(
+                            category.color,
+                            scheme.surface,
+                          ),
+                        ),
+                        Etiqueta(
+                          texto: competition.modalidad,
+                          colorTexto: scheme.onSurfaceVariant,
+                          colorFondo: scheme.surfaceContainerHighest,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    FilaInfo(
+                      icon: Icons.calendar_today_outlined,
+                      text: fechaHora,
+                    ),
+                    const SizedBox(height: 7),
+                    FilaInfo(
+                      icon: Icons.location_on_outlined,
+                      text: 'Ubicación: ${competition.ubicacion}',
+                    ),
+                    const SizedBox(height: 7),
+                    FilaInfo(
+                      icon: Icons.payments_outlined,
+                      text: 'Costo: ${competition.costo}',
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                FilaInfo(icon: Icons.calendar_today_outlined, text: fechaHora),
-                const SizedBox(height: 7),
-                FilaInfo(
-                  icon: Icons.location_on_outlined,
-                  text: 'Ubicación: ${competition.ubicacion}',
-                ),
-                const SizedBox(height: 7),
-                FilaInfo(
-                  icon: Icons.payments_outlined,
-                  text: 'Costo: ${competition.costo}',
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: BotonGuardar(competencia: competition),
+          ),
+        ],
       ),
     );
   }
@@ -226,82 +251,96 @@ class TarjetaDestacada extends StatelessWidget {
         side: BorderSide(color: scheme.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Semantics(
-        container: true,
-        button: true,
-        excludeSemantics: true,
-        onTap: onTap,
-        label: 'Destacada. ${resumenAccesible(competition, ahora)}',
-        child: InkWell(
-          onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ImagenCompetencia(
-                imagenUrl: competition.imagenUrl,
-                categoria: competition.categoria,
-                alto: 96,
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
+      // El botón Guardar queda fuera del resumen agrupado para que el
+      // lector de pantalla lo ofrezca como un control aparte.
+      child: Stack(
+        children: [
+          Semantics(
+            container: true,
+            button: true,
+            excludeSemantics: true,
+            onTap: onTap,
+            label: 'Destacada. ${resumenAccesible(competition, ahora)}',
+            child: InkWell(
+              onTap: onTap,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ImagenCompetencia(
+                    imagenUrl: competition.imagenUrl,
+                    categoria: competition.categoria,
+                    alto: 96,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        EtiquetaDeEstado(
-                          competition: competition,
-                          ahora: ahora,
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: [
+                            EtiquetaDeEstado(
+                              competition: competition,
+                              ahora: ahora,
+                            ),
+                            if (competition.fechaLimiteInscripcion != null)
+                              EtiquetaDeInscripcion(
+                                competition: competition,
+                                ahora: ahora,
+                              ),
+                            Etiqueta(
+                              texto: competition.categoria,
+                              icono: category.icono,
+                              colorTexto: category.color,
+                              colorFondo: fondoSuave(
+                                category.color,
+                                scheme.surface,
+                              ),
+                            ),
+                          ],
                         ),
-                        if (competition.fechaLimiteInscripcion != null)
-                          EtiquetaDeInscripcion(
-                            competition: competition,
-                            ahora: ahora,
+                        const SizedBox(height: 10),
+                        Text(
+                          competition.titulo,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                height: 1.15,
+                              ),
+                        ),
+                        const SizedBox(height: 10),
+                        FilaInfo(
+                          icon: Icons.calendar_today_outlined,
+                          text: formatearFechaHoraLegible(
+                            competition.fechaInicio,
                           ),
-                        Etiqueta(
-                          texto: competition.categoria,
-                          icono: category.icono,
-                          colorTexto: category.color,
-                          colorFondo: fondoSuave(
-                            category.color,
-                            scheme.surface,
-                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        FilaInfo(
+                          icon: Icons.location_on_outlined,
+                          text: 'Ubicación: ${competition.ubicacion}',
+                        ),
+                        const SizedBox(height: 6),
+                        FilaInfo(
+                          icon: Icons.payments_outlined,
+                          text: 'Costo: ${competition.costo}',
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      competition.titulo,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    FilaInfo(
-                      icon: Icons.calendar_today_outlined,
-                      text: formatearFechaHoraLegible(competition.fechaInicio),
-                    ),
-                    const SizedBox(height: 6),
-                    FilaInfo(
-                      icon: Icons.location_on_outlined,
-                      text: 'Ubicación: ${competition.ubicacion}',
-                    ),
-                    const SizedBox(height: 6),
-                    FilaInfo(
-                      icon: Icons.payments_outlined,
-                      text: 'Costo: ${competition.costo}',
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            top: 6,
+            right: 6,
+            child: BotonGuardar(competencia: competition, sobreImagen: true),
+          ),
+        ],
       ),
     );
   }

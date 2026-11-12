@@ -42,4 +42,17 @@ class CompetenciasRepository {
   Future<void> eliminarCompetencia(String id) {
     return _dataSource.eliminarCompetencia(id);
   }
+
+  // Mis eventos: competencias guardadas en este teléfono.
+  Future<Set<String>> obtenerIdsGuardados() {
+    return _dataSource.obtenerIdsGuardados();
+  }
+
+  Future<void> guardarCompetencia(String id) {
+    return _dataSource.guardarCompetencia(id);
+  }
+
+  Future<void> quitarGuardado(String id) {
+    return _dataSource.quitarGuardado(id);
+  }
 }

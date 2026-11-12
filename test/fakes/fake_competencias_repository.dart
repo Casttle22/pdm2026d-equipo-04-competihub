@@ -20,6 +20,33 @@ class FakeCompetenciasRepository extends CompetenciasRepository {
   Future<Competencia?> Function(String id)? respuestaPorId;
   var llamadas = 0;
   var llamadasPorId = 0;
+
+  // Mis eventos en memoria. Las pruebas pueden empezar con algunas
+  // guardadas, o hacer que guardar falle.
+  final guardados = <String>{};
+  Object? errorAlGuardar;
+
+  @override
+  Future<Set<String>> obtenerIdsGuardados() async => {...guardados};
+
+  @override
+  Future<void> guardarCompetencia(String id) async {
+    final error = errorAlGuardar;
+    if (error != null) {
+      throw error;
+    }
+    guardados.add(id);
+  }
+
+  @override
+  Future<void> quitarGuardado(String id) async {
+    final error = errorAlGuardar;
+    if (error != null) {
+      throw error;
+    }
+    guardados.remove(id);
+  }
+
   final idsConsultados = <String>[];
 
   @override

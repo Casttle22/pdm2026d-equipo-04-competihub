@@ -31,7 +31,13 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
     return Scaffold(
       body: IndexedStack(
         index: _seccion.index,
-        children: const [HomeScreen(), MapaScreen(), MisEventosScreen()],
+        children: [
+          const HomeScreen(),
+          const MapaScreen(),
+          MisEventosScreen(
+            onExplorar: () => setState(() => _seccion = Seccion.inicio),
+          ),
+        ],
       ),
       // Con texto muy grande, los rótulos de la barra se limitan a 1,3×
       // para que quepan los tres en un teléfono angosto. Los íconos y el
