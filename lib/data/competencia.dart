@@ -35,4 +35,28 @@ class Competencia {
   // empiezan con «mock-». Las creadas en la app usan «local-». La interfaz
   // solo rotula como ficticias a las de ejemplo.
   bool get esDeEjemplo => id.startsWith('mock-');
+
+  // Copia con otras fechas. La usan los datos de ejemplo, cuyas fechas se
+  // calculan respecto al día en que se siembran.
+  Competencia conFechas({
+    required DateTime fechaInicio,
+    required DateTime? fechaFin,
+  }) {
+    return Competencia(
+      id: id,
+      titulo: titulo,
+      categoria: categoria,
+      fechaInicio: fechaInicio,
+      ubicacion: ubicacion,
+      modalidad: modalidad,
+      descripcion: descripcion,
+      reglas: reglas,
+      costo: costo,
+      instruccionesParticipacion: instruccionesParticipacion,
+      fechaFin: fechaFin,
+      inscripcionUrl: inscripcionUrl,
+      contacto: contacto,
+      imagenUrl: imagenUrl,
+    );
+  }
 }

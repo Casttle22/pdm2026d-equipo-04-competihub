@@ -16,6 +16,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-11 · @AlexDLG1 — Módulo 1 (Issue 9): datos de ejemplo vigentes (base v2)
+
+- **Herramienta:** Claude Code (Claude Fable 5.2).
+- **Especificación:** "Migración que recalcule las fechas solo de las filas con id «mock-», relativas al día de la migración. Que una quede finalizada a propósito. En instalaciones nuevas, siembra con fechas relativas al día de creación. Nunca borres datos creados por el usuario. Prueba la migración con sqflite_common_ffi, solo como dependencia de desarrollo, partiendo de una base de la versión anterior con una competencia creada por el usuario."
+- **Resultado:** `abrirBaseCompetihub` (versión 2, `onUpgrade` encadenado), `fechasDeEjemplo` y `competenciasDeEjemplo` en `lib/data/mock_competencias.dart`, y pruebas con una base SQLite real.
+- **Aceptado:**
+  - Un solo camino: una instalación nueva crea el esquema v1 y recorre las mismas migraciones que una existente. No hay un `onCreate` aparte que se pueda desincronizar.
+  - Los ejemplos empiezan a 3, 7, 12, 18 y 25 días de hoy; `mock-esports-02` queda 20 días atrás, a propósito, para poder ver «Finalizada». Se conservan la hora del día y la duración de cada ejemplo.
+  - La fábrica de la base y la hora son parámetros, así las pruebas usan `sqflite_common_ffi` y una fecha fija.
+- **Rechazado / corregido:**
+  - No se cambiaron las fechas fijas de `competenciasMock`: 30 pruebas existentes dependen de ellas. Quedan como base y la app usa las relativas.
+  - La migración no vuelve a crear un ejemplo que la persona haya eliminado (hay una prueba para eso).
+  - `sqflite_common_ffi` va en `dev_dependencies`; no entra en la app.
+- **Verificación:** `test/migracion_v2_test.dart` (5 pruebas: fechas relativas, instalación nueva, v1→v2 con una fila de usuario que queda idéntica columna por columna y un ejemplo eliminado que no se repone, y orden del Feed tras migrar) y `test/ejemplos_vigentes_test.dart` (Inicio a 360 dp y texto 2.0: «5 por venir · 1 ya finalizó»). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 100/100.
+- **Commit / PR:** commit «feat: datos de ejemplo con fechas vigentes (base v2)» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-11 · @AlexDLG1 — Módulo 0: textos que se cortaban con letra grande
 
 - **Herramienta:** Claude Code (Claude Fable 5.2).

@@ -7,6 +7,128 @@ import 'competencia.dart';
 import 'competencia_draft.dart';
 import 'mock_competencias.dart';
 
+// Versión actual del esquema. Cada cambio de esquema o de datos sembrados
+// sube este número y agrega un paso en _migrar. Historial:
+// 1: tabla competencias con los datos de ejemplo de fechas fijas.
+// 2: las fechas de los datos de ejemplo pasan a ser relativas al día de la
+//    migración, para que no queden todos como finalizados.
+const int versionEsquema = 2;
+
+const String _tablaCompetencias = 'competencias';
+
+// Abre la base de datos y la lleva a `version`. Recibe la fábrica y la hora
+// para poder probar las migraciones con sqflite_common_ffi y una fecha fija;
+// `version` solo se cambia en las pruebas, para construir una base antigua.
+//
+// Una instalación nueva crea el esquema de la versión 1 y recorre las mismas
+// migraciones que una instalación existente: así hay un solo camino que
+// mantener y probar.
+Future<Database> abrirBaseCompetihub({
+  required DatabaseFactory fabrica,
+  required String ruta,
+  required DateTime Function() ahora,
+  int version = versionEsquema,
+}) {
+  return fabrica.openDatabase(
+    ruta,
+    options: OpenDatabaseOptions(
+      version: version,
+      onCreate: (database, version) async {
+        await _crearEsquemaV1(database);
+        await _migrar(database, 1, version, ahora());
+      },
+      onUpgrade: (database, anterior, nueva) =>
+          _migrar(database, anterior, nueva, ahora()),
+    ),
+  );
+}
+
+Future<void> _crearEsquemaV1(Database database) async {
+  await database.execute('''
+    CREATE TABLE $_tablaCompetencias (
+      id TEXT PRIMARY KEY NOT NULL,
+      titulo TEXT NOT NULL,
+      categoria TEXT NOT NULL,
+      fecha_inicio INTEGER NOT NULL,
+      ubicacion TEXT NOT NULL,
+      modalidad TEXT NOT NULL,
+      descripcion TEXT NOT NULL,
+      reglas TEXT NOT NULL,
+      costo TEXT NOT NULL,
+      instrucciones_participacion TEXT NOT NULL,
+      fecha_fin INTEGER,
+      inscripcion_url TEXT,
+      contacto TEXT,
+      imagen_url TEXT
+    )
+  ''');
+
+  final batch = database.batch();
+  for (final competencia in competenciasMock) {
+    batch.insert(_tablaCompetencias, <String, Object?>{
+      'id': competencia.id,
+      'titulo': competencia.titulo,
+      'categoria': competencia.categoria,
+      'fecha_inicio': competencia.fechaInicio.millisecondsSinceEpoch,
+      'ubicacion': competencia.ubicacion,
+      'modalidad': competencia.modalidad,
+      'descripcion': competencia.descripcion,
+      'reglas': competencia.reglas,
+      'costo': competencia.costo,
+      'instrucciones_participacion': competencia.instruccionesParticipacion,
+      'fecha_fin': competencia.fechaFin?.millisecondsSinceEpoch,
+      'inscripcion_url': competencia.inscripcionUrl,
+      'contacto': competencia.contacto,
+      'imagen_url': competencia.imagenUrl,
+    });
+  }
+  await batch.commit(noResult: true);
+}
+
+// Aplica en orden los pasos que faltan entre dos versiones. Ningún paso
+// borra ni modifica las competencias creadas en la app (ids «local-»).
+Future<void> _migrar(
+  Database database,
+  int anterior,
+  int nueva,
+  DateTime hoy,
+) async {
+  for (var version = anterior + 1; version <= nueva; version++) {
+    switch (version) {
+      case 2:
+        await _migrarAV2(database, hoy);
+    }
+  }
+}
+
+// v2: recalcula las fechas de las competencias de ejemplo (ids «mock-») que
+// sigan en la base. No vuelve a crear las que la persona haya eliminado.
+Future<void> _migrarAV2(Database database, DateTime hoy) async {
+  final filas = await database.query(
+    _tablaCompetencias,
+    columns: ['id'],
+    where: "id LIKE 'mock-%'",
+  );
+  final batch = database.batch();
+  for (final fila in filas) {
+    final id = fila['id']! as String;
+    final fechas = fechasDeEjemplo(id, hoy);
+    if (fechas == null) {
+      continue;
+    }
+    batch.update(
+      _tablaCompetencias,
+      <String, Object?>{
+        'fecha_inicio': fechas.inicio.millisecondsSinceEpoch,
+        'fecha_fin': fechas.fin?.millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+  await batch.commit(noResult: true);
+}
+
 abstract class CompetenciasDataSource {
   Future<List<Competencia>> obtenerCompetencias();
 
@@ -27,7 +149,7 @@ class CompetenciasDatabase implements CompetenciasDataSource {
        _ahora = ahora ?? DateTime.now;
 
   static const _databaseName = 'competihub.db';
-  static const _tableName = 'competencias';
+  static const _tableName = _tablaCompetencias;
 
   final Future<Database> Function() _openDatabase;
   final DateTime Function() _ahora;
@@ -37,35 +159,10 @@ class CompetenciasDatabase implements CompetenciasDataSource {
 
   static Future<Database> _openDefaultDatabase() async {
     final databasesPath = await getDatabasesPath();
-    return openDatabase(
-      '$databasesPath/$_databaseName',
-      version: 1,
-      onCreate: (database, version) async {
-        await database.execute('''
-          CREATE TABLE $_tableName (
-            id TEXT PRIMARY KEY NOT NULL,
-            titulo TEXT NOT NULL,
-            categoria TEXT NOT NULL,
-            fecha_inicio INTEGER NOT NULL,
-            ubicacion TEXT NOT NULL,
-            modalidad TEXT NOT NULL,
-            descripcion TEXT NOT NULL,
-            reglas TEXT NOT NULL,
-            costo TEXT NOT NULL,
-            instrucciones_participacion TEXT NOT NULL,
-            fecha_fin INTEGER,
-            inscripcion_url TEXT,
-            contacto TEXT,
-            imagen_url TEXT
-          )
-        ''');
-
-        final batch = database.batch();
-        for (final competencia in competenciasMock) {
-          batch.insert(_tableName, _toMap(competencia));
-        }
-        await batch.commit(noResult: true);
-      },
+    return abrirBaseCompetihub(
+      fabrica: databaseFactory,
+      ruta: '$databasesPath/$_databaseName',
+      ahora: DateTime.now,
     );
   }
 

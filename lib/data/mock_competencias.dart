@@ -99,3 +99,77 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
         'Ejemplo de evento finalizado: se habría reservado un puesto en la sede imaginaria. No admite inscripciones reales.',
   ),
 ]);
+
+// Días, respecto a hoy, en que empieza cada competencia de ejemplo dentro de
+// la app. Las fechas fijas de arriba son solo la base (hora del día y
+// duración): con ellas, al pasar el tiempo, todos los ejemplos terminaban
+// como «Finalizada». Una queda en el pasado a propósito, para que el estado
+// «Finalizada» se pueda ver y probar.
+const Map<String, int> diasDeInicioDeEjemplo = {
+  'mock-esports-01': 3,
+  'mock-academic-01': 7,
+  'mock-sports-01': 12,
+  'mock-academic-02': 18,
+  'mock-other-01': 25,
+  'mock-esports-02': -20,
+};
+
+// Fechas de una competencia de ejemplo relativas a `hoy`. Conserva la hora
+// del día y la duración de los datos base. Devuelve null si el id no es de
+// una competencia de ejemplo conocida.
+({DateTime inicio, DateTime? fin})? fechasDeEjemplo(String id, DateTime hoy) {
+  final dias = diasDeInicioDeEjemplo[id];
+  if (dias == null) {
+    return null;
+  }
+  for (final base in competenciasMock) {
+    if (base.id != id) {
+      continue;
+    }
+    final inicioBase = base.fechaInicio;
+    final inicio = DateTime(
+      hoy.year,
+      hoy.month,
+      hoy.day + dias,
+      inicioBase.hour,
+      inicioBase.minute,
+    );
+    final finBase = base.fechaFin;
+    if (finBase == null) {
+      return (inicio: inicio, fin: null);
+    }
+    // La duración se cuenta en días de calendario para que un cambio de
+    // horario no mueva la hora de cierre.
+    final diasDeDuracion =
+        DateTime.utc(finBase.year, finBase.month, finBase.day)
+            .difference(
+              DateTime.utc(inicioBase.year, inicioBase.month, inicioBase.day),
+            )
+            .inDays;
+    return (
+      inicio: inicio,
+      fin: DateTime(
+        inicio.year,
+        inicio.month,
+        inicio.day + diasDeDuracion,
+        finBase.hour,
+        finBase.minute,
+      ),
+    );
+  }
+  return null;
+}
+
+// Los ejemplos tal como se ven en la app: con fechas relativas a `hoy`.
+List<Competencia> competenciasDeEjemplo(DateTime hoy) {
+  return [
+    for (final base in competenciasMock)
+      switch (fechasDeEjemplo(base.id, hoy)) {
+        final fechas? => base.conFechas(
+          fechaInicio: fechas.inicio,
+          fechaFin: fechas.fin,
+        ),
+        null => base,
+      },
+  ];
+}
