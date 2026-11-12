@@ -16,6 +16,20 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Módulo 12: documentación del alcance nuevo
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Actualiza el README con el alcance nuevo (ya incluye mapa y guardados), la lista de funciones, las dependencias nuevas y cómo probar. Actualiza docs/flujo_navegacion_mvp.md con la barra inferior y las pantallas nuevas."
+- **Resultado:** README con flujo principal, funciones por sección, datos de ejemplo, persistencia, fuera de alcance, tabla de dependencias y cómo ejecutar y probar. `docs/flujo_navegacion_mvp.md` con un esquema de la navegación y las vistas A–F (Inicio, Mapa, Mis eventos, Detalle, Formulario y Elegir ubicación).
+- **Aceptado:**
+  - «Mapas nativos» deja de estar fuera de alcance tal cual: se aclara que lo que sigue fuera es un SDK de mapas nativo, porque el mapa usa OpenStreetMap con `flutter_map` y «Cómo llegar» abre la app de mapas del teléfono.
+  - Se agregó la sincronización entre dispositivos como fuera de alcance: los guardados viven solo en el teléfono.
+- **Rechazado / corregido:**
+  - No se tocaron las secciones «Equipo de desarrollo» ni «Metodología de trabajo». La metodología del README todavía describe Pull Requests, aunque el equipo integra ramas directamente; es una decisión del equipo y queda señalada para revisarla.
+- **Verificación:** Revisión de los enlaces y de que las versiones de la tabla coincidan con `pubspec.lock`. Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 233/233.
+- **Commit / PR:** commit «docs: README y flujo de navegación con el alcance nuevo» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Módulo 11: compartir
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).
