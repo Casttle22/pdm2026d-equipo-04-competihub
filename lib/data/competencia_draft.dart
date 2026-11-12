@@ -1,4 +1,5 @@
 import 'competencia.dart' show FormatoCompetencia;
+import 'etapa.dart';
 
 class CompetenciaDraft {
   const CompetenciaDraft({
@@ -21,6 +22,7 @@ class CompetenciaDraft {
     this.tamanoEquipoMax,
     this.premios,
     this.organizador,
+    this.etapas = const [],
   });
 
   final String titulo;
@@ -42,6 +44,33 @@ class CompetenciaDraft {
   final int? tamanoEquipoMax;
   final String? premios;
   final String? organizador;
+  final List<Etapa> etapas;
+
+  // Copia con otro cronograma; el resto de los datos no cambia.
+  CompetenciaDraft conEtapas(List<Etapa> etapas) {
+    return CompetenciaDraft(
+      titulo: titulo,
+      categoria: categoria,
+      fechaInicio: fechaInicio,
+      ubicacion: ubicacion,
+      modalidad: modalidad,
+      descripcion: descripcion,
+      reglas: reglas,
+      costo: costo,
+      instruccionesParticipacion: instruccionesParticipacion,
+      fechaFin: fechaFin,
+      inscripcionUrl: inscripcionUrl,
+      contacto: contacto,
+      imagenUrl: imagenUrl,
+      fechaLimiteInscripcion: fechaLimiteInscripcion,
+      formato: formato,
+      tamanoEquipoMin: tamanoEquipoMin,
+      tamanoEquipoMax: tamanoEquipoMax,
+      premios: premios,
+      organizador: organizador,
+      etapas: etapas,
+    );
+  }
 
   // Copia con otras fechas; el resto de los datos no cambia.
   CompetenciaDraft conFechas({
@@ -69,6 +98,7 @@ class CompetenciaDraft {
       tamanoEquipoMax: tamanoEquipoMax,
       premios: premios,
       organizador: organizador,
+      etapas: etapas,
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'competencia_draft.dart';
+import 'etapa.dart';
 
 // Cómo se compite. Es opcional: si no se conoce, no se muestra.
 enum FormatoCompetencia {
@@ -61,6 +62,7 @@ class Competencia {
     this.tamanoEquipoMax,
     this.premios,
     this.organizador,
+    this.etapas = const [],
   });
 
   // Une un id con los datos de un formulario. La usan las fuentes de datos
@@ -84,7 +86,8 @@ class Competencia {
       tamanoEquipoMin = draft.tamanoEquipoMin,
       tamanoEquipoMax = draft.tamanoEquipoMax,
       premios = draft.premios,
-      organizador = draft.organizador;
+      organizador = draft.organizador,
+      etapas = List.unmodifiable(draft.etapas);
 
   final String id;
   final String titulo;
@@ -112,6 +115,10 @@ class Competencia {
   final int? tamanoEquipoMax;
   final String? premios;
   final String? organizador;
+
+  // Cronograma, en el orden que eligió quien creó la competencia. La lista
+  // del Inicio no lo carga (no lo muestra); el Detalle sí.
+  final List<Etapa> etapas;
 
   bool get tieneFichaDeTorneo =>
       formato != null ||
@@ -146,6 +153,7 @@ class Competencia {
       tamanoEquipoMax: tamanoEquipoMax,
       premios: premios,
       organizador: organizador,
+      etapas: etapas,
     );
   }
 

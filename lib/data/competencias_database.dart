@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import '../utils/fechas.dart';
 import 'competencia.dart';
 import 'competencia_draft.dart';
+import 'etapa.dart';
 import 'mock_competencias.dart';
 
 // Versión actual del esquema. Cada cambio de esquema o de datos sembrados
@@ -15,9 +16,11 @@ import 'mock_competencias.dart';
 // 3: columna fecha_limite_inscripcion (opcional).
 // 4: ficha de torneo: formato, tamaño de equipo, premios y organizador
 //    (todas opcionales).
-const int versionEsquema = 4;
+// 5: tabla etapas (cronograma), que se borra junto con su competencia.
+const int versionEsquema = 5;
 
 const String _tablaCompetencias = 'competencias';
+const String _tablaEtapas = 'etapas';
 
 // Abre la base de datos y la lleva a `version`. Recibe la fábrica y la hora
 // para poder probar las migraciones con sqflite_common_ffi y una fecha fija;
@@ -36,6 +39,9 @@ Future<Database> abrirBaseCompetihub({
     ruta,
     options: OpenDatabaseOptions(
       version: version,
+      // SQLite no aplica las llaves foráneas si no se le pide en cada
+      // conexión. Sin esto, borrar una competencia dejaría sus etapas.
+      onConfigure: (database) => database.execute('PRAGMA foreign_keys = ON'),
       onCreate: (database, version) async {
         await _crearEsquemaV1(database);
         await _migrar(database, 1, version, ahora());
@@ -104,6 +110,8 @@ Future<void> _migrar(
         await _migrarAV3(database, hoy);
       case 4:
         await _migrarAV4(database);
+      case 5:
+        await _migrarAV5(database);
     }
   }
 }
@@ -194,6 +202,64 @@ Future<void> _migrarAV4(Database database) async {
   await batch.commit(noResult: true);
 }
 
+// v5: cronograma. Cada etapa pertenece a una competencia y se borra con ella
+// (ON DELETE CASCADE). Los ejemplos que tienen cronograma lo reciben a partir
+// de su fecha de inicio actual.
+Future<void> _migrarAV5(Database database) async {
+  await database.execute('''
+    CREATE TABLE $_tablaEtapas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      competencia_id TEXT NOT NULL
+        REFERENCES $_tablaCompetencias (id) ON DELETE CASCADE,
+      nombre TEXT NOT NULL,
+      fecha_hora INTEGER NOT NULL,
+      descripcion TEXT,
+      orden INTEGER NOT NULL
+    )
+  ''');
+  await database.execute(
+    'CREATE INDEX etapas_por_competencia '
+    'ON $_tablaEtapas (competencia_id, orden)',
+  );
+  for (final id in etapasDeEjemplo.keys) {
+    final filas = await database.query(
+      _tablaCompetencias,
+      columns: ['fecha_inicio'],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (filas.isEmpty) {
+      continue;
+    }
+    final inicio = DateTime.fromMillisecondsSinceEpoch(
+      filas.single['fecha_inicio']! as int,
+    );
+    await _guardarEtapas(database, id, etapasDeEjemploDesde(id, inicio));
+  }
+}
+
+// Reemplaza el cronograma de una competencia por `etapas`, en ese orden.
+Future<void> _guardarEtapas(
+  DatabaseExecutor database,
+  String competenciaId,
+  List<Etapa> etapas,
+) async {
+  await database.delete(
+    _tablaEtapas,
+    where: 'competencia_id = ?',
+    whereArgs: [competenciaId],
+  );
+  for (final (orden, etapa) in etapas.indexed) {
+    await database.insert(_tablaEtapas, <String, Object?>{
+      'competencia_id': competenciaId,
+      'nombre': etapa.nombre,
+      'fecha_hora': etapa.fechaHora.millisecondsSinceEpoch,
+      'descripcion': etapa.descripcion,
+      'orden': orden,
+    });
+  }
+}
+
 abstract class CompetenciasDataSource {
   Future<List<Competencia>> obtenerCompetencias();
 
@@ -250,16 +316,30 @@ class CompetenciasDatabase implements CompetenciasDataSource {
       whereArgs: [id],
       limit: 1,
     );
-    return rows.isEmpty ? null : _fromMap(rows.single);
+    if (rows.isEmpty) {
+      return null;
+    }
+    final etapas = await database.query(
+      _tablaEtapas,
+      where: 'competencia_id = ?',
+      whereArgs: [id],
+      orderBy: 'orden ASC',
+    );
+    return _fromMap(rows.single, etapas: etapas.map(_etapaDesdeFila).toList());
   }
 
   @override
   Future<Competencia> crearCompetencia(CompetenciaDraft draft) async {
     final database = await _db;
     final id = _generateId();
-    await database.insert(_tableName, <String, Object?>{
-      'id': id,
-      ..._draftToMap(draft),
+    // Competencia y etapas se guardan juntas: si algo falla, no queda nada a
+    // medias.
+    await database.transaction((txn) async {
+      await txn.insert(_tableName, <String, Object?>{
+        'id': id,
+        ..._draftToMap(draft),
+      });
+      await _guardarEtapas(txn, id, draft.etapas);
     });
     return Competencia.desdeBorrador(id, draft);
   }
@@ -267,15 +347,18 @@ class CompetenciasDatabase implements CompetenciasDataSource {
   @override
   Future<void> actualizarCompetencia(String id, CompetenciaDraft draft) async {
     final database = await _db;
-    final affectedRows = await database.update(
-      _tableName,
-      _draftToMap(draft),
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (affectedRows == 0) {
-      throw StateError('No existe una competencia con id $id.');
-    }
+    await database.transaction((txn) async {
+      final affectedRows = await txn.update(
+        _tableName,
+        _draftToMap(draft),
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (affectedRows == 0) {
+        throw StateError('No existe una competencia con id $id.');
+      }
+      await _guardarEtapas(txn, id, draft.etapas);
+    });
   }
 
   @override
@@ -332,7 +415,18 @@ class CompetenciasDatabase implements CompetenciasDataSource {
         : null;
   }
 
-  static Competencia _fromMap(Map<String, Object?> map) {
+  static Etapa _etapaDesdeFila(Map<String, Object?> fila) {
+    return Etapa(
+      nombre: fila['nombre']! as String,
+      fechaHora: _fechaONula(fila['fecha_hora'])!,
+      descripcion: fila['descripcion'] as String?,
+    );
+  }
+
+  static Competencia _fromMap(
+    Map<String, Object?> map, {
+    List<Etapa> etapas = const [],
+  }) {
     return Competencia(
       id: map['id']! as String,
       titulo: map['titulo']! as String,
@@ -354,6 +448,7 @@ class CompetenciasDatabase implements CompetenciasDataSource {
       tamanoEquipoMax: map['tamano_equipo_max'] as int?,
       premios: map['premios'] as String?,
       organizador: map['organizador'] as String?,
+      etapas: etapas,
     );
   }
 }

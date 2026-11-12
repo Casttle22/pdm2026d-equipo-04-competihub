@@ -11,6 +11,7 @@ import '../widgets/categoria_estilo.dart';
 import '../widgets/competition_delete_dialog.dart';
 import '../widgets/etiqueta.dart';
 import '../widgets/imagen_competencia.dart';
+import '../widgets/linea_de_tiempo.dart';
 import '../widgets/tarjeta_competencia.dart';
 import 'competition_form_screen.dart';
 
@@ -461,6 +462,26 @@ class _DetalleContenido extends StatelessWidget {
         value: competition.descripcion,
         accentColor: accentColor,
       ),
+      if (competition.etapas.isNotEmpty) ...[
+        const SizedBox(height: 24),
+        Semantics(
+          header: true,
+          child: Text(
+            'Etapas y cronograma',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ),
+        const SizedBox(height: 12),
+        LineaDeTiempo(
+          key: const ValueKey('detalle-cronograma'),
+          etapas: competition.etapas,
+          ahora: ahora,
+          competenciaFinalizada: estaFinalizada(competition, ahora),
+          colorAcento: accentColor,
+        ),
+      ],
     ];
 
     final participar = <Widget>[

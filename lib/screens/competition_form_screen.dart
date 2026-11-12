@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../data/competencia.dart';
 import '../data/competencia_draft.dart';
+import '../data/etapa.dart';
+import '../widgets/editor_etapas.dart';
 
 // Mismas categorías y modalidades que usan los datos actuales
 // (lib/data/mock_competencias.dart) y los estilos del Feed y del Detalle.
@@ -65,6 +67,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
   DateTime? _fechaFin;
   DateTime? _fechaLimiteInscripcion;
   FormatoCompetencia? _formato;
+  List<Etapa> _etapas = const [];
 
   bool _guardando = false;
   String? _errorGuardado;
@@ -107,6 +110,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     _premiosController = TextEditingController(text: initial?.premios);
     _organizadorController = TextEditingController(text: initial?.organizador);
     _formato = initial?.formato;
+    _etapas = initial?.etapas ?? const [];
     _categoria = initial?.categoria;
     _modalidad = initial?.modalidad;
     _fechaInicio = initial?.fechaInicio;
@@ -199,6 +203,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         _premiosController.text != (initial?.premios ?? '') ||
         _organizadorController.text != (initial?.organizador ?? '') ||
         _formato != initial?.formato ||
+        !listasDeEtapasIguales(_etapas, initial?.etapas ?? const []) ||
         _categoria != initial?.categoria ||
         _modalidad != initial?.modalidad ||
         _fechaInicio != initial?.fechaInicio ||
@@ -315,6 +320,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       tamanoEquipoMax: porEquipos ? _entero(_equipoMaxController.text) : null,
       premios: _opcionalONulo(_premiosController.text),
       organizador: _opcionalONulo(_organizadorController.text),
+      etapas: _etapas,
     );
 
     setState(() {
@@ -663,6 +669,14 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         clave: 'organizador',
         controller: _organizadorController,
         etiqueta: 'Organizador (opcional)',
+      ),
+      const SizedBox(height: 24),
+      const _Seccion(titulo: 'Etapas y cronograma'),
+      EditorEtapas(
+        etapas: _etapas,
+        habilitado: habilitado,
+        fechaSugerida: _fechaInicio,
+        onCambio: (etapas) => setState(() => _etapas = etapas),
       ),
       const SizedBox(height: 8),
       Text('* Campo obligatorio', style: Theme.of(context).textTheme.bodySmall),

@@ -1,4 +1,5 @@
 import 'competencia.dart';
+import 'etapa.dart';
 
 // Eventos inventados exclusivamente para desarrollo y pruebas.
 // La ficha de torneo (formato y tamaño de equipo) sale de las reglas de cada
@@ -195,15 +196,74 @@ DateTime? limiteDeInscripcionDeEjemplo(String id, DateTime hoy) {
   return DateTime(hoy.year, hoy.month, hoy.day + dias, 23, 59);
 }
 
+// Cronograma de algunos ejemplos, como distancia desde su inicio. Así sigue
+// siendo coherente aunque las fechas de los ejemplos se recalculen.
+final Map<
+  String,
+  List<({String nombre, Duration desdeInicio, String descripcion})>
+>
+etapasDeEjemplo = {
+  'mock-esports-01': [
+    (
+      nombre: 'Fase de grupos',
+      desdeInicio: Duration.zero,
+      descripcion: 'Partidas de prueba entre todos los equipos ficticios.',
+    ),
+    (
+      nombre: 'Semifinales',
+      desdeInicio: const Duration(hours: 1, minutes: 30),
+      descripcion: 'Los cuatro mejores equipos de la fase de grupos.',
+    ),
+    (
+      nombre: 'Final',
+      desdeInicio: const Duration(hours: 2, minutes: 30),
+      descripcion: 'Partida decisiva del torneo ficticio.',
+    ),
+  ],
+  'mock-academic-02': [
+    (
+      nombre: 'Ronda clasificatoria',
+      desdeInicio: Duration.zero,
+      descripcion: 'Acertijos individuales por pareja, en sala virtual.',
+    ),
+    (
+      nombre: 'Gran final',
+      desdeInicio: const Duration(days: 1),
+      descripcion: 'Las cinco mejores parejas, en el aula imaginaria.',
+    ),
+  ],
+};
+
+// Etapas de un ejemplo a partir de su fecha de inicio. Vacío si no tiene.
+List<Etapa> etapasDeEjemploDesde(String id, DateTime inicio) {
+  return [
+    for (final etapa in etapasDeEjemplo[id] ?? const [])
+      Etapa(
+        nombre: etapa.nombre,
+        fechaHora: inicio.add(etapa.desdeInicio),
+        descripcion: etapa.descripcion,
+      ),
+  ];
+}
+
 // Los ejemplos tal como se ven en la app: con fechas relativas a `hoy`.
 List<Competencia> competenciasDeEjemplo(DateTime hoy) {
   return [
     for (final base in competenciasMock)
       switch (fechasDeEjemplo(base.id, hoy)) {
-        final fechas? => base.conFechas(
-          fechaInicio: fechas.inicio,
-          fechaFin: fechas.fin,
-          fechaLimiteInscripcion: limiteDeInscripcionDeEjemplo(base.id, hoy),
+        final fechas? => Competencia.desdeBorrador(
+          base.id,
+          base
+              .aBorrador()
+              .conFechas(
+                fechaInicio: fechas.inicio,
+                fechaFin: fechas.fin,
+                fechaLimiteInscripcion: limiteDeInscripcionDeEjemplo(
+                  base.id,
+                  hoy,
+                ),
+              )
+              .conEtapas(etapasDeEjemploDesde(base.id, fechas.inicio)),
         ),
         null => base,
       },

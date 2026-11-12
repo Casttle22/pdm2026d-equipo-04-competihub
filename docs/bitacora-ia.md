@@ -16,6 +16,24 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Módulo 6: etapas y cronograma (base v5)
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Tabla etapas: id, competenciaId, nombre, fechaHora, descripcion y orden. Al borrar una competencia se borran sus etapas. En el Detalle, una línea de tiempo vertical con la etapa actual resaltada. En el formulario, agregar, editar, reordenar y quitar etapas."
+- **Resultado:** `lib/data/etapa.dart` (modelo y `estadosDeEtapas`), tabla `etapas` con `ON DELETE CASCADE` (migración v5), `lib/widgets/linea_de_tiempo.dart` y `lib/widgets/editor_etapas.dart`.
+- **Aceptado:**
+  - `PRAGMA foreign_keys = ON` en `onConfigure`: SQLite no aplica las llaves foráneas si no se le pide en cada conexión, y sin eso la cascada no borraba nada.
+  - Competencia y etapas se guardan en una sola transacción; al editar se reemplaza el cronograma completo en el orden del formulario.
+  - Etapa actual = la última que ya empezó, si la competencia no ha finalizado; antes del evento no se resalta ninguna y, al finalizar, todas quedan completadas. El estado también va en texto («Etapa actual», «Completada», «Próxima») para el lector de pantalla.
+  - Reordenar con botones Subir y Bajar, con descripción («Subir «Final»»), en lugar de arrastrar: arrastrar no funciona bien con lector de pantalla ni con texto grande.
+  - Cronogramas de ejemplo (copa y olimpiada) definidos como distancia desde su inicio, para que sigan siendo coherentes si las fechas se recalculan.
+- **Rechazado / corregido:**
+  - La lista del Inicio no carga las etapas (no las muestra); solo la consulta por id del Detalle. Se documentó en el modelo.
+  - El orden es el que elige quien crea la competencia, no el de la fecha: así se respeta lo que la persona arma en el editor.
+- **Verificación:** `test/etapas_test.dart` (16 pruebas: estados antes, durante y después; etapas de ejemplo; migración v4→v5 con una fila de usuario intacta; guardar, reordenar, reemplazar y borrar en cascada en SQLite; cascada en un ejemplo sin afectar a otro; línea de tiempo con la etapa actual; anuncios para lector de pantalla; sin resaltado antes del evento; sección oculta sin etapas; editor: agregar con validación, reordenar, editar y quitar, aviso de cambios sin guardar; y 360 dp con texto 2.0 en Detalle, editor y diálogo). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 183/183.
+- **Commit / PR:** commit «feat: etapas y cronograma (base v5)» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Módulo 5: ficha de torneo (base v4)
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).
