@@ -16,8 +16,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 const String urlTeselasOsm = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-// Debe coincidir con applicationId en android/app/build.gradle.kts.
-const String idDeLaApp = 'com.example.competihub';
+// Identificador con el que la app se presenta ante OpenStreetMap. No puede
+// empezar con «com.example»: OpenStreetMap bloquea esos identificadores
+// (error 403 «Access blocked»). Si se cambia el applicationId de Android a un
+// valor propio, conviene usar el mismo aquí.
+const String idDeLaApp = 'gt.edu.umes.competihub';
 
 // Origen de las teselas. null usa la red (OpenStreetMap); las pruebas lo
 // reemplazan para no depender de internet.

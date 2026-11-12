@@ -162,9 +162,11 @@ void main() {
   });
 
   group('Configuración de OpenStreetMap', () {
-    test('el userAgentPackageName coincide con el id de la app', () {
-      final gradle = File('android/app/build.gradle.kts').readAsStringSync();
-      expect(gradle, contains('applicationId = "$idDeLaApp"'));
+    test('el userAgentPackageName es un identificador propio', () {
+      // OpenStreetMap bloquea (403) los identificadores «com.example.*», que
+      // son los que Flutter pone por defecto: el mapa quedaría en blanco.
+      expect(idDeLaApp, isNot(startsWith('com.example')));
+      expect(idDeLaApp, matches(RegExp(r'^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$')));
     });
 
     test('el AndroidManifest principal pide permiso de internet', () {

@@ -16,6 +16,22 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Ejecutar en Windows e identificador propio ante OpenStreetMap
+
+- **Herramienta:** cambios hechos por Alex fuera de esta sesión (para correr `flutter run -d windows`), integrados y verificados con Claude Code (Claude Opus 5.5).
+- **Especificación:** "Poder revisar la app en Windows con `flutter run -d windows`."
+- **Resultado:** `lib/main.dart` activa la variante FFI de SQLite en escritorio; `sqflite_common_ffi` pasa de dependencia de desarrollo a dependencia normal; `idDeLaApp` cambia de `com.example.competihub` a `gt.edu.umes.competihub`.
+- **Aceptado:**
+  - Al correr en Windows se vio que OpenStreetMap responde 403 «Access blocked» a los identificadores `com.example.*`: el mapa habría quedado en blanco también en Android. Las pruebas no lo detectaban porque usan teselas falsas.
+  - La variante FFI solo se activa en Windows, Linux y macOS; en Android sigue el plugin nativo.
+- **Rechazado / corregido:**
+  - La prueba «el userAgentPackageName coincide con el id de la app» exigía que fuera igual a `applicationId` (`com.example.competihub`), justo lo que OpenStreetMap bloquea. Ahora verifica el requisito real: un identificador propio, con formato de paquete, que no empiece con `com.example`.
+  - El README decía que `sqflite_common_ffi` era solo de desarrollo; se corrigió y se agregó cómo correr en Windows.
+  - Queda pendiente decidir un `applicationId` propio para Android (hoy `com.example.competihub`): conviene que coincida con `idDeLaApp`, pero cambiarlo crea otra app en el teléfono y depende de cómo se vaya a publicar.
+- **Verificación:** `flutter analyze` sin observaciones, `flutter test` 233/233.
+- **Commit / PR:** commit «chore: ejecutar en Windows e identificador propio ante OpenStreetMap» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Módulo 12: documentación del alcance nuevo
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

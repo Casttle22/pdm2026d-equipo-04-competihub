@@ -93,7 +93,7 @@ La aplicación presenta instrucciones o medios externos para participar en una c
 | `flutter_map` | 8.3.2 | Mapa con teselas de OpenStreetMap |
 | `latlong2` | 0.10.1 | Coordenadas para `flutter_map` |
 | `share_plus` | 13.3.1 | Compartir una competencia |
-| `sqflite_common_ffi` (solo desarrollo) | 2.4.7 | Probar las migraciones con SQLite real en la computadora |
+| `sqflite_common_ffi` | 2.4.7 | SQLite en escritorio (Windows) y en las pruebas de migración |
 
 El mapa necesita internet; el permiso `INTERNET` está en `android/app/src/main/AndroidManifest.xml`, junto con las `<queries>` para abrir la app de mapas.
 
@@ -104,7 +104,10 @@ Requisitos: Flutter 3.44.8 (canal estable) y un emulador o teléfono Android.
 ```bash
 flutter pub get
 flutter run                      # en el emulador o teléfono conectado
+flutter run -d windows           # vista rápida en Windows (requiere el Modo de desarrollador)
 ```
+
+En escritorio, `lib/main.dart` activa la variante FFI de SQLite; «Cómo llegar» y «Compartir» dependen de las apps del sistema y se revisan en Android.
 
 Comprobaciones (las mismas que corre el CI):
 

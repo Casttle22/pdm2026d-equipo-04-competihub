@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'screens/pantalla_principal.dart';
 import 'tema.dart';
@@ -12,6 +14,15 @@ export 'widgets/tarjeta_competencia.dart'
     show CompetitionCard, TarjetaDestacada;
 
 void main() {
+  // En escritorio, sqflite necesita su variante FFI. En Android e iOS se usa el
+  // plugin nativo y este bloque no hace nada.
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux ||
+          defaultTargetPlatform == TargetPlatform.macOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
   // ProviderScope guarda los providers de toda la app. Las pruebas montan su
   // propio ProviderScope con un repositorio falso (override).
   runApp(const ProviderScope(child: CompetihubApp()));
