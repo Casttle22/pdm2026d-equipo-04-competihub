@@ -11,6 +11,7 @@ import '../widgets/categoria_estilo.dart';
 import '../widgets/competition_delete_dialog.dart';
 import '../widgets/etiqueta.dart';
 import '../widgets/imagen_competencia.dart';
+import '../widgets/tarjeta_competencia.dart';
 import 'competition_form_screen.dart';
 
 // Detalle de una competencia (S14): consulta por id con cuatro estados.
@@ -300,6 +301,7 @@ class _DetalleContenido extends StatelessWidget {
     final inscriptionUrl = competition.inscripcionUrl?.trim();
     final contact = competition.contacto?.trim();
     final tieneImagen = competition.imagenUrl?.trim().isNotEmpty ?? false;
+    final limiteInscripcion = competition.fechaLimiteInscripcion;
 
     final fecha = _DetailInfoCard(
       icon: Icons.calendar_month_outlined,
@@ -363,6 +365,8 @@ class _DetalleContenido extends StatelessWidget {
                   colorTexto: accentColor,
                   colorFondo: Colors.white,
                 ),
+                if (limiteInscripcion != null)
+                  EtiquetaDeInscripcion(competition: competition, ahora: ahora),
               ],
             ),
             const SizedBox(height: 20),
@@ -467,6 +471,19 @@ class _DetalleContenido extends StatelessWidget {
         ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 12),
+      if (limiteInscripcion != null) ...[
+        _DetailInfoCard(
+          key: const ValueKey('detalle-inscripcion'),
+          icon: Icons.how_to_reg_outlined,
+          label: 'Inscripción',
+          value:
+              '${etiquetaInscripcion(competition, ahora)}\n'
+              'Fecha límite: ${_formatDate(limiteInscripcion)} a las '
+              '${_formatTime(limiteInscripcion)}',
+          accentColor: accentColor,
+        ),
+        const SizedBox(height: 12),
+      ],
       _DetailInfoCard(
         icon: Icons.rule_outlined,
         label: 'Requisitos y reglas',
@@ -742,6 +759,7 @@ class _FilaResumen extends StatelessWidget {
 // `action` permite agregar un botón al final (por ejemplo, Copiar).
 class _DetailInfoCard extends StatelessWidget {
   const _DetailInfoCard({
+    super.key,
     required this.icon,
     required this.label,
     required this.value,

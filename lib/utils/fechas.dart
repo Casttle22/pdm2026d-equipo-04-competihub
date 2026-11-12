@@ -98,6 +98,48 @@ String etiquetaTemporal(Competencia competencia, DateTime ahora) {
   return 'Faltan $dias días';
 }
 
+enum EstadoInscripcion { abiertas, cierraPronto, cierraHoy, cerradas }
+
+// Con cuántos días de anticipación se empieza a avisar «Cierra en N días».
+const int diasDeAvisoDeCierre = 7;
+
+// Estado de la inscripción, o null si la competencia no tiene fecha límite:
+// sin ese dato no se puede afirmar que esté abierta ni cerrada.
+EstadoInscripcion? estadoInscripcion(Competencia competencia, DateTime ahora) {
+  final limite = competencia.fechaLimiteInscripcion;
+  if (limite == null) {
+    return null;
+  }
+  if (ahora.isAfter(limite) || estaFinalizada(competencia, ahora)) {
+    return EstadoInscripcion.cerradas;
+  }
+  final dias = diasHasta(limite, ahora);
+  if (dias == 0) {
+    return EstadoInscripcion.cierraHoy;
+  }
+  return dias <= diasDeAvisoDeCierre
+      ? EstadoInscripcion.cierraPronto
+      : EstadoInscripcion.abiertas;
+}
+
+// «Inscripciones abiertas», «Cierra en N días», «Cierra hoy» o
+// «Inscripciones cerradas». null si no hay fecha límite.
+String? etiquetaInscripcion(Competencia competencia, DateTime ahora) {
+  switch (estadoInscripcion(competencia, ahora)) {
+    case null:
+      return null;
+    case EstadoInscripcion.abiertas:
+      return 'Inscripciones abiertas';
+    case EstadoInscripcion.cierraHoy:
+      return 'Cierra hoy';
+    case EstadoInscripcion.cerradas:
+      return 'Inscripciones cerradas';
+    case EstadoInscripcion.cierraPronto:
+      final dias = diasHasta(competencia.fechaLimiteInscripcion!, ahora);
+      return dias == 1 ? 'Cierra en 1 día' : 'Cierra en $dias días';
+  }
+}
+
 // Orden del Feed: primero lo que todavía se puede aprovechar, de lo más
 // cercano a lo más lejano; al final las finalizadas, de la más reciente a la
 // más antigua. Con fechas iguales se conserva el orden original.

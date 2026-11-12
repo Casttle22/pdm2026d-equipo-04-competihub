@@ -13,6 +13,7 @@ class CompetenciaDraft {
     this.inscripcionUrl,
     this.contacto,
     this.imagenUrl,
+    this.fechaLimiteInscripcion,
   });
 
   final String titulo;
@@ -28,6 +29,31 @@ class CompetenciaDraft {
   final String? inscripcionUrl;
   final String? contacto;
   final String? imagenUrl;
+  final DateTime? fechaLimiteInscripcion;
+
+  // Copia con otras fechas; el resto de los datos no cambia.
+  CompetenciaDraft conFechas({
+    required DateTime fechaInicio,
+    required DateTime? fechaFin,
+    required DateTime? fechaLimiteInscripcion,
+  }) {
+    return CompetenciaDraft(
+      titulo: titulo,
+      categoria: categoria,
+      fechaInicio: fechaInicio,
+      ubicacion: ubicacion,
+      modalidad: modalidad,
+      descripcion: descripcion,
+      reglas: reglas,
+      costo: costo,
+      instruccionesParticipacion: instruccionesParticipacion,
+      fechaFin: fechaFin,
+      inscripcionUrl: inscripcionUrl,
+      contacto: contacto,
+      imagenUrl: imagenUrl,
+      fechaLimiteInscripcion: fechaLimiteInscripcion,
+    );
+  }
 }
 
 // Contrato de integración con los widgets asignados a José:

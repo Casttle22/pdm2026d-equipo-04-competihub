@@ -16,6 +16,24 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Módulo 4: fecha límite de inscripción (base v3)
+
+- **Herramienta:** Claude Code (Claude Fable 5.2 y Claude Opus 5.5).
+- **Especificación:** "Campo opcional fechaLimiteInscripcion. Estado visible en la tarjeta y en el Detalle: «Inscripciones abiertas», «Cierra en N días», «Cierra hoy» o «Inscripciones cerradas». Validación: el límite no puede ser posterior al inicio. Campo nuevo en el formulario. Sube la versión de la base y prueba la migración partiendo de la versión anterior con una competencia creada por el usuario."
+- **Resultado:** columna `fecha_limite_inscripcion` (migración v3), `estadoInscripcion` y `etiquetaInscripcion` en `lib/utils/fechas.dart`, `EtiquetaDeInscripcion` en las tarjetas y el Detalle, ficha «Inscripción» con la fecha exacta y campo nuevo en el formulario.
+- **Aceptado:**
+  - Sin fecha límite no se muestra ningún estado: la app no afirma que las inscripciones estén abiertas si no lo sabe.
+  - «Cierra en N días» solo en la última semana (`diasDeAvisoDeCierre = 7`); antes, «Inscripciones abiertas». Una competencia finalizada siempre aparece con la inscripción cerrada, aunque el dato diga otra cosa.
+  - Cada estado tiene su ícono además del color, para no depender solo del color.
+  - Los ejemplos reciben fechas límite que muestran los cuatro estados; uno queda sin límite.
+  - `Competencia.desdeBorrador` y `aBorrador()` evitan repetir la lista de 14 campos en la base de datos cada vez que se agrega uno.
+- **Rechazado / corregido:**
+  - El estado de inscripción no reemplaza a la etiqueta de tiempo («Faltan N días»): responden preguntas distintas (cuándo es y si todavía me puedo anotar).
+  - Una prueba propia buscaba la palabra «inscripción» para comprobar que no había estado, pero el título de la competencia de prueba la contenía. Se cambió para buscar los cuatro textos de estado.
+- **Verificación:** `test/inscripcion_test.dart` (16 pruebas: los cuatro estados y sus bordes, ejemplos, migración v2→v3 con una fila de usuario que solo gana la columna nueva vacía, guardar y quitar el límite en SQLite, tarjeta, Detalle, resumen para lector de pantalla, validación y selectores del formulario, y 360 dp con texto 2.0). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 153/153.
+- **Commit / PR:** commit «feat: fecha límite de inscripción con estado (base v3)» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-11 · @AlexDLG1 — Módulo 3: Inicio nuevo (búsqueda, filtros con ícono, Destacados y Próximos)
 
 - **Herramienta:** Claude Code (Claude Fable 5.2).

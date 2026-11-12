@@ -10,7 +10,9 @@ import 'imagen_competencia.dart';
 // Resumen que un lector de pantalla anuncia para una tarjeta: los mismos
 // datos clave que se ven, en una sola frase.
 String resumenAccesible(Competencia competition, DateTime ahora) {
+  final inscripcion = etiquetaInscripcion(competition, ahora);
   return '${competition.titulo}. ${etiquetaTemporal(competition, ahora)}. '
+      '${inscripcion == null ? '' : '$inscripcion. '}'
       '${competition.categoria}, ${competition.modalidad}. '
       '${formatearFechaHoraLegible(competition.fechaInicio)}. '
       'Ubicación: ${competition.ubicacion}. '
@@ -44,6 +46,58 @@ class EtiquetaDeEstado extends StatelessWidget {
       colorFondo: finalizada
           ? scheme.surfaceContainerHighest
           : scheme.primaryContainer,
+    );
+  }
+}
+
+// Estado de la inscripción. No se dibuja si la competencia no tiene fecha
+// límite. El color acompaña al texto, no lo reemplaza: cada estado tiene
+// también su propio ícono.
+class EtiquetaDeInscripcion extends StatelessWidget {
+  const EtiquetaDeInscripcion({
+    super.key,
+    required this.competition,
+    required this.ahora,
+  });
+
+  final Competencia competition;
+  final DateTime ahora;
+
+  @override
+  Widget build(BuildContext context) {
+    final estado = estadoInscripcion(competition, ahora);
+    if (estado == null) {
+      return const SizedBox.shrink();
+    }
+    final scheme = Theme.of(context).colorScheme;
+    final (icono, texto, fondo) = switch (estado) {
+      EstadoInscripcion.abiertas => (
+        Icons.how_to_reg_outlined,
+        scheme.onSecondaryContainer,
+        scheme.secondaryContainer,
+      ),
+      EstadoInscripcion.cierraPronto => (
+        Icons.hourglass_bottom_outlined,
+        scheme.onTertiaryContainer,
+        scheme.tertiaryContainer,
+      ),
+      EstadoInscripcion.cierraHoy => (
+        Icons.alarm_outlined,
+        scheme.onErrorContainer,
+        scheme.errorContainer,
+      ),
+      EstadoInscripcion.cerradas => (
+        Icons.lock_outline,
+        scheme.onSurfaceVariant,
+        scheme.surfaceContainerHighest,
+      ),
+    };
+    return Etiqueta(
+      key: const ValueKey('etiqueta-inscripcion'),
+      texto: etiquetaInscripcion(competition, ahora)!,
+      icono: icono,
+      colorTexto: texto,
+      colorFondo: fondo,
     );
   }
 }
@@ -104,6 +158,11 @@ class CompetitionCard extends StatelessWidget {
                   runSpacing: 6,
                   children: [
                     EtiquetaDeEstado(competition: competition, ahora: ahora),
+                    if (competition.fechaLimiteInscripcion != null)
+                      EtiquetaDeInscripcion(
+                        competition: competition,
+                        ahora: ahora,
+                      ),
                     Etiqueta(
                       texto: competition.categoria,
                       icono: category.icono,
@@ -196,6 +255,11 @@ class TarjetaDestacada extends StatelessWidget {
                           competition: competition,
                           ahora: ahora,
                         ),
+                        if (competition.fechaLimiteInscripcion != null)
+                          EtiquetaDeInscripcion(
+                            competition: competition,
+                            ahora: ahora,
+                          ),
                         Etiqueta(
                           texto: competition.categoria,
                           icono: category.icono,

@@ -160,6 +160,25 @@ const Map<String, int> diasDeInicioDeEjemplo = {
   return null;
 }
 
+// Días, respecto a hoy, en que cierra la inscripción de cada ejemplo (a las
+// 23:59). Están elegidos para que se vean los cuatro estados: abiertas,
+// cierra en N días, cierra hoy y cerradas. Un ejemplo queda sin límite.
+const Map<String, int> diasDeCierreDeEjemplo = {
+  'mock-esports-01': 2,
+  'mock-academic-01': 0,
+  'mock-sports-01': 10,
+  'mock-other-01': -1,
+  'mock-esports-02': -22,
+};
+
+DateTime? limiteDeInscripcionDeEjemplo(String id, DateTime hoy) {
+  final dias = diasDeCierreDeEjemplo[id];
+  if (dias == null) {
+    return null;
+  }
+  return DateTime(hoy.year, hoy.month, hoy.day + dias, 23, 59);
+}
+
 // Los ejemplos tal como se ven en la app: con fechas relativas a `hoy`.
 List<Competencia> competenciasDeEjemplo(DateTime hoy) {
   return [
@@ -168,6 +187,7 @@ List<Competencia> competenciasDeEjemplo(DateTime hoy) {
         final fechas? => base.conFechas(
           fechaInicio: fechas.inicio,
           fechaFin: fechas.fin,
+          fechaLimiteInscripcion: limiteDeInscripcionDeEjemplo(base.id, hoy),
         ),
         null => base,
       },

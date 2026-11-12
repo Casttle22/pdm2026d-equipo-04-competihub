@@ -59,6 +59,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
   String? _modalidad;
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
+  DateTime? _fechaLimiteInscripcion;
 
   bool _guardando = false;
   String? _errorGuardado;
@@ -96,6 +97,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     _modalidad = initial?.modalidad;
     _fechaInicio = initial?.fechaInicio;
     _fechaFin = initial?.fechaFin;
+    _fechaLimiteInscripcion = initial?.fechaLimiteInscripcion;
   }
 
   @override
@@ -175,7 +177,8 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         _categoria != initial?.categoria ||
         _modalidad != initial?.modalidad ||
         _fechaInicio != initial?.fechaInicio ||
-        _fechaFin != initial?.fechaFin;
+        _fechaFin != initial?.fechaFin ||
+        _fechaLimiteInscripcion != initial?.fechaLimiteInscripcion;
   }
 
   // Atrás (botón de la barra o del sistema): sale directo si no hay cambios;
@@ -279,6 +282,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       inscripcionUrl: _opcionalONulo(_inscripcionUrlController.text),
       contacto: _opcionalONulo(_contactoController.text),
       imagenUrl: _opcionalONulo(_imagenUrlController.text),
+      fechaLimiteInscripcion: _fechaLimiteInscripcion,
     );
 
     setState(() {
@@ -479,6 +483,33 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       ),
       const SizedBox(height: 24),
       const _Seccion(titulo: 'Información para participar'),
+      _CampoFechaHora(
+        key: const ValueKey('competition-form-fecha-limite'),
+        etiqueta: 'Límite de inscripción (opcional)',
+        valor: _fechaLimiteInscripcion,
+        habilitado: habilitado,
+        onElegir: () async {
+          final elegida = await _elegirFechaHora(
+            _fechaLimiteInscripcion,
+            sugerida: _fechaInicio,
+          );
+          if (elegida != null) {
+            setState(() => _fechaLimiteInscripcion = elegida);
+          }
+        },
+        onLimpiar: () => setState(() => _fechaLimiteInscripcion = null),
+        ayuda: 'Hasta cuándo se puede inscribir alguien.',
+        validator: (_) {
+          final inicio = _fechaInicio;
+          final limite = _fechaLimiteInscripcion;
+          if (inicio != null && limite != null && limite.isAfter(inicio)) {
+            return 'El límite de inscripción no puede ser posterior al '
+                'inicio.';
+          }
+          return null;
+        },
+      ),
+      separacion,
       _campoTexto(
         clave: 'reglas',
         controller: _reglasController,

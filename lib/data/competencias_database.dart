@@ -12,7 +12,8 @@ import 'mock_competencias.dart';
 // 1: tabla competencias con los datos de ejemplo de fechas fijas.
 // 2: las fechas de los datos de ejemplo pasan a ser relativas al día de la
 //    migración, para que no queden todos como finalizados.
-const int versionEsquema = 2;
+// 3: columna fecha_limite_inscripcion (opcional).
+const int versionEsquema = 3;
 
 const String _tablaCompetencias = 'competencias';
 
@@ -97,6 +98,8 @@ Future<void> _migrar(
     switch (version) {
       case 2:
         await _migrarAV2(database, hoy);
+      case 3:
+        await _migrarAV3(database, hoy);
     }
   }
 }
@@ -121,6 +124,31 @@ Future<void> _migrarAV2(Database database, DateTime hoy) async {
       <String, Object?>{
         'fecha_inicio': fechas.inicio.millisecondsSinceEpoch,
         'fecha_fin': fechas.fin?.millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+  await batch.commit(noResult: true);
+}
+
+// v3: fecha límite de inscripción. La columna es opcional, así que las
+// competencias existentes quedan sin límite (y sin estado de inscripción).
+// A los ejemplos se les asigna uno para que los cuatro estados se puedan ver.
+Future<void> _migrarAV3(Database database, DateTime hoy) async {
+  await database.execute(
+    'ALTER TABLE $_tablaCompetencias '
+    'ADD COLUMN fecha_limite_inscripcion INTEGER',
+  );
+  final batch = database.batch();
+  for (final id in diasDeCierreDeEjemplo.keys) {
+    batch.update(
+      _tablaCompetencias,
+      <String, Object?>{
+        'fecha_limite_inscripcion': limiteDeInscripcionDeEjemplo(
+          id,
+          hoy,
+        )?.millisecondsSinceEpoch,
       },
       where: 'id = ?',
       whereArgs: [id],
@@ -192,9 +220,11 @@ class CompetenciasDatabase implements CompetenciasDataSource {
   Future<Competencia> crearCompetencia(CompetenciaDraft draft) async {
     final database = await _db;
     final id = _generateId();
-    final competencia = _fromDraft(id, draft);
-    await database.insert(_tableName, _toMap(competencia));
-    return competencia;
+    await database.insert(_tableName, <String, Object?>{
+      'id': id,
+      ..._draftToMap(draft),
+    });
+    return Competencia.desdeBorrador(id, draft);
   }
 
   @override
@@ -224,64 +254,6 @@ class CompetenciasDatabase implements CompetenciasDataSource {
     }
   }
 
-  static Map<String, Object?> _toMap(Competencia competencia) {
-    return <String, Object?>{
-      'id': competencia.id,
-      ..._valuesToMap(
-        titulo: competencia.titulo,
-        categoria: competencia.categoria,
-        fechaInicio: competencia.fechaInicio,
-        ubicacion: competencia.ubicacion,
-        modalidad: competencia.modalidad,
-        descripcion: competencia.descripcion,
-        reglas: competencia.reglas,
-        costo: competencia.costo,
-        instruccionesParticipacion: competencia.instruccionesParticipacion,
-        fechaFin: competencia.fechaFin,
-        inscripcionUrl: competencia.inscripcionUrl,
-        contacto: competencia.contacto,
-        imagenUrl: competencia.imagenUrl,
-      ),
-    };
-  }
-
-  static Map<String, Object?> _draftToMap(CompetenciaDraft draft) {
-    return _valuesToMap(
-      titulo: draft.titulo,
-      categoria: draft.categoria,
-      fechaInicio: draft.fechaInicio,
-      ubicacion: draft.ubicacion,
-      modalidad: draft.modalidad,
-      descripcion: draft.descripcion,
-      reglas: draft.reglas,
-      costo: draft.costo,
-      instruccionesParticipacion: draft.instruccionesParticipacion,
-      fechaFin: draft.fechaFin,
-      inscripcionUrl: draft.inscripcionUrl,
-      contacto: draft.contacto,
-      imagenUrl: draft.imagenUrl,
-    );
-  }
-
-  static Competencia _fromDraft(String id, CompetenciaDraft draft) {
-    return Competencia(
-      id: id,
-      titulo: draft.titulo,
-      categoria: draft.categoria,
-      fechaInicio: draft.fechaInicio,
-      ubicacion: draft.ubicacion,
-      modalidad: draft.modalidad,
-      descripcion: draft.descripcion,
-      reglas: draft.reglas,
-      costo: draft.costo,
-      instruccionesParticipacion: draft.instruccionesParticipacion,
-      fechaFin: draft.fechaFin,
-      inscripcionUrl: draft.inscripcionUrl,
-      contacto: draft.contacto,
-      imagenUrl: draft.imagenUrl,
-    );
-  }
-
   static String _generateId() {
     final random = Random.secure();
     final suffix = List.generate(
@@ -291,36 +263,31 @@ class CompetenciasDatabase implements CompetenciasDataSource {
     return 'local-${DateTime.now().microsecondsSinceEpoch}-$suffix';
   }
 
-  static Map<String, Object?> _valuesToMap({
-    required String titulo,
-    required String categoria,
-    required DateTime fechaInicio,
-    required String ubicacion,
-    required String modalidad,
-    required String descripcion,
-    required String reglas,
-    required String costo,
-    required String instruccionesParticipacion,
-    required DateTime? fechaFin,
-    required String? inscripcionUrl,
-    required String? contacto,
-    required String? imagenUrl,
-  }) {
+  // Columnas que vienen del formulario (todas menos el id).
+  static Map<String, Object?> _draftToMap(CompetenciaDraft draft) {
     return <String, Object?>{
-      'titulo': titulo,
-      'categoria': categoria,
-      'fecha_inicio': fechaInicio.millisecondsSinceEpoch,
-      'ubicacion': ubicacion,
-      'modalidad': modalidad,
-      'descripcion': descripcion,
-      'reglas': reglas,
-      'costo': costo,
-      'instrucciones_participacion': instruccionesParticipacion,
-      'fecha_fin': fechaFin?.millisecondsSinceEpoch,
-      'inscripcion_url': inscripcionUrl,
-      'contacto': contacto,
-      'imagen_url': imagenUrl,
+      'titulo': draft.titulo,
+      'categoria': draft.categoria,
+      'fecha_inicio': draft.fechaInicio.millisecondsSinceEpoch,
+      'ubicacion': draft.ubicacion,
+      'modalidad': draft.modalidad,
+      'descripcion': draft.descripcion,
+      'reglas': draft.reglas,
+      'costo': draft.costo,
+      'instrucciones_participacion': draft.instruccionesParticipacion,
+      'fecha_fin': draft.fechaFin?.millisecondsSinceEpoch,
+      'inscripcion_url': draft.inscripcionUrl,
+      'contacto': draft.contacto,
+      'imagen_url': draft.imagenUrl,
+      'fecha_limite_inscripcion':
+          draft.fechaLimiteInscripcion?.millisecondsSinceEpoch,
     };
+  }
+
+  static DateTime? _fechaONula(Object? milisegundos) {
+    return milisegundos is int
+        ? DateTime.fromMillisecondsSinceEpoch(milisegundos)
+        : null;
   }
 
   static Competencia _fromMap(Map<String, Object?> map) {
@@ -328,24 +295,18 @@ class CompetenciasDatabase implements CompetenciasDataSource {
       id: map['id']! as String,
       titulo: map['titulo']! as String,
       categoria: map['categoria']! as String,
-      fechaInicio: DateTime.fromMillisecondsSinceEpoch(
-        map['fecha_inicio']! as int,
-      ),
+      fechaInicio: _fechaONula(map['fecha_inicio'])!,
       ubicacion: map['ubicacion']! as String,
       modalidad: map['modalidad']! as String,
       descripcion: map['descripcion']! as String,
       reglas: map['reglas']! as String,
       costo: map['costo']! as String,
       instruccionesParticipacion: map['instrucciones_participacion']! as String,
-      fechaFin: switch (map['fecha_fin']) {
-        final int milliseconds => DateTime.fromMillisecondsSinceEpoch(
-          milliseconds,
-        ),
-        _ => null,
-      },
+      fechaFin: _fechaONula(map['fecha_fin']),
       inscripcionUrl: map['inscripcion_url'] as String?,
       contacto: map['contacto'] as String?,
       imagenUrl: map['imagen_url'] as String?,
+      fechaLimiteInscripcion: _fechaONula(map['fecha_limite_inscripcion']),
     );
   }
 }
