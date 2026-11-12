@@ -24,6 +24,9 @@ void main() {
           200,
           scrollable: listaDeInicio,
         );
+        // Redibuja tras desplazarse: si no, el toque usa la posición anterior
+        // y puede caer sobre la barra inferior.
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(ValueKey(competition.id)));
         await tester.pumpAndSettle();
 
@@ -64,6 +67,9 @@ void main() {
       200,
       scrollable: listaDeInicio,
     );
+    // Redibuja tras desplazarse: si no, el toque usa la posición anterior
+    // y puede caer sobre la barra inferior.
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(ValueKey(competition.id)));
     await tester.pumpAndSettle();
     expect(find.text('Identificador: ${competition.id}'), findsOneWidget);

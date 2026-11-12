@@ -16,6 +16,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Módulo 7: barra inferior
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Barra inferior con tres secciones: Inicio, Mapa y Mis eventos. Conserva el estado de cada pestaña al cambiar."
+- **Resultado:** `lib/screens/pantalla_principal.dart` (`NavigationBar` con un `IndexedStack`), `lib/widgets/estado_vacio.dart` y pantallas iniciales de Mapa y Mis eventos, que se completan en los módulos 10 y 8.
+- **Aceptado:**
+  - `IndexedStack`: las pestañas no se destruyen al cambiar, así que conservan búsqueda, filtro, posición de la lista y, después, el mapa.
+  - El Detalle y el formulario se abren con el navegador principal, encima de la barra. Así el botón Atrás del sistema funciona igual que antes y no hace falta manejar una pila por pestaña.
+  - Los rótulos de la barra se limitan a 1,3× con texto grande para que quepan los tres a 360 dp; el resto de la app sigue la escala del sistema.
+- **Rechazado / corregido:**
+  - No se usó un navegador anidado por pestaña (estilo de otras apps que dejan la barra visible en el Detalle): obligaría a interceptar el botón Atrás y el Detalle a 360 dp perdería 80 dp de alto.
+  - Las pantallas de Mapa y Mis eventos de este módulo solo dicen qué mostrarán, sin prometer fechas.
+  - `test/navigation_test.dart` se ajustó: después de desplazarse hasta una tarjeta ahora redibuja antes de tocarla. Es la misma causa que se encontró en `0cde13c` (`ensureVisible` no redibuja); con la barra la lista es más baja y el toque caía sobre la barra. Verifica lo mismo.
+- **Verificación:** `test/barra_inferior_test.dart` (5 pruebas: tres secciones con Inicio al empezar, cambio de pestaña, Inicio conserva búsqueda, filtro y posición, Detalle sobre la barra y regreso a la misma pestaña, y 360 dp con texto 2.0 en las tres). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 188/188.
+- **Commit / PR:** commit «feat: barra inferior con Inicio, Mapa y Mis eventos» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Módulo 6: etapas y cronograma (base v5)
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).
