@@ -16,11 +16,30 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Módulo 10: mapa interactivo con OpenStreetMap (base v7)
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "flutter_map con teselas de OpenStreetMap, userAgentPackageName con el id de la app y atribución visible «© OpenStreetMap contributors». Permiso INTERNET en el AndroidManifest principal. Campos opcionales latitud y longitud. En el formulario, elegir el punto tocando un mapa. En el Detalle, un mapa pequeño con el marcador. En la pestaña Mapa, todas las presenciales con coordenadas; al tocar un marcador, una tarjeta breve que lleve al Detalle. Coordenadas ficticias alrededor del centro de Quetzaltenango (14.8347, -91.5181) y un aviso de que son ficticias. Sin conexión, un estado claro en vez de un mapa en blanco."
+- **Resultado:** dependencias `flutter_map` 8.3.2 y `latlong2` 0.10.1; columnas `latitud` y `longitud` (migración v7); `lib/widgets/mapa_base.dart` (teselas, atribución, aviso de ficticias y estado sin conexión); pestaña Mapa completa; `SelectorUbicacionScreen`; mapa pequeño en el Detalle; sección «Punto en el mapa» en el formulario; permiso `INTERNET` en el manifiesto principal. «Cómo llegar» ahora usa las coordenadas si existen.
+- **Aceptado:**
+  - Un solo widget de mapa para los tres usos, así la identificación ante OpenStreetMap (`userAgentPackageName: com.example.competihub`) y la atribución no se pueden olvidar en ninguno. La atribución abre la página de derechos de OpenStreetMap.
+  - Sin conexión: tras 3 teselas fallidas se reemplaza el mapa por un mensaje y «Reintentar», que vuelve a pedir las teselas. Con un solo fallo, un error aislado del servidor ocultaría todo el mapa.
+  - El origen de las teselas va en un provider: las pruebas usan imágenes en memoria o teselas que fallan, sin internet.
+  - El mapa del Detalle no se arrastra, para no pelear con el desplazamiento de la pantalla.
+  - Coordenadas ficticias para los cuatro ejemplos con lugar físico, a menos de 0,02° del centro de Quetzaltenango; el mapa, el Detalle y «Cómo llegar» avisan que son ficticias.
+- **Rechazado / corregido:**
+  - La pestaña Mapa también muestra las competencias **híbridas** con coordenadas, no solo las presenciales: tienen un lugar físico y «Cómo llegar» ya las incluía. Así el ejemplo híbrido con punto no queda fuera del mapa. Si el equipo prefiere solo presenciales, es cambiar `competenciasEnMapa`.
+  - No se usó `SimpleAttributionWidget` de flutter_map porque antepone «flutter_map |»; se escribió una atribución propia con el texto pedido.
+  - Se corrigió la entrada del módulo 9, a la que le faltaba la versión de `url_launcher` (6.3.3).
+- **Verificación:** `test/mapa_test.dart` (17 pruebas: coordenadas de los ejemplos, filtro de ubicables, migración v6→v7 sin tocar a la persona ni sus guardados, guardar y quitar el punto, `userAgentPackageName` igual al `applicationId`, permiso `INTERNET`, marcadores con aviso y atribución, tarjeta breve hasta el Detalle, sin conexión con reintento, mapa vacío, sin aviso con datos propios, selección conservada al cambiar de pestaña, mapa pequeño en el Detalle, sin mapa en virtuales, elegir el punto tocando el mapa, quitarlo, y 360 dp con texto 2.0). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 226/226. Pendiente en el emulador: que las teselas reales carguen y que el estado sin conexión aparezca en modo avión.
+- **Commit / PR:** commit «feat: mapa interactivo con OpenStreetMap (base v7)» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Módulo 9: Cómo llegar
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).
 - **Especificación:** "Botón en el Detalle de las competencias presenciales e híbridas. Abre la app de mapas con la ubicación usando url_launcher (geo: o el URL de Google Maps como respaldo). Configura las <queries> de Android. Si no se puede abrir, muestra un mensaje y ofrece copiar la dirección."
-- **Resultado:** dependencia `url_launcher` , `lib/servicios/abridor_de_mapas.dart` (enlaces y apertura, con su provider), `lib/widgets/boton_como_llegar.dart` en la fila de acciones del Detalle y `<queries>` para `geo:` y `https:` en el `AndroidManifest.xml`.
+- **Resultado:** dependencia `url_launcher` 6.3.3, `lib/servicios/abridor_de_mapas.dart` (enlaces y apertura, con su provider), `lib/widgets/boton_como_llegar.dart` en la fila de acciones del Detalle y `<queries>` para `geo:` y `https:` en el `AndroidManifest.xml`.
 - **Aceptado:**
   - Primero `geo:` (lo atiende cualquier app de mapas) y, si no hay ninguna, el enlace web de Google Maps. La función que arma los enlaces ya acepta coordenadas para el módulo 10.
   - La apertura va detrás de un provider (`abridorDeMapasProvider`): las pruebas la reemplazan y verifican qué se intentó abrir sin abrir nada.

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../data/competencia.dart';
 import '../providers/competencias_providers.dart';
@@ -15,6 +17,7 @@ import '../widgets/competition_delete_dialog.dart';
 import '../widgets/etiqueta.dart';
 import '../widgets/imagen_competencia.dart';
 import '../widgets/linea_de_tiempo.dart';
+import '../widgets/mapa_base.dart';
 import '../widgets/tarjeta_competencia.dart';
 import 'competition_form_screen.dart';
 
@@ -471,6 +474,10 @@ class _DetalleContenido extends StatelessWidget {
         value: competition.ubicacion,
         accentColor: accentColor,
       ),
+      if (competition.tieneCoordenadas) ...[
+        const SizedBox(height: 12),
+        _MapaPequeno(competition: competition, accentColor: accentColor),
+      ],
       const SizedBox(height: 12),
       _DetailInfoCard(
         icon: Icons.description_outlined,
@@ -647,6 +654,56 @@ class _DetalleContenido extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// Mapa pequeño con el marcador de la competencia. Es solo una vista (no se
+// arrastra) para no interferir con el desplazamiento de la pantalla; para
+// llegar está el botón «Cómo llegar».
+class _MapaPequeno extends StatelessWidget {
+  const _MapaPequeno({required this.competition, required this.accentColor});
+
+  final Competencia competition;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final punto = LatLng(competition.latitud!, competition.longitud!);
+    return Semantics(
+      container: true,
+      label: competition.esDeEjemplo
+          ? 'Mapa con la ubicación ficticia de la competencia.'
+          : 'Mapa con la ubicación de la competencia.',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: SizedBox(
+          key: const ValueKey('detalle-mapa'),
+          height: 200,
+          child: MapaBase(
+            centro: punto,
+            zoom: 15,
+            interactivo: false,
+            avisoFicticio: competition.esDeEjemplo
+                ? 'Ubicación ficticia de ejemplo.'
+                : null,
+            marcadores: [
+              Marker(
+                point: punto,
+                width: 44,
+                height: 44,
+                alignment: Alignment.topCenter,
+                child: Icon(
+                  Icons.location_on,
+                  size: 44,
+                  color: accentColor,
+                  shadows: const [Shadow(color: Colors.white, blurRadius: 4)],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

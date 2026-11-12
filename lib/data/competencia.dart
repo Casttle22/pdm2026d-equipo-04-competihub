@@ -63,6 +63,8 @@ class Competencia {
     this.premios,
     this.organizador,
     this.etapas = const [],
+    this.latitud,
+    this.longitud,
   });
 
   // Une un id con los datos de un formulario. La usan las fuentes de datos
@@ -87,7 +89,9 @@ class Competencia {
       tamanoEquipoMax = draft.tamanoEquipoMax,
       premios = draft.premios,
       organizador = draft.organizador,
-      etapas = List.unmodifiable(draft.etapas);
+      etapas = List.unmodifiable(draft.etapas),
+      latitud = draft.latitud,
+      longitud = draft.longitud;
 
   final String id;
   final String titulo;
@@ -119,6 +123,13 @@ class Competencia {
   // Cronograma, en el orden que eligió quien creó la competencia. La lista
   // del Inicio no lo carga (no lo muestra); el Detalle sí.
   final List<Etapa> etapas;
+
+  // Punto en el mapa (opcional). Se guardan juntos: o están los dos o
+  // ninguno.
+  final double? latitud;
+  final double? longitud;
+
+  bool get tieneCoordenadas => latitud != null && longitud != null;
 
   bool get tieneFichaDeTorneo =>
       formato != null ||
@@ -154,6 +165,8 @@ class Competencia {
       premios: premios,
       organizador: organizador,
       etapas: etapas,
+      latitud: latitud,
+      longitud: longitud,
     );
   }
 

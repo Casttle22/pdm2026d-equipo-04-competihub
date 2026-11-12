@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../data/competencia.dart';
 import '../data/competencia_draft.dart';
 import '../data/etapa.dart';
 import '../widgets/editor_etapas.dart';
+import 'selector_ubicacion_screen.dart';
 
 // Mismas categorías y modalidades que usan los datos actuales
 // (lib/data/mock_competencias.dart) y los estilos del Feed y del Detalle.
@@ -68,6 +70,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
   DateTime? _fechaLimiteInscripcion;
   FormatoCompetencia? _formato;
   List<Etapa> _etapas = const [];
+  LatLng? _punto;
 
   bool _guardando = false;
   String? _errorGuardado;
@@ -111,6 +114,9 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     _organizadorController = TextEditingController(text: initial?.organizador);
     _formato = initial?.formato;
     _etapas = initial?.etapas ?? const [];
+    _punto = initial != null && initial.tieneCoordenadas
+        ? LatLng(initial.latitud!, initial.longitud!)
+        : null;
     _categoria = initial?.categoria;
     _modalidad = initial?.modalidad;
     _fechaInicio = initial?.fechaInicio;
@@ -204,6 +210,8 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         _organizadorController.text != (initial?.organizador ?? '') ||
         _formato != initial?.formato ||
         !listasDeEtapasIguales(_etapas, initial?.etapas ?? const []) ||
+        _punto?.latitude != initial?.latitud ||
+        _punto?.longitude != initial?.longitud ||
         _categoria != initial?.categoria ||
         _modalidad != initial?.modalidad ||
         _fechaInicio != initial?.fechaInicio ||
@@ -321,6 +329,8 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       premios: _opcionalONulo(_premiosController.text),
       organizador: _opcionalONulo(_organizadorController.text),
       etapas: _etapas,
+      latitud: _punto?.latitude,
+      longitud: _punto?.longitude,
     );
 
     setState(() {
@@ -510,6 +520,22 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         controller: _ubicacionController,
         etiqueta: 'Ubicación *',
         obligatorio: true,
+      ),
+      separacion,
+      _PuntoEnMapa(
+        punto: _punto,
+        habilitado: habilitado,
+        onElegir: () async {
+          final elegido = await Navigator.of(context).push<LatLng>(
+            MaterialPageRoute(
+              builder: (_) => SelectorUbicacionScreen(inicial: _punto),
+            ),
+          );
+          if (elegido != null && mounted) {
+            setState(() => _punto = elegido);
+          }
+        },
+        onQuitar: () => setState(() => _punto = null),
       ),
       separacion,
       _campoTexto(
@@ -775,6 +801,64 @@ class _Seccion extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(titulo, style: Theme.of(context).textTheme.titleMedium),
+    );
+  }
+}
+
+// Punto en el mapa (opcional): muestra si hay uno elegido y permite elegirlo
+// en el mapa, cambiarlo o quitarlo.
+class _PuntoEnMapa extends StatelessWidget {
+  const _PuntoEnMapa({
+    required this.punto,
+    required this.habilitado,
+    required this.onElegir,
+    required this.onQuitar,
+  });
+
+  final LatLng? punto;
+  final bool habilitado;
+  final VoidCallback onElegir;
+  final VoidCallback onQuitar;
+
+  @override
+  Widget build(BuildContext context) {
+    final punto = this.punto;
+    return InputDecorator(
+      key: const ValueKey('competition-form-punto'),
+      decoration: const InputDecoration(
+        labelText: 'Punto en el mapa (opcional)',
+        helperText: 'Sirve para el mapa y para «Cómo llegar».',
+        helperMaxLines: _lineasDeError,
+        border: OutlineInputBorder(),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(punto == null ? 'Sin punto elegido' : describirPunto(punto)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                key: const ValueKey('competition-form-elegir-punto'),
+                onPressed: habilitado ? onElegir : null,
+                icon: const Icon(Icons.map_outlined),
+                label: Text(
+                  punto == null ? 'Elegir en el mapa' : 'Cambiar punto',
+                ),
+              ),
+              if (punto != null)
+                TextButton.icon(
+                  key: const ValueKey('competition-form-quitar-punto'),
+                  onPressed: habilitado ? onQuitar : null,
+                  icon: const Icon(Icons.clear),
+                  label: const Text('Quitar punto'),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

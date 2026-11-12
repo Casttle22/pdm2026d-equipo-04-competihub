@@ -5,6 +5,9 @@ import 'etapa.dart';
 // La ficha de torneo (formato y tamaño de equipo) sale de las reglas de cada
 // ejemplo; premios y organizador también son ficticios y lo dicen. La
 // carrera no tiene ficha: sus reglas no dicen si es individual.
+// Las coordenadas de los ejemplos presenciales e híbridos son ficticias: son
+// puntos elegidos alrededor del centro de Quetzaltenango (centroDeEjemplo),
+// no la ubicación de ningún evento. El mapa lo avisa.
 // No representan eventos reales ni evidencia de investigación de usuarios.
 final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
   Competencia(
@@ -45,6 +48,8 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
         'Para la simulación, preparar un alias y presentarse en el laboratorio de prueba. No asistir a un lugar real.',
     formato: FormatoCompetencia.individual,
     organizador: 'Laboratorio ficticio Prisma',
+    latitud: 14.8405,
+    longitud: -91.5235,
   ),
   Competencia(
     id: 'mock-sports-01',
@@ -61,6 +66,8 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     instruccionesParticipacion:
         'En el ejemplo, solicitar un dorsal al contacto ficticio. No se reciben solicitudes ni pagos reales.',
     contacto: 'carrera@example.com',
+    latitud: 14.829,
+    longitud: -91.512,
   ),
   Competencia(
     id: 'mock-academic-02',
@@ -81,6 +88,8 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     tamanoEquipoMin: 2,
     tamanoEquipoMax: 2,
     premios: 'Diplomas simbólicos (ficticios)',
+    latitud: 14.8372,
+    longitud: -91.5098,
   ),
   Competencia(
     id: 'mock-other-01',
@@ -114,8 +123,15 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     instruccionesParticipacion:
         'Ejemplo de evento finalizado: se habría reservado un puesto en la sede imaginaria. No admite inscripciones reales.',
     formato: FormatoCompetencia.individual,
+    latitud: 14.8318,
+    longitud: -91.5262,
   ),
 ]);
+
+// Centro de Quetzaltenango, alrededor del cual están las ubicaciones
+// ficticias de los ejemplos. También es el centro inicial de los mapas.
+const double latitudCentroDeEjemplo = 14.8347;
+const double longitudCentroDeEjemplo = -91.5181;
 
 // Días, respecto a hoy, en que empieza cada competencia de ejemplo dentro de
 // la app. Las fechas fijas de arriba son solo la base (hora del día y

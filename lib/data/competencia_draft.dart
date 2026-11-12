@@ -23,6 +23,8 @@ class CompetenciaDraft {
     this.premios,
     this.organizador,
     this.etapas = const [],
+    this.latitud,
+    this.longitud,
   });
 
   final String titulo;
@@ -45,6 +47,8 @@ class CompetenciaDraft {
   final String? premios;
   final String? organizador;
   final List<Etapa> etapas;
+  final double? latitud;
+  final double? longitud;
 
   // Copia con otro cronograma; el resto de los datos no cambia.
   CompetenciaDraft conEtapas(List<Etapa> etapas) {
@@ -69,6 +73,8 @@ class CompetenciaDraft {
       premios: premios,
       organizador: organizador,
       etapas: etapas,
+      latitud: latitud,
+      longitud: longitud,
     );
   }
 
@@ -99,6 +105,8 @@ class CompetenciaDraft {
       premios: premios,
       organizador: organizador,
       etapas: etapas,
+      latitud: latitud,
+      longitud: longitud,
     );
   }
 }

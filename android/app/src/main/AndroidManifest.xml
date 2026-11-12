@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Las teselas del mapa (OpenStreetMap) se descargan de internet. Sin
+         este permiso en el manifiesto principal, el mapa funcionaría en
+         depuración pero quedaría en blanco en la versión de publicación. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="CompetiHub"
         android:name="${applicationName}"

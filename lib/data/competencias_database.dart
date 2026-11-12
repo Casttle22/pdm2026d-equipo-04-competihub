@@ -18,7 +18,8 @@ import 'mock_competencias.dart';
 //    (todas opcionales).
 // 5: tabla etapas (cronograma), que se borra junto con su competencia.
 // 6: tabla guardados (Mis eventos), que también se borra con su competencia.
-const int versionEsquema = 6;
+// 7: columnas latitud y longitud (opcionales) para el mapa.
+const int versionEsquema = 7;
 
 const String _tablaCompetencias = 'competencias';
 const String _tablaEtapas = 'etapas';
@@ -116,6 +117,8 @@ Future<void> _migrar(
         await _migrarAV5(database);
       case 6:
         await _migrarAV6(database);
+      case 7:
+        await _migrarAV7(database);
     }
   }
 }
@@ -274,6 +277,34 @@ Future<void> _migrarAV6(Database database) async {
       guardado_en INTEGER NOT NULL
     )
   ''');
+}
+
+// v7: punto en el mapa. Las competencias creadas en la app quedan sin punto
+// hasta que alguien lo elija; los ejemplos presenciales e híbridos reciben
+// sus coordenadas ficticias.
+Future<void> _migrarAV7(Database database) async {
+  await database.execute(
+    'ALTER TABLE $_tablaCompetencias ADD COLUMN latitud REAL',
+  );
+  await database.execute(
+    'ALTER TABLE $_tablaCompetencias ADD COLUMN longitud REAL',
+  );
+  final batch = database.batch();
+  for (final ejemplo in competenciasMock) {
+    if (!ejemplo.tieneCoordenadas) {
+      continue;
+    }
+    batch.update(
+      _tablaCompetencias,
+      <String, Object?>{
+        'latitud': ejemplo.latitud,
+        'longitud': ejemplo.longitud,
+      },
+      where: 'id = ?',
+      whereArgs: [ejemplo.id],
+    );
+  }
+  await batch.commit(noResult: true);
 }
 
 abstract class CompetenciasDataSource {
@@ -459,6 +490,8 @@ class CompetenciasDatabase implements CompetenciasDataSource {
       'tamano_equipo_max': draft.tamanoEquipoMax,
       'premios': draft.premios,
       'organizador': draft.organizador,
+      'latitud': draft.latitud,
+      'longitud': draft.longitud,
     };
   }
 
@@ -502,6 +535,8 @@ class CompetenciasDatabase implements CompetenciasDataSource {
       premios: map['premios'] as String?,
       organizador: map['organizador'] as String?,
       etapas: etapas,
+      latitud: (map['latitud'] as num?)?.toDouble(),
+      longitud: (map['longitud'] as num?)?.toDouble(),
     );
   }
 }

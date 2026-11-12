@@ -46,7 +46,11 @@ class BotonComoLlegar extends ConsumerWidget {
       }
     }
 
-    final abierto = await abridor.abrir(direccion);
+    final abierto = await abridor.abrir(
+      direccion,
+      latitud: competencia.latitud,
+      longitud: competencia.longitud,
+    );
     if (abierto) {
       return;
     }
