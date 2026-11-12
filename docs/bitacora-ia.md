@@ -16,6 +16,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-11 · @ALEXDLG11M — Verificación de la rama `feat/pulido-ux-fase1` y corrección de dos pruebas
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Antes de integrar el pulido de la fase 1, ejecutar `flutter pub get`, `dart format --set-exit-if-changed lib test`, `flutter analyze` y `flutter test`; si algo falla, corregirlo sin borrar ni debilitar pruebas; revisar Feed, Detalle y Formulario a 360 dp y con texto grande."
+- **Resultado:** El commit `13adee4` tal cual fallaba 2 de 90 pruebas. Se corrigieron y la suite queda en 90/90.
+- **Aceptado:**
+  - `lib/screens/competition_detail_screen.dart`: el texto "Eliminar competencia" del menú va dentro de `Flexible`. Sin eso, la fila se desbordaba 62 px en la prueba y, en un teléfono con texto grande, el menú tiene el mismo problema.
+  - `test/competition_detail_content_test.dart`: `pumpAndSettle()` después de cada `scrollUntilVisible`.
+- **Rechazado / corregido:**
+  - En el árbol de trabajo había un arreglo sin commit que bajaba el paso de desplazamiento de 160 a 50 px. Se investigó antes de aceptarlo: la causa no era el tamaño del paso. `scrollUntilVisible` termina con `ensureVisible`, que mueve la lista pero no la vuelve a dibujar; la búsqueda siguiente miraba la posición anterior, no veía la tarjeta de Modalidad y el arrastre extra la dejaba arriba de la pantalla (`find.text` ignora lo que está fuera de pantalla). Con 50 px pasaba solo porque el paso es menor que el alto de una tarjeta. Se restauró 160 px y se agregó el `pumpAndSettle()`; las mismas verificaciones, sin quitar ninguna.
+- **Verificación:**
+  - Línea base en un worktree temporal de `13adee4`: `flutter test` 88/90 (fallaban "El detalle presenta datos generales y cómo participar" y "Eliminar está en el menú de opciones y pide confirmación").
+  - Tras la corrección: `dart format --set-exit-if-changed lib test` 0 cambios, `flutter analyze` sin observaciones, `flutter test` 90/90.
+  - Revisión visual sin emulador: esta computadora no tiene SDK de Android (`flutter doctor`: *Unable to locate Android SDK*). En su lugar, una prueba temporal fuera del repositorio dibujó Feed, Detalle, menú, Formulario (vacío, con errores y diálogo de descartar) a 360×780 dp con Roboto y escalas de texto 1.0, 1.3 y 2.0: ningún desbordamiento. Hallazgos pendientes: a 2.0 los mensajes de error del formulario se cortan con "…" y el título "Detalle de competencia" se corta desde 1.3. Las capturas usan el repositorio falso, así que no reflejan el orden por fecha (que se aplica en la capa SQLite).
+- **Commit / PR:** commit en `feat/pulido-ux-fase1` (sin PR: el equipo integra ramas a `main` directamente).
+
+---
 ## 2026-11-05 · @Pabloricalderon — Issue #22: pruebas de estados asíncronos del Detalle
 
 - **Herramienta:** ChatGPT (OpenAI).

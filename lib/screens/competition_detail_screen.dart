@@ -116,7 +116,7 @@ class _CompetitionDetailScreenState
                       children: [
                         Icon(Icons.delete_outline),
                         SizedBox(width: 12),
-                        Text('Eliminar competencia'),
+                        Flexible(child: Text('Eliminar competencia')),
                       ],
                     ),
                   ),

@@ -11,6 +11,10 @@ Future<void> expectDetailText(WidgetTester tester, String value) async {
     160,
     scrollable: find.byType(Scrollable),
   );
+  // scrollUntilVisible termina con ensureVisible, que mueve la lista pero no
+  // la vuelve a dibujar. Sin este pump, la siguiente búsqueda mira la
+  // posición anterior, no encuentra el dato de abajo y lo pasa de largo.
+  await tester.pumpAndSettle();
   expect(find.text(value), findsOneWidget);
 }
 
