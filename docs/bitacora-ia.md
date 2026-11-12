@@ -16,6 +16,20 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Rediseño 1/5: estilo general
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Fondo gris azulado muy claro. Tarjetas blancas con radio de 16 y sombra suave. Azul principal #1565C0 o similar, manteniendo contraste AA (test/categoria_estilo_test.dart debe seguir pasando). Tipografía en negrita."
+- **Resultado:** `lib/tema.dart` con `fondoApp` (#F3F6FB), `radioTarjeta` (16), `sombraSuave`, `TarjetaBlanca`, campos redondeados con fondo blanco, botones de 48 dp, títulos en negrita y barra inferior blanca con el activo en azul. `lib/widgets/etiquetas_ficha.dart` con los colores de las etiquetas de las maquetas: Individual lila, Equipos azul, Presencial verde, Virtual rojo e Híbrida naranja.
+- **Aceptado:**
+  - `TarjetaBlanca` dibuja su fondo, radio y sombra sin depender del tema, porque varias pruebas montan pantallas sueltas sin el tema de la app.
+  - La superficie del esquema pasa a blanco puro; el fondo de las pantallas es el gris azulado.
+- **Rechazado / corregido:**
+  - Antes de revisar en Windows se borró la caché de teselas de flutter_map (`%LOCALAPPDATA%\com.example\competihub\fm_cache`, 581 imágenes): guardaba las respuestas «Access blocked» de cuando el identificador era `com.example`. Con la caché limpia, el mapa carga teselas reales con `gt.edu.umes.competihub`.
+- **Verificación:** `test/tema_test.dart` suma 8 pares de contraste AA (texto, texto secundario y azul sobre el fondo, y las cinco etiquetas). `flutter run -d windows` con la ventana a 400 px: fondo, tarjetas y negritas correctos, y el mapa con teselas. Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 241/241.
+- **Commit / PR:** commit «style: estilo general de las maquetas» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Ejecutar en Windows e identificador propio ante OpenStreetMap
 
 - **Herramienta:** cambios hechos por Alex fuera de esta sesión (para correr `flutter run -d windows`), integrados y verificados con Claude Code (Claude Opus 5.5).

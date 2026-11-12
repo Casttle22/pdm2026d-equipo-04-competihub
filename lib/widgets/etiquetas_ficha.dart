@@ -1,0 +1,93 @@
+import 'package:flutter/material.dart';
+
+import '../data/competencia.dart';
+import 'etiqueta.dart';
+
+// Colores de las etiquetas de formato y modalidad de las maquetas:
+// Individual lila, Equipos azul, Presencial verde, Virtual rojo e Híbrida
+// naranja. Cada texto alcanza contraste AA (4,5:1) sobre su fondo; lo
+// comprueba test/tema_test.dart.
+class ColoresEtiqueta {
+  const ColoresEtiqueta({
+    required this.texto,
+    required this.fondo,
+    required this.icono,
+  });
+
+  final Color texto;
+  final Color fondo;
+  final IconData icono;
+}
+
+const ColoresEtiqueta coloresIndividual = ColoresEtiqueta(
+  texto: Color(0xFF6A1B9A),
+  fondo: Color(0xFFF3E5F5),
+  icono: Icons.person_outline,
+);
+const ColoresEtiqueta coloresEquipos = ColoresEtiqueta(
+  texto: Color(0xFF0D47A1),
+  fondo: Color(0xFFE3F2FD),
+  icono: Icons.groups_outlined,
+);
+const ColoresEtiqueta coloresPresencial = ColoresEtiqueta(
+  texto: Color(0xFF1B5E20),
+  fondo: Color(0xFFE8F5E9),
+  icono: Icons.place_outlined,
+);
+const ColoresEtiqueta coloresVirtual = ColoresEtiqueta(
+  texto: Color(0xFFB71C1C),
+  fondo: Color(0xFFFFEBEE),
+  icono: Icons.wifi,
+);
+const ColoresEtiqueta coloresHibrida = ColoresEtiqueta(
+  texto: Color(0xFF8A4B00),
+  fondo: Color(0xFFFFF3E0),
+  icono: Icons.sync_alt,
+);
+
+ColoresEtiqueta coloresDeModalidad(String modalidad) => switch (modalidad) {
+  'Presencial' => coloresPresencial,
+  'Virtual' => coloresVirtual,
+  _ => coloresHibrida,
+};
+
+ColoresEtiqueta coloresDeFormato(FormatoCompetencia formato) =>
+    switch (formato) {
+      FormatoCompetencia.individual => coloresIndividual,
+      FormatoCompetencia.equipos => coloresEquipos,
+    };
+
+// «Individual» o «Equipos» (sin dibujar nada si el formato no se conoce).
+class EtiquetaDeFormato extends StatelessWidget {
+  const EtiquetaDeFormato({super.key, required this.formato});
+
+  final FormatoCompetencia formato;
+
+  @override
+  Widget build(BuildContext context) {
+    final colores = coloresDeFormato(formato);
+    return Etiqueta(
+      texto: formato == FormatoCompetencia.equipos ? 'Equipos' : 'Individual',
+      icono: colores.icono,
+      colorTexto: colores.texto,
+      colorFondo: colores.fondo,
+    );
+  }
+}
+
+class EtiquetaDeModalidad extends StatelessWidget {
+  const EtiquetaDeModalidad({super.key, required this.modalidad});
+
+  final String modalidad;
+
+  @override
+  Widget build(BuildContext context) {
+    final colores = coloresDeModalidad(modalidad);
+    return Etiqueta(
+      texto: modalidad,
+      icono: colores.icono,
+      colorTexto: colores.texto,
+      colorFondo: colores.fondo,
+    );
+  }
+}

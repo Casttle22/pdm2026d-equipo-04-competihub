@@ -4,6 +4,7 @@ import 'package:competihub/data/mock_competencias.dart';
 import 'package:competihub/main.dart';
 import 'package:competihub/screens/competition_detail_screen.dart';
 import 'package:competihub/tema.dart';
+import 'package:competihub/widgets/etiquetas_ficha.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -48,6 +49,27 @@ void main() {
     'mensaje de error': (scheme.error, scheme.surface),
     'caja de error': (scheme.onErrorContainer, scheme.errorContainer),
   };
+  // Fondo gris azulado de las pantallas y tarjetas blancas.
+  pares['texto sobre el fondo de la app'] = (scheme.onSurface, fondoApp);
+  pares['texto secundario sobre el fondo de la app'] = (
+    scheme.onSurfaceVariant,
+    fondoApp,
+  );
+  pares['color principal sobre el fondo de la app'] = (
+    scheme.primary,
+    fondoApp,
+  );
+  // Etiquetas de formato y modalidad.
+  for (final (nombre, colores) in [
+    ('Individual', coloresIndividual),
+    ('Equipos', coloresEquipos),
+    ('Presencial', coloresPresencial),
+    ('Virtual', coloresVirtual),
+    ('Híbrida', coloresHibrida),
+  ]) {
+    pares['etiqueta $nombre'] = (colores.texto, colores.fondo);
+  }
+
   pares.forEach((nombre, par) {
     test('Contraste AA: $nombre', () {
       expect(contraste(par.$1, par.$2), greaterThanOrEqualTo(4.5));
