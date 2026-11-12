@@ -16,6 +16,22 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Módulo 9: Cómo llegar
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Botón en el Detalle de las competencias presenciales e híbridas. Abre la app de mapas con la ubicación usando url_launcher (geo: o el URL de Google Maps como respaldo). Configura las <queries> de Android. Si no se puede abrir, muestra un mensaje y ofrece copiar la dirección."
+- **Resultado:** dependencia `url_launcher` , `lib/servicios/abridor_de_mapas.dart` (enlaces y apertura, con su provider), `lib/widgets/boton_como_llegar.dart` en la fila de acciones del Detalle y `<queries>` para `geo:` y `https:` en el `AndroidManifest.xml`.
+- **Aceptado:**
+  - Primero `geo:` (lo atiende cualquier app de mapas) y, si no hay ninguna, el enlace web de Google Maps. La función que arma los enlaces ya acepta coordenadas para el módulo 10.
+  - La apertura va detrás de un provider (`abridorDeMapasProvider`): las pruebas la reemplazan y verifican qué se intentó abrir sin abrir nada.
+  - Si no se pudo abrir, un mensaje con la acción «Copiar dirección».
+- **Rechazado / corregido:**
+  - En las competencias de ejemplo, antes de abrir el mapa se avisa que la ubicación es ficticia y se pide confirmar. Abrir una búsqueda de «Circuito imaginario del Parque Nube» sin aviso podría parecer un error de la app o hacer creer que el lugar existe.
+  - No se usó `canLaunchUrl` antes de abrir: con `launchUrl` basta saber si se abrió, y se evita una segunda consulta al sistema.
+- **Verificación:** `test/como_llegar_test.dart` (11 pruebas: enlaces con y sin coordenadas, respaldo web, fallo total, modalidades, `<queries>` en el manifiesto, apertura desde el Detalle, botón en híbridas y no en virtuales, mensaje con copia de la dirección, aviso en ejemplos y 360 dp con texto 2.0, donde los botones pasan a otra línea). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 209/209. Pendiente de revisar en el emulador: que se abra la app de mapas de verdad.
+- **Commit / PR:** commit «feat: Cómo llegar con url_launcher» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Módulo 8: Mis eventos (base v6)
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

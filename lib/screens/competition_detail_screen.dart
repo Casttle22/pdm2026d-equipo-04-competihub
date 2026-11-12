@@ -7,6 +7,8 @@ import '../providers/competencias_providers.dart';
 import '../providers/reloj_provider.dart';
 import '../tema.dart';
 import '../utils/fechas.dart';
+import '../servicios/abridor_de_mapas.dart';
+import '../widgets/boton_como_llegar.dart';
 import '../widgets/boton_guardar.dart';
 import '../widgets/categoria_estilo.dart';
 import '../widgets/competition_delete_dialog.dart';
@@ -408,7 +410,11 @@ class _DetalleContenido extends StatelessWidget {
         key: const ValueKey('detalle-acciones'),
         spacing: 8,
         runSpacing: 8,
-        children: [BotonGuardar(competencia: competition, conTexto: true)],
+        children: [
+          BotonGuardar(competencia: competition, conTexto: true),
+          if (admiteComoLlegar(competition.modalidad))
+            BotonComoLlegar(competencia: competition),
+        ],
       ),
     ];
 
