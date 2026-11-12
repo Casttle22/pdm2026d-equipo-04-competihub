@@ -10,6 +10,11 @@ const List<String> _modalidades = ['Presencial', 'Virtual', 'Híbrida'];
 
 const String _campoObligatorio = 'Este campo es obligatorio.';
 
+// Los mensajes de error pueden ocupar varias líneas. Con una sola (el valor
+// por defecto), en pantallas angostas o con texto grande se cortaban con «…»
+// y no se leía qué faltaba.
+const int _lineasDeError = 6;
+
 // Formulario reutilizable para crear (initial == null) o editar una
 // competencia. No guarda nada por sí mismo: arma un CompetenciaDraft y se lo
 // entrega a onSave. Si onSave termina bien, cierra la pantalla; si lanza una
@@ -377,8 +382,12 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       DropdownButtonFormField<String>(
         key: const ValueKey('competition-form-categoria'),
         initialValue: _categoria,
+        // Ocupa el ancho disponible en vez del ancho de la opción más larga,
+        // que con texto grande no cabe en pantallas angostas.
+        isExpanded: true,
         decoration: const InputDecoration(
           labelText: 'Categoría *',
+          errorMaxLines: _lineasDeError,
           border: OutlineInputBorder(),
         ),
         items: _opcionesCon(
@@ -395,8 +404,10 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       DropdownButtonFormField<String>(
         key: const ValueKey('competition-form-modalidad'),
         initialValue: _modalidad,
+        isExpanded: true,
         decoration: const InputDecoration(
           labelText: 'Modalidad *',
+          errorMaxLines: _lineasDeError,
           border: OutlineInputBorder(),
         ),
         items: _opcionesCon(
@@ -548,6 +559,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       decoration: InputDecoration(
         labelText: etiqueta,
         hintText: ayuda,
+        errorMaxLines: _lineasDeError,
         border: const OutlineInputBorder(),
       ),
       validator:
@@ -672,6 +684,8 @@ class _CampoFechaHora extends StatelessWidget {
               enabled: habilitado,
               errorText: field.errorText,
               helperText: ayuda,
+              helperMaxLines: _lineasDeError,
+              errorMaxLines: _lineasDeError,
               border: const OutlineInputBorder(),
               suffixIcon: actual != null && onLimpiar != null
                   ? IconButton(

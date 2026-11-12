@@ -16,7 +16,39 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
-## 2026-11-11 · @ALEXDLG11M — Verificación de la rama `feat/pulido-ux-fase1` y corrección de dos pruebas
+## 2026-11-11 · @AlexDLG1 — Módulo 0: textos que se cortaban con letra grande
+
+- **Herramienta:** Claude Code (Claude Fable 5.2).
+- **Especificación:** "Que los mensajes de error del formulario no se corten con texto grande (errorMaxLines o equivalente). Que el título de la barra del Detalle tampoco se corte, o se acorte a «Detalle»."
+- **Resultado:** `errorMaxLines` en todos los campos del formulario, listas desplegables con `isExpanded` y título «Detalle».
+- **Aceptado:** Una constante (`_lineasDeError`) compartida por los cuatro tipos de campo; título corto en la barra, porque el título completo de la competencia ya está en la cabecera.
+- **Rechazado / corregido:**
+  - La primera versión (4 líneas de error) no alcanzaba para el mensaje de enlace inválido a 360 dp y 2.0; se subió a 6.
+  - La prueba nueva encontró un desbordamiento que no se había pedido: las listas de Categoría y Modalidad medían el ancho de su opción más larga. Se corrigió con `isExpanded: true`.
+  - No se usó un tema global de `InputDecoration`: el formulario se prueba suelto, sin el tema de la app, y el arreglo debía valer ahí también.
+- **Verificación:** `test/modulo0_texto_grande_test.dart` (3 pruebas a 360 dp y texto 2.0: errores completos, error de enlace en varias líneas y título sin cortar). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 93/93.
+- **Commit / PR:** commit «fix: textos que se cortaban con letra grande» en `feat/fases-2-3` (sin PR).
+
+---
+## 2026-11-11 · @AlexDLG1 — Pulido de UX, fase 1 (commit `13adee4`)
+
+- **Herramienta:** Claude en claude.ai: implementado con Claude Fable 5.2 y verificado con Claude Opus 5.5, por encargo de Alex.
+- **Especificación:** Pulir el Feed, el Detalle y el formulario sin cambiar la arquitectura (repositorio único, providers de Riverpod): Feed ordenado por fecha con aviso de cuánto falta y el costo en la tarjeta; Detalle con un resumen arriba y botones para copiar; formulario que lleve al primer error y pida confirmar antes de descartar cambios.
+- **Resultado:** 15 archivos (1 622 líneas agregadas): `lib/utils/fechas.dart`, `lib/providers/reloj_provider.dart`, `lib/widgets/categoria_estilo.dart`, `lib/widgets/etiqueta.dart`, cambios en `lib/main.dart`, en el Detalle y en el formulario, y cinco archivos de pruebas nuevos.
+- **Aceptado:**
+  - Orden «próximas primero, finalizadas al final» en la capa de datos, con la hora inyectada (`relojProvider`) para poder probarlo con una fecha fija.
+  - Etiquetas de tiempo («Faltan N días», «Hoy», «Mañana», «En curso», «Finalizada») y rótulo «Finalizadas» en el Feed.
+  - Colores por categoría con contraste AA comprobado en `test/categoria_estilo_test.dart`.
+  - Resumen «Cuándo, Dónde, Costo» en el Detalle, botones de copiar enlace y contacto, y Eliminar dentro de un menú para alejarlo de Editar.
+  - Formulario: desplazamiento al primer campo inválido, aviso de fecha pasada que no bloquea y diálogo «¿Descartar cambios?».
+- **Rechazado / corregido:**
+  - El commit se entregó con 2 de 90 pruebas en rojo; se corrigieron en `0cde13c` (ver la entrada siguiente). Lección: verificar el commit, no el árbol de trabajo.
+  - La entrada de bitácora no venía con el commit; se agrega aquí, después.
+- **Verificación:** Ver la entrada siguiente: 90/90 pruebas tras `0cde13c`, formato y análisis sin observaciones, y revisión visual a 360 dp con texto a 1.0, 1.3 y 2.0.
+- **Commit / PR:** `13adee4` en `feat/pulido-ux-fase1` (sin PR).
+
+---
+## 2026-11-11 · @AlexDLG1 — Verificación de la rama `feat/pulido-ux-fase1` y corrección de dos pruebas
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).
 - **Especificación:** "Antes de integrar el pulido de la fase 1, ejecutar `flutter pub get`, `dart format --set-exit-if-changed lib test`, `flutter analyze` y `flutter test`; si algo falla, corregirlo sin borrar ni debilitar pruebas; revisar Feed, Detalle y Formulario a 360 dp y con texto grande."

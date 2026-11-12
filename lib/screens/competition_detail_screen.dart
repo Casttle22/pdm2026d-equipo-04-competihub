@@ -90,7 +90,9 @@ class _CompetitionDetailScreenState
       canPop: !_eliminando,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Detalle de competencia'),
+          // Título corto: con texto grande, «Detalle de competencia» se
+          // cortaba al compartir la barra con los botones.
+          title: const Text('Detalle'),
           scrolledUnderElevation: 1,
           actions: [
             if (competencia != null) ...[
