@@ -9,7 +9,8 @@ Future<void> expectDetailText(WidgetTester tester, String value) async {
   await tester.scrollUntilVisible(
     find.text(value),
     160,
-    scrollable: find.byType(Scrollable),
+    // La lista del Detalle (la galería de fotos también se desplaza, de lado).
+    scrollable: find.byType(Scrollable).first,
   );
   // scrollUntilVisible termina con ensureVisible, que mueve la lista pero no
   // la vuelve a dibujar. Sin este pump, la siguiente búsqueda mira la

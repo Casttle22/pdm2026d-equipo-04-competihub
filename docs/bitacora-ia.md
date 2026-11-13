@@ -16,6 +16,24 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Sección «Fotos y videos» en el Detalle
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Campo opcional galeria: List<MediaCompetencia> con tipo (imagen o video), fuente (asset o URL) y título. En el Detalle, «Fotos y videos» con una fila horizontal de miniaturas. Imagen: al tocarla se abre en grande, con opción de cerrar. Video: miniatura con ícono de play; al tocarla se abre el enlace con url_launcher, sin paquetes nuevos. Sin galería no se muestra. Solo para los ejemplos: no cambiar SQLite ni el formulario; dejarlo anotado. Galería de ejemplo en 2 o 3 competencias; los videos, de ejemplo y rotulados como ficticios."
+- **Resultado:** `lib/data/media_competencia.dart`, `galeria` en `Competencia` (fuera del borrador del formulario), `lib/widgets/galeria_competencia.dart` (miniaturas, vista ampliada con crédito y botón Cerrar, apertura de videos), `lib/servicios/abridor_de_enlaces.dart` y galerías en la copa (un video), la carrera (dos fotos y un video) y la olimpiada (dos fotos y un video).
+- **Aceptado:**
+  - La base de datos no guarda la galería: al leer un ejemplo, la capa de datos le añade la definida en `mock_competencias.dart`. Así la sección también se ve en la app real sin tocar el esquema. Pendiente anotado en el README: guardarla en SQLite y editarla en el formulario.
+  - Los videos son enlaces de example.com con «Video ficticio» en el título. En un ejemplo, antes de abrirlo se avisa que no lleva a un video real (como «Cómo llegar»); en una competencia propia se abre directo. Si no se puede abrir, se avisa.
+  - Las fotos de galería dicen «foto de referencia»: no son del evento, que no existe.
+  - La vista ampliada usa `InteractiveViewer` (se puede ampliar con dos dedos) y muestra el crédito de la foto.
+  - Cada miniatura se anuncia como «Foto: …» o «Video: … Se abre en otra app.».
+- **Rechazado / corregido:**
+  - No se agregó un reproductor de video (se pidió no sumar paquetes).
+  - `test/competition_detail_content_test.dart`: la galería agrega otra área desplazable (horizontal) y la ayuda de la prueba exigía una sola; ahora usa la primera, la lista del Detalle. Verifica lo mismo.
+- **Verificación:** `test/galeria_test.dart` (10 pruebas: qué ejemplos tienen galería y videos ficticios, la base devuelve la galería sin guardarla, aparece con elementos, no aparece sin ellos, el video tiene play y la foto no, la foto se amplía con crédito y se cierra, el aviso de video ficticio con Cancelar y Abrir, apertura directa con error en una competencia propia, anuncios para lector de pantalla y 360 dp con texto 2.0). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 300/300.
+- **Commit / PR:** commit «feat: sección Fotos y videos en el Detalle» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Imágenes de portada de las competencias de ejemplo
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

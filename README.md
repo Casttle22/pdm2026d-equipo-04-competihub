@@ -44,7 +44,7 @@ La app tiene una barra inferior con tres secciones: **Inicio**, **Mapa** y **Mis
 **Detalle de una competencia**
 - Resumen arriba (cuándo, dónde y costo) y acciones: **Guardar**, **Cómo llegar** (presenciales e híbridas) y **Compartir**.
 - Estado de la inscripción («Inscripciones abiertas», «Cierra en N días», «Cierra hoy», «Inscripciones cerradas») con su fecha límite.
-- Información general, mapa pequeño con la ubicación, cronograma con la etapa actual resaltada, información para participar y la sección «Formato y premios» (individual o por equipos, tamaño de equipo, premios y organizador).
+- Portada (imagen local o URL), «Fotos y videos» en las de ejemplo, información general, mapa pequeño con la ubicación, cronograma con la etapa actual resaltada, información para participar y la sección «Formato y premios» (individual o por equipos, tamaño de equipo, premios y organizador).
 - En pantallas de 600 dp o más, dos columnas.
 
 **Crear, editar y eliminar competencias**
@@ -62,6 +62,10 @@ La app tiene una barra inferior con tres secciones: **Inicio**, **Mapa** y **Mis
 - Tema azul con contraste AA comprobado en pruebas.
 - Probado a 360 dp de ancho con el texto del sistema al doble de tamaño.
 - Tarjetas y botones con descripciones para lector de pantalla.
+
+### Pendiente
+
+- **Fotos y videos:** por ahora solo las competencias de ejemplo tienen galería (definida en `lib/data/mock_competencias.dart`). Falta guardarla en SQLite y poder agregarla al crear o editar una competencia.
 
 ### Datos de ejemplo
 

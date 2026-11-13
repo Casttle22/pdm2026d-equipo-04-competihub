@@ -560,6 +560,9 @@ class CompetenciasDatabase implements CompetenciasDataSource {
       etapas: etapas,
       latitud: (map['latitud'] as num?)?.toDouble(),
       longitud: (map['longitud'] as num?)?.toDouble(),
+      // La galería no está en SQLite: solo los ejemplos traen una, definida
+      // en mock_competencias.dart (pendiente guardarla y editarla).
+      galeria: galeriaDeEjemplo(map['id']! as String),
     );
   }
 }

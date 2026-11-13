@@ -1,5 +1,6 @@
 import 'competencia_draft.dart';
 import 'etapa.dart';
+import 'media_competencia.dart';
 
 // Cómo se compite. Es opcional: si no se conoce, no se muestra.
 enum FormatoCompetencia {
@@ -65,33 +66,39 @@ class Competencia {
     this.etapas = const [],
     this.latitud,
     this.longitud,
+    this.galeria = const [],
   });
 
   // Une un id con los datos de un formulario. La usan las fuentes de datos
   // al crear o actualizar, para no repetir la lista de campos.
-  Competencia.desdeBorrador(this.id, CompetenciaDraft draft)
-    : titulo = draft.titulo,
-      categoria = draft.categoria,
-      fechaInicio = draft.fechaInicio,
-      ubicacion = draft.ubicacion,
-      modalidad = draft.modalidad,
-      descripcion = draft.descripcion,
-      reglas = draft.reglas,
-      costo = draft.costo,
-      instruccionesParticipacion = draft.instruccionesParticipacion,
-      fechaFin = draft.fechaFin,
-      inscripcionUrl = draft.inscripcionUrl,
-      contacto = draft.contacto,
-      imagenUrl = draft.imagenUrl,
-      fechaLimiteInscripcion = draft.fechaLimiteInscripcion,
-      formato = draft.formato,
-      tamanoEquipoMin = draft.tamanoEquipoMin,
-      tamanoEquipoMax = draft.tamanoEquipoMax,
-      premios = draft.premios,
-      organizador = draft.organizador,
-      etapas = List.unmodifiable(draft.etapas),
-      latitud = draft.latitud,
-      longitud = draft.longitud;
+  // La galería no viene del formulario (todavía no se edita): se pasa aparte.
+  Competencia.desdeBorrador(
+    this.id,
+    CompetenciaDraft draft, {
+    List<MediaCompetencia> galeria = const [],
+  }) : galeria = List.unmodifiable(galeria),
+       titulo = draft.titulo,
+       categoria = draft.categoria,
+       fechaInicio = draft.fechaInicio,
+       ubicacion = draft.ubicacion,
+       modalidad = draft.modalidad,
+       descripcion = draft.descripcion,
+       reglas = draft.reglas,
+       costo = draft.costo,
+       instruccionesParticipacion = draft.instruccionesParticipacion,
+       fechaFin = draft.fechaFin,
+       inscripcionUrl = draft.inscripcionUrl,
+       contacto = draft.contacto,
+       imagenUrl = draft.imagenUrl,
+       fechaLimiteInscripcion = draft.fechaLimiteInscripcion,
+       formato = draft.formato,
+       tamanoEquipoMin = draft.tamanoEquipoMin,
+       tamanoEquipoMax = draft.tamanoEquipoMax,
+       premios = draft.premios,
+       organizador = draft.organizador,
+       etapas = List.unmodifiable(draft.etapas),
+       latitud = draft.latitud,
+       longitud = draft.longitud;
 
   final String id;
   final String titulo;
@@ -130,6 +137,10 @@ class Competencia {
   final double? longitud;
 
   bool get tieneCoordenadas => latitud != null && longitud != null;
+
+  // Fotos y videos. Por ahora solo los ejemplos tienen: no se guarda en
+  // SQLite ni se edita en el formulario (pendiente).
+  final List<MediaCompetencia> galeria;
 
   bool get tieneFichaDeTorneo =>
       formato != null ||
@@ -179,6 +190,7 @@ class Competencia {
   }) {
     return Competencia.desdeBorrador(
       id,
+      galeria: galeria,
       aBorrador().conFechas(
         fechaInicio: fechaInicio,
         fechaFin: fechaFin,

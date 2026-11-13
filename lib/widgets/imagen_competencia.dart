@@ -16,12 +16,17 @@ class ImagenCompetencia extends StatelessWidget {
     required this.categoria,
     this.alto = 120,
     this.alineacionIcono = Alignment.center,
+    this.ajuste = BoxFit.cover,
   });
 
   final String? imagenUrl;
   final String categoria;
   final double alto;
   final Alignment alineacionIcono;
+
+  // Cómo llena la imagen su espacio: recortada (cover) en tarjetas y
+  // completa (contain) en la vista ampliada.
+  final BoxFit ajuste;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +53,7 @@ class ImagenCompetencia extends StatelessWidget {
         child: Image.asset(
           url,
           key: const ValueKey('imagen-asset'),
-          fit: BoxFit.cover,
+          fit: ajuste,
           excludeFromSemantics: true,
           errorBuilder: alFallar,
         ),
@@ -67,7 +72,7 @@ class ImagenCompetencia extends StatelessWidget {
       width: double.infinity,
       child: Image.network(
         url,
-        fit: BoxFit.cover,
+        fit: ajuste,
         excludeFromSemantics: true,
         loadingBuilder: (context, child, progreso) => progreso == null
             ? child

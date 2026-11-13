@@ -1,5 +1,6 @@
 import 'competencia.dart';
 import 'etapa.dart';
+import 'media_competencia.dart';
 
 // Eventos inventados exclusivamente para desarrollo y pruebas.
 // La ficha de torneo (formato y tamaño de equipo) sale de las reglas de cada
@@ -10,6 +11,8 @@ import 'etapa.dart';
 // no la ubicación de ningún evento. El mapa lo avisa.
 // Las portadas son fotos con licencia libre incluidas en la app
 // (assets/imagenes/); fuente y licencia en docs/creditos_imagenes.md.
+// Tres ejemplos traen «Fotos y videos»: las fotos son de referencia (no del
+// evento, que no existe) y los videos son enlaces ficticios de example.com.
 // No representan eventos reales ni evidencia de investigación de usuarios.
 final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
   Competencia(
@@ -34,6 +37,14 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     premios: 'Trofeo simbólico de prueba (ficticio)',
     organizador: 'Club ficticio de arena digital',
     imagenUrl: 'assets/imagenes/portada_esports.jpg',
+    galeria: const [
+      MediaCompetencia(
+        tipo: TipoMedia.video,
+        fuente: 'https://example.com/competihub/video-ficticio-copa',
+        titulo: 'Video ficticio: presentación de la copa (ejemplo)',
+        miniatura: 'assets/imagenes/portada_esports.jpg',
+      ),
+    ],
   ),
   Competencia(
     id: 'mock-academic-01',
@@ -73,6 +84,24 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     latitud: 14.829,
     longitud: -91.512,
     imagenUrl: 'assets/imagenes/portada_carrera.jpg',
+    galeria: const [
+      MediaCompetencia(
+        tipo: TipoMedia.imagen,
+        fuente: 'assets/imagenes/galeria_pista.jpg',
+        titulo: 'Pista de atletismo (foto de referencia)',
+      ),
+      MediaCompetencia(
+        tipo: TipoMedia.imagen,
+        fuente: 'assets/imagenes/portada_carrera.jpg',
+        titulo: 'Carriles de la pista (foto de referencia)',
+      ),
+      MediaCompetencia(
+        tipo: TipoMedia.video,
+        fuente: 'https://example.com/competihub/video-ficticio-carrera',
+        titulo: 'Video ficticio: recorrido de la carrera (ejemplo)',
+        miniatura: 'assets/imagenes/galeria_pista.jpg',
+      ),
+    ],
   ),
   Competencia(
     id: 'mock-academic-02',
@@ -96,6 +125,24 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     latitud: 14.8372,
     longitud: -91.5098,
     imagenUrl: 'assets/imagenes/portada_logica.jpg',
+    galeria: const [
+      MediaCompetencia(
+        tipo: TipoMedia.imagen,
+        fuente: 'assets/imagenes/galeria_ajedrez_perfil.jpg',
+        titulo: 'Tablero de ajedrez (foto de referencia)',
+      ),
+      MediaCompetencia(
+        tipo: TipoMedia.imagen,
+        fuente: 'assets/imagenes/galeria_ajedrez_dorado.jpg',
+        titulo: 'Piezas en juego (foto de referencia)',
+      ),
+      MediaCompetencia(
+        tipo: TipoMedia.video,
+        fuente: 'https://example.com/competihub/video-ficticio-olimpiada',
+        titulo: 'Video ficticio: cómo se juega la olimpiada (ejemplo)',
+        miniatura: 'assets/imagenes/portada_logica.jpg',
+      ),
+    ],
   ),
   Competencia(
     id: 'mock-other-01',
@@ -277,6 +324,7 @@ List<Competencia> competenciasDeEjemplo(DateTime hoy) {
       switch (fechasDeEjemplo(base.id, hoy)) {
         final fechas? => Competencia.desdeBorrador(
           base.id,
+          galeria: base.galeria,
           base
               .aBorrador()
               .conFechas(
@@ -292,4 +340,15 @@ List<Competencia> competenciasDeEjemplo(DateTime hoy) {
         null => base,
       },
   ];
+}
+
+// Galería de un ejemplo por su id (vacía si no es un ejemplo o no tiene).
+// La usa la base de datos, que no guarda la galería.
+List<MediaCompetencia> galeriaDeEjemplo(String id) {
+  for (final ejemplo in competenciasMock) {
+    if (ejemplo.id == id) {
+      return ejemplo.galeria;
+    }
+  }
+  return const [];
 }

@@ -17,6 +17,7 @@ import '../widgets/boton_guardar.dart';
 import '../widgets/categoria_estilo.dart';
 import '../widgets/competition_delete_dialog.dart';
 import '../widgets/etiqueta.dart';
+import '../widgets/galeria_competencia.dart';
 import '../widgets/imagen_competencia.dart';
 import '../widgets/linea_de_tiempo.dart';
 import '../widgets/mapa_base.dart';
@@ -398,6 +399,11 @@ class _DetalleContenido extends StatelessWidget {
         label: 'Descripción',
         value: competition.descripcion,
       ),
+      if (competition.galeria.isNotEmpty) ...[
+        const SizedBox(height: 24),
+        const _TituloSeccion('Fotos y videos'),
+        GaleriaCompetencia(competencia: competition),
+      ],
       if (competition.etapas.isNotEmpty) ...[
         const SizedBox(height: 24),
         const _TituloSeccion('Etapas y cronograma'),
