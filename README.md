@@ -59,12 +59,13 @@ La app tiene una barra inferior con tres secciones: **Inicio**, **Mapa** y **Mis
 - Competencias guardadas en el teléfono, con las próximas primero.
 
 **Accesibilidad**
-- Tema azul con contraste AA comprobado en pruebas.
+- Tema azul en modo claro y oscuro (sigue al sistema o se elige en el Inicio), con contraste AA comprobado en pruebas en los dos modos.
 - Probado a 360 dp de ancho con el texto del sistema al doble de tamaño.
 - Tarjetas y botones con descripciones para lector de pantalla.
 
 ### Pendiente
 
+- **Modo de color recordado:** la elección Sistema/Claro/Oscuro vuelve a «Sistema» al cerrar la app; guardarla está pendiente de decidir.
 - **Fotos y videos:** por ahora solo las competencias de ejemplo tienen galería (definida en `lib/data/mock_competencias.dart`). Falta guardarla en SQLite y poder agregarla al crear o editar una competencia.
 
 ### Datos de ejemplo

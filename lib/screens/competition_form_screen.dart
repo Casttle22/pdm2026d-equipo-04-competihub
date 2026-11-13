@@ -391,9 +391,9 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         ),
         // Barra inferior fija con el botón de guardar, de ancho completo.
         bottomNavigationBar: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
+          decoration: BoxDecoration(
+            color: colorDeTarjeta(context),
+            boxShadow: const [
               BoxShadow(
                 color: Color(0x1A102A43),
                 blurRadius: 12,

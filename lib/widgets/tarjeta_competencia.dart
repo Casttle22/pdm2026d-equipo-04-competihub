@@ -140,7 +140,7 @@ class CuadroDeCategoria extends StatelessWidget {
       width: 64,
       height: 64,
       decoration: BoxDecoration(
-        color: fondoSuave(estilo.color, Colors.white),
+        color: fondoSuave(estilo.color, colorDeTarjeta(context)),
         borderRadius: BorderRadius.circular(radioCampo),
       ),
       child: Icon(estilo.icono, color: estilo.color, size: 32),

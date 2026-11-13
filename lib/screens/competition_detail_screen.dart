@@ -643,7 +643,9 @@ class _Cabecera extends StatelessWidget {
                   child: Etiqueta(
                     texto: competition.categoria,
                     icono: estilo.icono,
-                    colorTexto: estilo.color,
+                    // Etiqueta blanca sobre el degradado azul (igual en los
+                    // dos modos): el texto va con el color oscuro.
+                    colorTexto: colorBaseDeCategoria(competition.categoria),
                     colorFondo: blanco,
                   ),
                 ),

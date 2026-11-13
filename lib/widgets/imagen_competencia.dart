@@ -116,6 +116,8 @@ class FondoDeCategoria extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final estilo = estiloDeCategoria(categoria, Theme.of(context).colorScheme);
+    // Fondo con contenido blanco: siempre el color oscuro de la categoría.
+    final base = colorBaseDeCategoria(categoria);
     return ExcludeSemantics(
       child: Container(
         height: alto,
@@ -124,10 +126,7 @@ class FondoDeCategoria extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              estilo.color,
-              Color.lerp(estilo.color, Colors.black, 0.4)!,
-            ],
+            colors: [base, Color.lerp(base, Colors.black, 0.4)!],
           ),
         ),
         child: Stack(

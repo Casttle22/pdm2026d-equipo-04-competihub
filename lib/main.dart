@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'providers/tema_provider.dart';
 import 'screens/pantalla_principal.dart';
 import 'tema.dart';
 
-// La pantalla principal, el Inicio y sus tarjetas viven en sus propios archivos. Se reexportan
-// porque son parte de la interfaz pública de la app que usan las pruebas.
+// La pantalla principal, el Inicio y sus tarjetas viven en sus propios
+// archivos. Se reexportan porque son parte de la interfaz pública de la app
+// que usan las pruebas.
 export 'screens/inicio_screen.dart' show HomeScreen;
 export 'screens/pantalla_principal.dart' show PantallaPrincipal, Seccion;
 export 'widgets/tarjeta_competencia.dart'
@@ -28,14 +30,18 @@ void main() {
   runApp(const ProviderScope(child: CompetihubApp()));
 }
 
-class CompetihubApp extends StatelessWidget {
+// Tema claro y oscuro con la misma identidad. Por defecto sigue la
+// configuración del sistema; el selector del Inicio permite fijar uno.
+class CompetihubApp extends ConsumerWidget {
   const CompetihubApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'CompetiHub',
       theme: temaCompetihub(),
+      darkTheme: temaCompetihubOscuro(),
+      themeMode: ref.watch(modoTemaProvider),
       home: const PantallaPrincipal(),
       debugShowCheckedModeBanner: false,
     );

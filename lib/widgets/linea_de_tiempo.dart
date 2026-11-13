@@ -198,7 +198,15 @@ class _Punto extends StatelessWidget {
         ),
       ),
       child: completada
-          ? const Icon(Icons.check, size: 12, color: Colors.white)
+          ? Icon(
+              Icons.check,
+              size: 12,
+              color:
+                  ThemeData.estimateBrightnessForColor(colorAcento) ==
+                      Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
+            )
           : null,
     );
   }

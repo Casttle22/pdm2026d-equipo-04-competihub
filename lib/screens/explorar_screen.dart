@@ -113,7 +113,7 @@ class _ExplorarScreenState extends ConsumerState<ExplorarScreen> {
         DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
-            boxShadow: sombraSuave,
+            boxShadow: sombraDeTarjeta(context),
           ),
           child: TextField(
             key: const ValueKey('explorar-busqueda'),
@@ -134,7 +134,7 @@ class _ExplorarScreenState extends ConsumerState<ExplorarScreen> {
                       },
                     ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: colorDeTarjeta(context),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(28),
                 borderSide: BorderSide.none,

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../tema.dart';
 
 // Decoración de los campos del formulario: borde redondeado (radio 12),
-// fondo blanco y mensajes de error y ayuda de varias líneas. Se define aquí
-// y no solo en el tema para que el formulario se vea igual en pruebas que lo
-// montan sin el tema de la app.
+// fondo de tarjeta (blanco en claro, gris en oscuro) y mensajes de error y
+// ayuda de varias líneas. Se define aquí y no solo en el tema para que el
+// formulario se vea igual en pruebas que lo montan sin el tema de la app.
 //
 // La etiqueta del campo no va dentro del borde sino encima (ver
 // CampoConEtiqueta): dentro, con texto grande, «Fecha y hora de inicio *» se
@@ -33,7 +33,7 @@ InputDecoration decoracionCampo(
     suffixIcon: sufijo,
     enabled: habilitado,
     filled: true,
-    fillColor: Colors.white,
+    fillColor: colorDeTarjeta(context),
     helperMaxLines: 6,
     errorMaxLines: 6,
     border: borde(scheme.outlineVariant),

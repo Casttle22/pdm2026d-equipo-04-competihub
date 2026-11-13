@@ -16,6 +16,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-13 · @AlexDLG1 — Modo claro y oscuro
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Crea un tema oscuro con la misma identidad (mismo color semilla, mismos estilos de tarjetas, botones, barra inferior y snackbars). En MaterialApp usa theme, darkTheme y themeMode. Por defecto sigue al sistema; agrega un selector Sistema/Claro/Oscuro en un lugar visible, guardado en un provider de Riverpod. Para recordarlo al cerrar la app, propónmelo antes, sin paquetes nuevos. Revisa los colores fijos y cámbialos por colores del ColorScheme cuando deban cambiar en oscuro; déjalos fijos solo donde tenga sentido."
+- **Resultado:** `temaCompetihubOscuro()` y `esquemaOscuro` en `lib/tema.dart` (un solo constructor de tema para los dos modos), `colorDeTarjeta`, `colorDeFondo` y `sombraDeTarjeta`; `lib/providers/tema_provider.dart` (`modoTemaProvider`, por defecto Sistema); `lib/widgets/selector_tema.dart` en el encabezado del Inicio; `CompetihubApp` con `theme`, `darkTheme` y `themeMode`; variantes oscuras de los colores de categoría y de las etiquetas de formato y modalidad.
+- **Aceptado:**
+  - Colores que ahora salen del tema: tarjetas, campos, buscadores, píldora de modalidad, píldoras de filtro (seleccionada con `onPrimary`), barra inferior del formulario, cuadro de 64 dp de las filas y la marca de etapa completada de la línea de tiempo (elige blanco o negro según el acento).
+  - Colores que quedan fijos a propósito: texto blanco sobre fotos y velos (carrusel, miniaturas de video), el visor de imágenes en negro, la cabecera azul del Detalle con su etiqueta blanca (el texto de la etiqueta usa el color oscuro de la categoría en los dos modos), los degradados de portada sin imagen (siempre el color oscuro de la categoría, con ícono blanco) y las sombras blancas de los marcadores sobre el mapa.
+  - En oscuro, el color principal es el azul claro que genera Material con la misma semilla: el azul de marca no tiene contraste suficiente sobre gris oscuro.
+  - El mapa conserva los colores de OpenStreetMap; los controles y tarjetas encima usan el tema.
+- **Rechazado / corregido:**
+  - Con el botón de tema, la fila de píldora, tema y «+» se desbordaba 3,5 px a 320 dp con texto 1,5 (lo detectó una prueba existente). Pasó a un `Wrap`: a 400 dp los controles quedan en una segunda línea bajo la marca.
+  - **Pendiente de decidir (no implementado):** recordar la elección al cerrar la app. Propuesta sin paquetes nuevos: una tabla `preferencias` en la base SQLite que ya existe (migración v9) con el modo elegido. La alternativa común, `shared_preferences`, es un paquete nuevo y quedó fuera por indicación de Alex. Por ahora la elección vive en memoria y vuelve a «Sistema» al reiniciar.
+- **Verificación:** `test/modo_oscuro_test.dart` (28 pruebas: 21 pares de contraste AA del tema oscuro, incluidas categorías y etiquetas; misma semilla; degradados con texto blanco; por defecto sigue al sistema y cambia con él; Claro y Oscuro fijan el modo y Sistema vuelve a seguirlo; provider; campos y píldoras con colores del tema; 360 dp con texto 2.0 en oscuro). Capturas generadas en pruebas de Inicio, Explorar, Mis eventos, Detalle con galería y formulario en oscuro, sin desbordes. Las pruebas existentes pasaron sin cambios. Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 328/328.
+- **Commit / PR:** commit «feat: modo claro y oscuro» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Sección «Fotos y videos» en el Detalle
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

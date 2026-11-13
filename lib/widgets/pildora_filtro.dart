@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../tema.dart';
+
 // Píldora de filtro (categoría, modalidad, formato…): blanca con borde, o
 // azul rellena con texto blanco si está seleccionada.
 class PildoraFiltro extends StatelessWidget {
@@ -19,7 +21,7 @@ class PildoraFiltro extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final colorContenido = seleccionada ? Colors.white : scheme.onSurface;
+    final colorContenido = seleccionada ? scheme.onPrimary : scheme.onSurface;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
@@ -29,7 +31,7 @@ class PildoraFiltro extends StatelessWidget {
         showCheckmark: false,
         onSelected: (_) => onSeleccionar(),
         selectedColor: scheme.primary,
-        backgroundColor: Colors.white,
+        backgroundColor: colorDeTarjeta(context),
         labelStyle: TextStyle(
           color: colorContenido,
           fontWeight: FontWeight.w700,

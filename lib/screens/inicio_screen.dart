@@ -9,6 +9,7 @@ import '../utils/busqueda.dart';
 import '../utils/fechas.dart';
 import '../widgets/categoria_estilo.dart';
 import '../widgets/pildora_filtro.dart';
+import '../widgets/selector_tema.dart';
 import '../widgets/tarjeta_competencia.dart';
 import 'competition_detail_screen.dart';
 import 'competition_form_screen.dart';
@@ -253,14 +254,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              // Píldora, tema y «+». En un Wrap: con texto grande en un
+              // teléfono angosto, los botones bajan de línea.
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   _PildoraUbicacion(
                     valor: _ubicacion,
                     onCambio: (valor) => setState(() => _ubicacion = valor),
                   ),
-                  const SizedBox(width: 8),
+                  const SelectorTema(),
                   // En el encabezado y no como botón flotante: así no tapa
                   // el botón «Detalles» de las filas.
                   IconButton.filled(
@@ -276,7 +281,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
-              boxShadow: sombraSuave,
+              boxShadow: sombraDeTarjeta(context),
             ),
             child: TextField(
               key: const ValueKey('inicio-busqueda'),
@@ -294,7 +299,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onPressed: _borrarBusqueda,
                       ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: colorDeTarjeta(context),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 18,
@@ -517,9 +522,9 @@ class _PildoraUbicacion extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorDeTarjeta(context),
           borderRadius: BorderRadius.circular(999),
-          boxShadow: sombraSuave,
+          boxShadow: sombraDeTarjeta(context),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
