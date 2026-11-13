@@ -206,6 +206,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(campo('inscripcion-url'), '');
       await tester.enterText(campo('contacto'), '   ');
+      // Los ejemplos traen portada: también se vacía para comprobar que el
+      // campo de imagen se puede limpiar.
+      await tester.enterText(campo('imagen-url'), '');
       await tocarGuardar(tester);
 
       expect(recibido, isNotNull);

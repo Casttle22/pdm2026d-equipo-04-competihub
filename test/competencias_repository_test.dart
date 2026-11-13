@@ -98,7 +98,17 @@ class _MemoryDataSource implements CompetenciasDataSource {
   _MemoryDataSource(Iterable<Competencia> seed) : _items = [...seed];
 
   final List<Competencia> _items;
+  final Set<String> _guardados = {};
   var _nextId = 1;
+
+  @override
+  Future<Set<String>> obtenerIdsGuardados() async => {..._guardados};
+
+  @override
+  Future<void> guardarCompetencia(String id) async => _guardados.add(id);
+
+  @override
+  Future<void> quitarGuardado(String id) async => _guardados.remove(id);
 
   @override
   Future<List<Competencia>> obtenerCompetencias() async => [..._items];

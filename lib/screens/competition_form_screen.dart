@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../data/competencia.dart';
 import '../data/competencia_draft.dart';
+import '../data/etapa.dart';
+import '../tema.dart';
+import '../widgets/decoracion_campo.dart';
+import '../widgets/editor_etapas.dart';
+import 'selector_ubicacion_screen.dart';
 
 // Mismas categorías y modalidades que usan los datos actuales
 // (lib/data/mock_competencias.dart) y los estilos del Feed y del Detalle.
@@ -10,15 +16,31 @@ const List<String> _modalidades = ['Presencial', 'Virtual', 'Híbrida'];
 
 const String _campoObligatorio = 'Este campo es obligatorio.';
 
+// Los mensajes de error pueden ocupar varias líneas (ver decoracionCampo):
+// con una sola, en pantallas angostas o con texto grande se cortaban con «…».
+
 // Formulario reutilizable para crear (initial == null) o editar una
 // competencia. No guarda nada por sí mismo: arma un CompetenciaDraft y se lo
 // entrega a onSave. Si onSave termina bien, cierra la pantalla; si lanza una
 // excepción, conserva lo escrito y permite reintentar.
+//
+// Cuida dos casos en que se pierde trabajo: si la validación falla, lleva la
+// pantalla al primer campo con error; y si se intenta salir con cambios sin
+// guardar, pregunta antes de descartarlos.
 class CompetitionFormScreen extends StatefulWidget {
-  const CompetitionFormScreen({super.key, this.initial, required this.onSave});
+  const CompetitionFormScreen({
+    super.key,
+    this.initial,
+    required this.onSave,
+    this.ahora,
+  });
 
   final Competencia? initial;
   final Future<void> Function(CompetenciaDraft) onSave;
+
+  // Hora actual, para avisar si el inicio elegido ya pasó. Las pruebas
+  // pueden fijarla; por defecto es DateTime.now.
+  final DateTime Function()? ahora;
 
   @override
   State<CompetitionFormScreen> createState() => _CompetitionFormScreenState();
@@ -36,17 +58,34 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
   late final TextEditingController _inscripcionUrlController;
   late final TextEditingController _contactoController;
   late final TextEditingController _imagenUrlController;
+  late final TextEditingController _equipoMinController;
+  late final TextEditingController _equipoMaxController;
+  late final TextEditingController _premiosController;
+  late final TextEditingController _organizadorController;
 
   String? _categoria;
   String? _modalidad;
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
+  DateTime? _fechaLimiteInscripcion;
+  FormatoCompetencia? _formato;
+  List<Etapa> _etapas = const [];
+  LatLng? _punto;
 
   bool _guardando = false;
   String? _errorGuardado;
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   bool get _esEdicion => widget.initial != null;
+
+  bool get _inicioYaPaso {
+    final inicio = _fechaInicio;
+    if (inicio == null) {
+      return false;
+    }
+    final ahora = (widget.ahora ?? DateTime.now)();
+    return inicio.isBefore(ahora);
+  }
 
   @override
   void initState() {
@@ -65,10 +104,24 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     );
     _contactoController = TextEditingController(text: initial?.contacto);
     _imagenUrlController = TextEditingController(text: initial?.imagenUrl);
+    _equipoMinController = TextEditingController(
+      text: initial?.tamanoEquipoMin?.toString(),
+    );
+    _equipoMaxController = TextEditingController(
+      text: initial?.tamanoEquipoMax?.toString(),
+    );
+    _premiosController = TextEditingController(text: initial?.premios);
+    _organizadorController = TextEditingController(text: initial?.organizador);
+    _formato = initial?.formato;
+    _etapas = initial?.etapas ?? const [];
+    _punto = initial != null && initial.tieneCoordenadas
+        ? LatLng(initial.latitud!, initial.longitud!)
+        : null;
     _categoria = initial?.categoria;
     _modalidad = initial?.modalidad;
     _fechaInicio = initial?.fechaInicio;
     _fechaFin = initial?.fechaFin;
+    _fechaLimiteInscripcion = initial?.fechaLimiteInscripcion;
   }
 
   @override
@@ -82,6 +135,10 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     _inscripcionUrlController.dispose();
     _contactoController.dispose();
     _imagenUrlController.dispose();
+    _equipoMinController.dispose();
+    _equipoMaxController.dispose();
+    _premiosController.dispose();
+    _organizadorController.dispose();
     super.dispose();
   }
 
@@ -94,8 +151,13 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     return [...base, actual];
   }
 
-  Future<DateTime?> _elegirFechaHora(DateTime? actual) async {
-    final base = actual ?? DateTime.now();
+  // `actual` es el valor que ya tiene el campo; `sugerida` solo sirve como
+  // punto de partida de los selectores cuando el campo está vacío.
+  Future<DateTime?> _elegirFechaHora(
+    DateTime? actual, {
+    DateTime? sugerida,
+  }) async {
+    final base = actual ?? sugerida ?? DateTime.now();
     final fecha = await showDatePicker(
       context: context,
       initialDate: base,
@@ -110,9 +172,119 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       initialTime: TimeOfDay.fromDateTime(base),
     );
     if (hora == null) {
-      return null;
+      // Se canceló la hora. Si el campo ya tenía un valor, se conserva la
+      // fecha recién elegida con la hora anterior; si estaba vacío, no se
+      // inventa una hora.
+      if (actual == null) {
+        return null;
+      }
+      return DateTime(
+        fecha.year,
+        fecha.month,
+        fecha.day,
+        actual.hour,
+        actual.minute,
+      );
     }
     return DateTime(fecha.year, fecha.month, fecha.day, hora.hour, hora.minute);
+  }
+
+  // Compara lo que hay en pantalla con los datos iniciales.
+  bool _hayCambios() {
+    final initial = widget.initial;
+    return _tituloController.text != (initial?.titulo ?? '') ||
+        _ubicacionController.text != (initial?.ubicacion ?? '') ||
+        _descripcionController.text != (initial?.descripcion ?? '') ||
+        _reglasController.text != (initial?.reglas ?? '') ||
+        _costoController.text != (initial?.costo ?? '') ||
+        _instruccionesController.text !=
+            (initial?.instruccionesParticipacion ?? '') ||
+        _inscripcionUrlController.text != (initial?.inscripcionUrl ?? '') ||
+        _contactoController.text != (initial?.contacto ?? '') ||
+        _imagenUrlController.text != (initial?.imagenUrl ?? '') ||
+        _equipoMinController.text !=
+            (initial?.tamanoEquipoMin?.toString() ?? '') ||
+        _equipoMaxController.text !=
+            (initial?.tamanoEquipoMax?.toString() ?? '') ||
+        _premiosController.text != (initial?.premios ?? '') ||
+        _organizadorController.text != (initial?.organizador ?? '') ||
+        _formato != initial?.formato ||
+        !listasDeEtapasIguales(_etapas, initial?.etapas ?? const []) ||
+        _punto?.latitude != initial?.latitud ||
+        _punto?.longitude != initial?.longitud ||
+        _categoria != initial?.categoria ||
+        _modalidad != initial?.modalidad ||
+        _fechaInicio != initial?.fechaInicio ||
+        _fechaFin != initial?.fechaFin ||
+        _fechaLimiteInscripcion != initial?.fechaLimiteInscripcion;
+  }
+
+  // Atrás (botón de la barra o del sistema): sale directo si no hay cambios;
+  // si los hay, pregunta antes de descartarlos.
+  Future<void> _intentarSalir() async {
+    if (_guardando) {
+      return;
+    }
+    final navigator = Navigator.of(context);
+    if (!_hayCambios()) {
+      navigator.pop();
+      return;
+    }
+    final descartar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('¿Descartar cambios?'),
+        content: const Text('Lo que escribiste todavía no se ha guardado.'),
+        actions: [
+          TextButton(
+            key: const ValueKey('competition-form-discard-cancel'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Seguir editando'),
+          ),
+          FilledButton(
+            key: const ValueKey('competition-form-discard-confirm'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Descartar'),
+          ),
+        ],
+      ),
+    );
+    if (descartar == true && mounted) {
+      navigator.pop();
+    }
+  }
+
+  // Desplaza la pantalla hasta el campo con error que esté más arriba.
+  void _mostrarPrimerError(Set<FormFieldState<Object?>> invalidos) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      BuildContext? destino;
+      double? menorY;
+      for (final campo in invalidos) {
+        if (!campo.mounted) {
+          continue;
+        }
+        final render = campo.context.findRenderObject();
+        if (render is! RenderBox || !render.hasSize) {
+          continue;
+        }
+        final y = render.localToGlobal(Offset.zero).dy;
+        if (menorY == null || y < menorY) {
+          menorY = y;
+          destino = campo.context;
+        }
+      }
+      if (destino != null) {
+        Scrollable.ensureVisible(
+          destino,
+          alignment: 0.1,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   Future<void> _guardar() async {
@@ -121,14 +293,20 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       return;
     }
     final formState = _formKey.currentState;
-    if (formState == null || !formState.validate()) {
+    if (formState == null) {
+      return;
+    }
+    final invalidos = formState.validateGranularly();
+    if (invalidos.isNotEmpty) {
       setState(() {
         _autovalidateMode = AutovalidateMode.always;
         _errorGuardado = null;
       });
+      _mostrarPrimerError(invalidos);
       return;
     }
 
+    final porEquipos = _formato == FormatoCompetencia.equipos;
     final draft = CompetenciaDraft(
       titulo: _tituloController.text.trim(),
       categoria: _categoria!,
@@ -143,6 +321,16 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       inscripcionUrl: _opcionalONulo(_inscripcionUrlController.text),
       contacto: _opcionalONulo(_contactoController.text),
       imagenUrl: _opcionalONulo(_imagenUrlController.text),
+      fechaLimiteInscripcion: _fechaLimiteInscripcion,
+      formato: _formato,
+      // El tamaño de equipo solo se guarda si el formato es por equipos.
+      tamanoEquipoMin: porEquipos ? _entero(_equipoMinController.text) : null,
+      tamanoEquipoMax: porEquipos ? _entero(_equipoMaxController.text) : null,
+      premios: _opcionalONulo(_premiosController.text),
+      organizador: _opcionalONulo(_organizadorController.text),
+      etapas: _etapas,
+      latitud: _punto?.latitude,
+      longitud: _punto?.longitude,
     );
 
     setState(() {
@@ -176,7 +364,14 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: !_guardando,
+      // Siempre se intercepta el regreso: _intentarSalir decide si sale
+      // directo, pregunta por los cambios o espera a que termine de guardar.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _intentarSalir();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           title: Text(_esEdicion ? 'Editar competencia' : 'Nueva competencia'),
@@ -194,29 +389,52 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
             ),
           ),
         ),
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_errorGuardado != null) ...[
-                  _MensajeError(texto: _errorGuardado!),
-                  const SizedBox(height: 12),
+        // Barra inferior fija con el botón de guardar, de ancho completo.
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(
+            color: colorDeTarjeta(context),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1A102A43),
+                blurRadius: 12,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_errorGuardado != null) ...[
+                    _MensajeError(texto: _errorGuardado!),
+                    const SizedBox(height: 12),
+                  ],
+                  FilledButton(
+                    key: const ValueKey('competition-form-save'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(radioCampo),
+                      ),
+                    ),
+                    onPressed: _guardando ? null : _guardar,
+                    child: _guardando
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _esEdicion
+                                ? 'Guardar cambios'
+                                : 'Crear competencia',
+                          ),
+                  ),
                 ],
-                FilledButton(
-                  key: const ValueKey('competition-form-save'),
-                  onPressed: _guardando ? null : _guardar,
-                  child: _guardando
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_esEdicion ? 'Guardar cambios' : 'Guardar'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -236,45 +454,58 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         obligatorio: true,
       ),
       separacion,
-      DropdownButtonFormField<String>(
-        key: const ValueKey('competition-form-categoria'),
-        initialValue: _categoria,
-        decoration: const InputDecoration(
-          labelText: 'Categoría *',
-          border: OutlineInputBorder(),
+      CampoConEtiqueta(
+        etiqueta: 'Categoría *',
+        child: DropdownButtonFormField<String>(
+          key: const ValueKey('competition-form-categoria'),
+          initialValue: _categoria,
+          // Ocupa el ancho disponible en vez del ancho de la opción más larga,
+          // que con texto grande no cabe en pantallas angostas.
+          isExpanded: true,
+          decoration: decoracionCampo(context),
+          items: _opcionesCon(
+            _categorias,
+            widget.initial?.categoria,
+          ).map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+          onChanged: habilitado
+              ? (valor) => setState(() => _categoria = valor)
+              : null,
+          validator: (valor) =>
+              valor == null ? 'Selecciona una categoría.' : null,
         ),
-        items: _opcionesCon(
-          _categorias,
-          widget.initial?.categoria,
-        ).map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-        onChanged: habilitado
-            ? (valor) => setState(() => _categoria = valor)
-            : null,
-        validator: (valor) =>
-            valor == null ? 'Selecciona una categoría.' : null,
       ),
       separacion,
-      DropdownButtonFormField<String>(
-        key: const ValueKey('competition-form-modalidad'),
-        initialValue: _modalidad,
-        decoration: const InputDecoration(
-          labelText: 'Modalidad *',
-          border: OutlineInputBorder(),
+      CampoConEtiqueta(
+        etiqueta: 'Modalidad *',
+        child: DropdownButtonFormField<String>(
+          key: const ValueKey('competition-form-modalidad'),
+          initialValue: _modalidad,
+          isExpanded: true,
+          decoration: decoracionCampo(context),
+          items: _opcionesCon(
+            _modalidades,
+            widget.initial?.modalidad,
+          ).map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+          onChanged: habilitado
+              ? (valor) => setState(() => _modalidad = valor)
+              : null,
+          validator: (valor) =>
+              valor == null ? 'Selecciona una modalidad.' : null,
         ),
-        items: _opcionesCon(
-          _modalidades,
-          widget.initial?.modalidad,
-        ).map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
-        onChanged: habilitado
-            ? (valor) => setState(() => _modalidad = valor)
-            : null,
-        validator: (valor) =>
-            valor == null ? 'Selecciona una modalidad.' : null,
       ),
       separacion,
+      _campoTexto(
+        clave: 'descripcion',
+        controller: _descripcionController,
+        etiqueta: 'Descripción *',
+        obligatorio: true,
+        multilinea: true,
+      ),
+      const SizedBox(height: 24),
+      const _Seccion(titulo: 'Fecha y hora'),
       _CampoFechaHora(
         key: const ValueKey('competition-form-fecha-inicio'),
-        etiqueta: 'Inicio *',
+        etiqueta: 'Fecha y hora de inicio *',
         valor: _fechaInicio,
         habilitado: habilitado,
         onElegir: () async {
@@ -283,17 +514,22 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
             setState(() => _fechaInicio = elegida);
           }
         },
+        // Aviso que no bloquea: se puede registrar un evento ya ocurrido.
+        ayuda: _inicioYaPaso ? 'Esta fecha ya pasó.' : null,
         validator: (_) =>
             _fechaInicio == null ? 'Selecciona la fecha de inicio.' : null,
       ),
       separacion,
       _CampoFechaHora(
         key: const ValueKey('competition-form-fecha-fin'),
-        etiqueta: 'Fin (opcional)',
+        etiqueta: 'Fecha y hora de fin (opcional)',
         valor: _fechaFin,
         habilitado: habilitado,
         onElegir: () async {
-          final elegida = await _elegirFechaHora(_fechaFin ?? _fechaInicio);
+          final elegida = await _elegirFechaHora(
+            _fechaFin,
+            sugerida: _fechaInicio,
+          );
           if (elegida != null) {
             setState(() => _fechaFin = elegida);
           }
@@ -308,7 +544,8 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
           return null;
         },
       ),
-      separacion,
+      const SizedBox(height: 24),
+      const _Seccion(titulo: 'Ubicación'),
       _campoTexto(
         clave: 'ubicacion',
         controller: _ubicacionController,
@@ -316,15 +553,50 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         obligatorio: true,
       ),
       separacion,
-      _campoTexto(
-        clave: 'descripcion',
-        controller: _descripcionController,
-        etiqueta: 'Descripción *',
-        obligatorio: true,
-        multilinea: true,
+      _PuntoEnMapa(
+        punto: _punto,
+        habilitado: habilitado,
+        onElegir: () async {
+          final elegido = await Navigator.of(context).push<LatLng>(
+            MaterialPageRoute(
+              builder: (_) => SelectorUbicacionScreen(inicial: _punto),
+            ),
+          );
+          if (elegido != null && mounted) {
+            setState(() => _punto = elegido);
+          }
+        },
+        onQuitar: () => setState(() => _punto = null),
       ),
       const SizedBox(height: 24),
-      const _Seccion(titulo: 'Información para participar'),
+      const _Seccion(titulo: 'Participación'),
+      _CampoFechaHora(
+        key: const ValueKey('competition-form-fecha-limite'),
+        etiqueta: 'Límite de inscripción (opcional)',
+        valor: _fechaLimiteInscripcion,
+        habilitado: habilitado,
+        onElegir: () async {
+          final elegida = await _elegirFechaHora(
+            _fechaLimiteInscripcion,
+            sugerida: _fechaInicio,
+          );
+          if (elegida != null) {
+            setState(() => _fechaLimiteInscripcion = elegida);
+          }
+        },
+        onLimpiar: () => setState(() => _fechaLimiteInscripcion = null),
+        ayuda: 'Hasta cuándo se puede inscribir alguien.',
+        validator: (_) {
+          final inicio = _fechaInicio;
+          final limite = _fechaLimiteInscripcion;
+          if (inicio != null && limite != null && limite.isAfter(inicio)) {
+            return 'El límite de inscripción no puede ser posterior al '
+                'inicio.';
+          }
+          return null;
+        },
+      ),
+      separacion,
       _campoTexto(
         clave: 'reglas',
         controller: _reglasController,
@@ -355,6 +627,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         etiqueta: 'Enlace de inscripción (opcional)',
         ayuda: 'https://…',
         teclado: TextInputType.url,
+        capitalizacion: TextCapitalization.none,
         validator: _validarEnlaceOpcional,
       ),
       separacion,
@@ -362,6 +635,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         clave: 'contacto',
         controller: _contactoController,
         etiqueta: 'Contacto (opcional)',
+        capitalizacion: TextCapitalization.none,
       ),
       separacion,
       _campoTexto(
@@ -370,7 +644,87 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         etiqueta: 'Enlace de imagen (opcional)',
         ayuda: 'https://…',
         teclado: TextInputType.url,
-        validator: _validarEnlaceOpcional,
+        capitalizacion: TextCapitalization.none,
+        validator: _validarImagenOpcional,
+      ),
+      const SizedBox(height: 24),
+      const _Seccion(titulo: 'Formato y premios'),
+      CampoConEtiqueta(
+        etiqueta: 'Formato (opcional)',
+        child: DropdownButtonFormField<FormatoCompetencia?>(
+          key: const ValueKey('competition-form-formato'),
+          initialValue: _formato,
+          isExpanded: true,
+          decoration: decoracionCampo(context),
+          items: const [
+            DropdownMenuItem(value: null, child: Text('Sin especificar')),
+            DropdownMenuItem(
+              value: FormatoCompetencia.individual,
+              child: Text('Individual'),
+            ),
+            DropdownMenuItem(
+              value: FormatoCompetencia.equipos,
+              child: Text('Por equipos'),
+            ),
+          ],
+          onChanged: habilitado
+              ? (valor) => setState(() => _formato = valor)
+              : null,
+        ),
+      ),
+      if (_formato == FormatoCompetencia.equipos) ...[
+        separacion,
+        // Uno debajo del otro: con texto grande, dos campos lado a lado no
+        // caben en 360 dp.
+        _campoTexto(
+          clave: 'equipo-min',
+          controller: _equipoMinController,
+          etiqueta: 'Mínimo de personas por equipo (opcional)',
+          teclado: TextInputType.number,
+          capitalizacion: TextCapitalization.none,
+          validator: _validarTamano,
+        ),
+        separacion,
+        _campoTexto(
+          clave: 'equipo-max',
+          controller: _equipoMaxController,
+          etiqueta: 'Máximo de personas por equipo (opcional)',
+          teclado: TextInputType.number,
+          capitalizacion: TextCapitalization.none,
+          validator: (valor) {
+            final error = _validarTamano(valor);
+            if (error != null) {
+              return error;
+            }
+            final minimo = _entero(_equipoMinController.text);
+            final maximo = _entero(valor ?? '');
+            if (minimo != null && maximo != null && maximo < minimo) {
+              return 'El máximo no puede ser menor que el mínimo.';
+            }
+            return null;
+          },
+        ),
+      ],
+      separacion,
+      _campoTexto(
+        clave: 'premios',
+        controller: _premiosController,
+        etiqueta: 'Premios (opcional)',
+        multilinea: true,
+      ),
+      separacion,
+      _campoTexto(
+        clave: 'organizador',
+        controller: _organizadorController,
+        etiqueta: 'Organizador (opcional)',
+      ),
+      const SizedBox(height: 24),
+      const _Seccion(titulo: 'Etapas y cronograma'),
+      EditorEtapas(
+        etapas: _etapas,
+        habilitado: habilitado,
+        fechaSugerida: _fechaInicio,
+        onCambio: (etapas) => setState(() => _etapas = etapas),
       ),
       const SizedBox(height: 8),
       Text('* Campo obligatorio', style: Theme.of(context).textTheme.bodySmall),
@@ -385,32 +739,48 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     bool obligatorio = false,
     bool multilinea = false,
     TextInputType? teclado,
+    TextCapitalization capitalizacion = TextCapitalization.sentences,
     FormFieldValidator<String>? validator,
   }) {
-    return TextFormField(
-      key: ValueKey('competition-form-$clave'),
-      controller: controller,
-      enabled: !_guardando,
-      keyboardType: multilinea ? TextInputType.multiline : teclado,
-      minLines: multilinea ? 2 : 1,
-      maxLines: multilinea ? 5 : 1,
-      textInputAction: multilinea
-          ? TextInputAction.newline
-          : TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: etiqueta,
-        hintText: ayuda,
-        border: const OutlineInputBorder(),
+    return CampoConEtiqueta(
+      etiqueta: etiqueta,
+      child: TextFormField(
+        key: ValueKey('competition-form-$clave'),
+        controller: controller,
+        enabled: !_guardando,
+        textCapitalization: capitalizacion,
+        keyboardType: multilinea ? TextInputType.multiline : teclado,
+        minLines: multilinea ? 2 : 1,
+        maxLines: multilinea ? 5 : 1,
+        textInputAction: multilinea
+            ? TextInputAction.newline
+            : TextInputAction.next,
+        decoration: decoracionCampo(context, sugerencia: ayuda),
+        validator:
+            validator ??
+            (obligatorio
+                ? (valor) => (valor == null || valor.trim().isEmpty)
+                      ? _campoObligatorio
+                      : null
+                : null),
       ),
-      validator:
-          validator ??
-          (obligatorio
-              ? (valor) => (valor == null || valor.trim().isEmpty)
-                    ? _campoObligatorio
-                    : null
-              : null),
     );
   }
+}
+
+int? _entero(String texto) => int.tryParse(texto.trim());
+
+// Vacío es válido. Si hay texto, debe ser un número entero de 1 a 100.
+String? _validarTamano(String? valor) {
+  final texto = valor?.trim() ?? '';
+  if (texto.isEmpty) {
+    return null;
+  }
+  final numero = int.tryParse(texto);
+  if (numero == null || numero < 1 || numero > 100) {
+    return 'Escribe un número entero entre 1 y 100.';
+  }
+  return null;
 }
 
 String? _opcionalONulo(String texto) {
@@ -435,6 +805,17 @@ String? _validarEnlaceOpcional(String? valor) {
       : 'Ingresa un enlace válido que empiece con http:// o https://.';
 }
 
+// Como _validarEnlaceOpcional, pero acepta también una imagen incluida en la
+// app («assets/imagenes/…»), que es lo que traen los ejemplos: sin esto, no
+// se podía guardar un ejemplo editado.
+String? _validarImagenOpcional(String? valor) {
+  final texto = valor?.trim() ?? '';
+  if (texto.startsWith('assets/imagenes/')) {
+    return null;
+  }
+  return _validarEnlaceOpcional(valor);
+}
+
 String _formatearFechaHora(DateTime fecha) {
   String dosDigitos(int n) => n.toString().padLeft(2, '0');
   return '${dosDigitos(fecha.day)}/${dosDigitos(fecha.month)}/${fecha.year} '
@@ -450,7 +831,76 @@ class _Seccion extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Text(titulo, style: Theme.of(context).textTheme.titleMedium),
+      child: Semantics(
+        header: true,
+        child: Text(
+          titulo,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Punto en el mapa (opcional): muestra si hay uno elegido y permite elegirlo
+// en el mapa, cambiarlo o quitarlo.
+class _PuntoEnMapa extends StatelessWidget {
+  const _PuntoEnMapa({
+    required this.punto,
+    required this.habilitado,
+    required this.onElegir,
+    required this.onQuitar,
+  });
+
+  final LatLng? punto;
+  final bool habilitado;
+  final VoidCallback onElegir;
+  final VoidCallback onQuitar;
+
+  @override
+  Widget build(BuildContext context) {
+    final punto = this.punto;
+    return CampoConEtiqueta(
+      etiqueta: 'Punto en el mapa (opcional)',
+      child: InputDecorator(
+        key: const ValueKey('competition-form-punto'),
+        decoration: decoracionCampo(
+          context,
+          ayuda: 'Sirve para el mapa y para «Cómo llegar».',
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(punto == null ? 'Sin punto elegido' : describirPunto(punto)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  key: const ValueKey('competition-form-elegir-punto'),
+                  onPressed: habilitado ? onElegir : null,
+                  icon: const Icon(Icons.map_outlined),
+                  label: Text(
+                    punto == null ? 'Elegir en el mapa' : 'Cambiar punto',
+                  ),
+                ),
+                if (punto != null)
+                  TextButton.icon(
+                    key: const ValueKey('competition-form-quitar-punto'),
+                    onPressed: habilitado ? onQuitar : null,
+                    icon: const Icon(Icons.clear),
+                    label: const Text('Quitar punto'),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -497,6 +947,7 @@ class _CampoFechaHora extends StatelessWidget {
     required this.onElegir,
     required this.validator,
     this.onLimpiar,
+    this.ayuda,
   });
 
   final String etiqueta;
@@ -505,6 +956,7 @@ class _CampoFechaHora extends StatelessWidget {
   final VoidCallback onElegir;
   final VoidCallback? onLimpiar;
   final FormFieldValidator<DateTime> validator;
+  final String? ayuda;
 
   @override
   Widget build(BuildContext context) {
@@ -512,26 +964,30 @@ class _CampoFechaHora extends StatelessWidget {
       validator: validator,
       builder: (field) {
         final actual = valor;
-        return InkWell(
-          onTap: habilitado ? onElegir : null,
-          borderRadius: BorderRadius.circular(4),
-          child: InputDecorator(
-            isEmpty: actual == null,
-            decoration: InputDecoration(
-              labelText: etiqueta,
-              enabled: habilitado,
-              errorText: field.errorText,
-              border: const OutlineInputBorder(),
-              suffixIcon: actual != null && onLimpiar != null
-                  ? IconButton(
-                      key: ValueKey('${_claveTexto(key)}-limpiar'),
-                      tooltip: 'Quitar fecha',
-                      icon: const Icon(Icons.clear),
-                      onPressed: habilitado ? onLimpiar : null,
-                    )
-                  : const Icon(Icons.calendar_today_outlined),
+        return CampoConEtiqueta(
+          etiqueta: etiqueta,
+          child: InkWell(
+            onTap: habilitado ? onElegir : null,
+            borderRadius: BorderRadius.circular(radioCampo),
+            child: InputDecorator(
+              isEmpty: actual == null,
+              decoration: decoracionCampo(
+                context,
+                sugerencia: 'Elegir fecha y hora',
+                habilitado: habilitado,
+                error: field.errorText,
+                ayuda: ayuda,
+                sufijo: actual != null && onLimpiar != null
+                    ? IconButton(
+                        key: ValueKey('${_claveTexto(key)}-limpiar'),
+                        tooltip: 'Quitar fecha',
+                        icon: const Icon(Icons.clear),
+                        onPressed: habilitado ? onLimpiar : null,
+                      )
+                    : const Icon(Icons.calendar_today_outlined),
+              ),
+              child: Text(actual == null ? '' : _formatearFechaHora(actual)),
             ),
-            child: Text(actual == null ? '' : _formatearFechaHora(actual)),
           ),
         );
       },

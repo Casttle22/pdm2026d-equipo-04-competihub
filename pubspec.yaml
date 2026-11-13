@@ -36,6 +36,12 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.4.3
   sqflite: ^2.4.2
+  url_launcher: ^6.3.3
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  share_plus: ^13.3.1
+  # SQLite en escritorio (Windows, Linux, macOS); ver lib/main.dart.
+  sqflite_common_ffi: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +64,11 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Portadas y fotos de las competencias de ejemplo (fuente y licencia en
+  # docs/creditos_imagenes.md).
+  assets:
+    - assets/imagenes/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

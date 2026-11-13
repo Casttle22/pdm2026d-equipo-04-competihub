@@ -1,6 +1,18 @@
 import 'competencia.dart';
+import 'etapa.dart';
+import 'media_competencia.dart';
 
 // Eventos inventados exclusivamente para desarrollo y pruebas.
+// La ficha de torneo (formato y tamaño de equipo) sale de las reglas de cada
+// ejemplo; premios y organizador también son ficticios y lo dicen. La
+// carrera no tiene ficha: sus reglas no dicen si es individual.
+// Las coordenadas de los ejemplos presenciales e híbridos son ficticias: son
+// puntos elegidos alrededor del centro de Quetzaltenango (centroDeEjemplo),
+// no la ubicación de ningún evento. El mapa lo avisa.
+// Las portadas son fotos con licencia libre incluidas en la app
+// (assets/imagenes/); fuente y licencia en docs/creditos_imagenes.md.
+// Tres ejemplos traen «Fotos y videos»: las fotos son de referencia (no del
+// evento, que no existe) y los videos son enlaces ficticios de example.com.
 // No representan eventos reales ni evidencia de investigación de usuarios.
 final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
   Competencia(
@@ -19,6 +31,20 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
         'En este escenario de prueba, completar el formulario ficticio con el nombre del equipo. No hay inscripción real.',
     inscripcionUrl: 'https://example.com/competihub/mock-esports-01',
     contacto: 'arena@example.com',
+    formato: FormatoCompetencia.equipos,
+    tamanoEquipoMin: 3,
+    tamanoEquipoMax: 3,
+    premios: 'Trofeo simbólico de prueba (ficticio)',
+    organizador: 'Club ficticio de arena digital',
+    imagenUrl: 'assets/imagenes/portada_esports.jpg',
+    galeria: const [
+      MediaCompetencia(
+        tipo: TipoMedia.video,
+        fuente: 'https://example.com/competihub/video-ficticio-copa',
+        titulo: 'Video ficticio: presentación de la copa (ejemplo)',
+        miniatura: 'assets/imagenes/portada_esports.jpg',
+      ),
+    ],
   ),
   Competencia(
     id: 'mock-academic-01',
@@ -34,6 +60,11 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     costo: 'Q 25 ficticios',
     instruccionesParticipacion:
         'Para la simulación, preparar un alias y presentarse en el laboratorio de prueba. No asistir a un lugar real.',
+    formato: FormatoCompetencia.individual,
+    organizador: 'Laboratorio ficticio Prisma',
+    latitud: 14.8405,
+    longitud: -91.5235,
+    imagenUrl: 'assets/imagenes/portada_programacion.jpg',
   ),
   Competencia(
     id: 'mock-sports-01',
@@ -50,6 +81,27 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     instruccionesParticipacion:
         'En el ejemplo, solicitar un dorsal al contacto ficticio. No se reciben solicitudes ni pagos reales.',
     contacto: 'carrera@example.com',
+    latitud: 14.829,
+    longitud: -91.512,
+    imagenUrl: 'assets/imagenes/portada_carrera.jpg',
+    galeria: const [
+      MediaCompetencia(
+        tipo: TipoMedia.imagen,
+        fuente: 'assets/imagenes/galeria_pista.jpg',
+        titulo: 'Pista de atletismo (foto de referencia)',
+      ),
+      MediaCompetencia(
+        tipo: TipoMedia.imagen,
+        fuente: 'assets/imagenes/portada_carrera.jpg',
+        titulo: 'Carriles de la pista (foto de referencia)',
+      ),
+      MediaCompetencia(
+        tipo: TipoMedia.video,
+        fuente: 'https://example.com/competihub/video-ficticio-carrera',
+        titulo: 'Video ficticio: recorrido de la carrera (ejemplo)',
+        miniatura: 'assets/imagenes/galeria_pista.jpg',
+      ),
+    ],
   ),
   Competencia(
     id: 'mock-academic-02',
@@ -66,6 +118,31 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     instruccionesParticipacion:
         'En la simulación, registrar una pareja y elegir modalidad mediante el enlace de ejemplo. No hay registro real.',
     inscripcionUrl: 'https://example.com/competihub/mock-academic-02',
+    formato: FormatoCompetencia.equipos,
+    tamanoEquipoMin: 2,
+    tamanoEquipoMax: 2,
+    premios: 'Diplomas simbólicos (ficticios)',
+    latitud: 14.8372,
+    longitud: -91.5098,
+    imagenUrl: 'assets/imagenes/portada_logica.jpg',
+    galeria: const [
+      MediaCompetencia(
+        tipo: TipoMedia.imagen,
+        fuente: 'assets/imagenes/galeria_ajedrez_perfil.jpg',
+        titulo: 'Tablero de ajedrez (foto de referencia)',
+      ),
+      MediaCompetencia(
+        tipo: TipoMedia.imagen,
+        fuente: 'assets/imagenes/galeria_ajedrez_dorado.jpg',
+        titulo: 'Piezas en juego (foto de referencia)',
+      ),
+      MediaCompetencia(
+        tipo: TipoMedia.video,
+        fuente: 'https://example.com/competihub/video-ficticio-olimpiada',
+        titulo: 'Video ficticio: cómo se juega la olimpiada (ejemplo)',
+        miniatura: 'assets/imagenes/portada_logica.jpg',
+      ),
+    ],
   ),
   Competencia(
     id: 'mock-other-01',
@@ -82,6 +159,8 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     instruccionesParticipacion:
         'En este escenario, enviar una ilustración al correo de ejemplo. No se reciben obras reales.',
     contacto: 'ilustracion@example.com',
+    formato: FormatoCompetencia.individual,
+    imagenUrl: 'assets/imagenes/portada_ilustracion.jpg',
   ),
   Competencia(
     id: 'mock-esports-02',
@@ -97,5 +176,179 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     costo: 'Q 15 ficticios',
     instruccionesParticipacion:
         'Ejemplo de evento finalizado: se habría reservado un puesto en la sede imaginaria. No admite inscripciones reales.',
+    formato: FormatoCompetencia.individual,
+    latitud: 14.8318,
+    longitud: -91.5262,
+    imagenUrl: 'assets/imagenes/portada_estrategia.jpg',
   ),
 ]);
+
+// Centro de Quetzaltenango, alrededor del cual están las ubicaciones
+// ficticias de los ejemplos. También es el centro inicial de los mapas.
+const double latitudCentroDeEjemplo = 14.8347;
+const double longitudCentroDeEjemplo = -91.5181;
+
+// Días, respecto a hoy, en que empieza cada competencia de ejemplo dentro de
+// la app. Las fechas fijas de arriba son solo la base (hora del día y
+// duración): con ellas, al pasar el tiempo, todos los ejemplos terminaban
+// como «Finalizada». Una queda en el pasado a propósito, para que el estado
+// «Finalizada» se pueda ver y probar.
+const Map<String, int> diasDeInicioDeEjemplo = {
+  'mock-esports-01': 3,
+  'mock-academic-01': 7,
+  'mock-sports-01': 12,
+  'mock-academic-02': 18,
+  'mock-other-01': 25,
+  'mock-esports-02': -20,
+};
+
+// Fechas de una competencia de ejemplo relativas a `hoy`. Conserva la hora
+// del día y la duración de los datos base. Devuelve null si el id no es de
+// una competencia de ejemplo conocida.
+({DateTime inicio, DateTime? fin})? fechasDeEjemplo(String id, DateTime hoy) {
+  final dias = diasDeInicioDeEjemplo[id];
+  if (dias == null) {
+    return null;
+  }
+  for (final base in competenciasMock) {
+    if (base.id != id) {
+      continue;
+    }
+    final inicioBase = base.fechaInicio;
+    final inicio = DateTime(
+      hoy.year,
+      hoy.month,
+      hoy.day + dias,
+      inicioBase.hour,
+      inicioBase.minute,
+    );
+    final finBase = base.fechaFin;
+    if (finBase == null) {
+      return (inicio: inicio, fin: null);
+    }
+    // La duración se cuenta en días de calendario para que un cambio de
+    // horario no mueva la hora de cierre.
+    final diasDeDuracion =
+        DateTime.utc(finBase.year, finBase.month, finBase.day)
+            .difference(
+              DateTime.utc(inicioBase.year, inicioBase.month, inicioBase.day),
+            )
+            .inDays;
+    return (
+      inicio: inicio,
+      fin: DateTime(
+        inicio.year,
+        inicio.month,
+        inicio.day + diasDeDuracion,
+        finBase.hour,
+        finBase.minute,
+      ),
+    );
+  }
+  return null;
+}
+
+// Días, respecto a hoy, en que cierra la inscripción de cada ejemplo (a las
+// 23:59). Están elegidos para que se vean los cuatro estados: abiertas,
+// cierra en N días, cierra hoy y cerradas. Un ejemplo queda sin límite.
+const Map<String, int> diasDeCierreDeEjemplo = {
+  'mock-esports-01': 2,
+  'mock-academic-01': 0,
+  'mock-sports-01': 10,
+  'mock-other-01': -1,
+  'mock-esports-02': -22,
+};
+
+DateTime? limiteDeInscripcionDeEjemplo(String id, DateTime hoy) {
+  final dias = diasDeCierreDeEjemplo[id];
+  if (dias == null) {
+    return null;
+  }
+  return DateTime(hoy.year, hoy.month, hoy.day + dias, 23, 59);
+}
+
+// Cronograma de algunos ejemplos, como distancia desde su inicio. Así sigue
+// siendo coherente aunque las fechas de los ejemplos se recalculen.
+final Map<
+  String,
+  List<({String nombre, Duration desdeInicio, String descripcion})>
+>
+etapasDeEjemplo = {
+  'mock-esports-01': [
+    (
+      nombre: 'Fase de grupos',
+      desdeInicio: Duration.zero,
+      descripcion: 'Partidas de prueba entre todos los equipos ficticios.',
+    ),
+    (
+      nombre: 'Semifinales',
+      desdeInicio: const Duration(hours: 1, minutes: 30),
+      descripcion: 'Los cuatro mejores equipos de la fase de grupos.',
+    ),
+    (
+      nombre: 'Final',
+      desdeInicio: const Duration(hours: 2, minutes: 30),
+      descripcion: 'Partida decisiva del torneo ficticio.',
+    ),
+  ],
+  'mock-academic-02': [
+    (
+      nombre: 'Ronda clasificatoria',
+      desdeInicio: Duration.zero,
+      descripcion: 'Acertijos individuales por pareja, en sala virtual.',
+    ),
+    (
+      nombre: 'Gran final',
+      desdeInicio: const Duration(days: 1),
+      descripcion: 'Las cinco mejores parejas, en el aula imaginaria.',
+    ),
+  ],
+};
+
+// Etapas de un ejemplo a partir de su fecha de inicio. Vacío si no tiene.
+List<Etapa> etapasDeEjemploDesde(String id, DateTime inicio) {
+  return [
+    for (final etapa in etapasDeEjemplo[id] ?? const [])
+      Etapa(
+        nombre: etapa.nombre,
+        fechaHora: inicio.add(etapa.desdeInicio),
+        descripcion: etapa.descripcion,
+      ),
+  ];
+}
+
+// Los ejemplos tal como se ven en la app: con fechas relativas a `hoy`.
+List<Competencia> competenciasDeEjemplo(DateTime hoy) {
+  return [
+    for (final base in competenciasMock)
+      switch (fechasDeEjemplo(base.id, hoy)) {
+        final fechas? => Competencia.desdeBorrador(
+          base.id,
+          galeria: base.galeria,
+          base
+              .aBorrador()
+              .conFechas(
+                fechaInicio: fechas.inicio,
+                fechaFin: fechas.fin,
+                fechaLimiteInscripcion: limiteDeInscripcionDeEjemplo(
+                  base.id,
+                  hoy,
+                ),
+              )
+              .conEtapas(etapasDeEjemploDesde(base.id, fechas.inicio)),
+        ),
+        null => base,
+      },
+  ];
+}
+
+// Galería de un ejemplo por su id (vacía si no es un ejemplo o no tiene).
+// La usa la base de datos, que no guarda la galería.
+List<MediaCompetencia> galeriaDeEjemplo(String id) {
+  for (final ejemplo in competenciasMock) {
+    if (ejemplo.id == id) {
+      return ejemplo.galeria;
+    }
+  }
+  return const [];
+}

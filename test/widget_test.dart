@@ -21,8 +21,13 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'CompetiHub'), findsOneWidget);
-    expect(find.text('Explora competencias'), findsOneWidget);
+    // La marca va en el encabezado del Inicio (ya no en una AppBar) y el
+    // buscador invita a explorar.
+    expect(find.text('CompetiHub'), findsOneWidget);
+    expect(
+      find.text('Buscar torneos, hackathons, organizadores…'),
+      findsOneWidget,
+    );
     expect(
       find.text(
         'Competencias ficticias para desarrollo y pruebas. No son eventos reales.',
@@ -46,7 +51,7 @@ void main() {
       await tester.scrollUntilVisible(
         find.byKey(ValueKey(competition.id)),
         200,
-        scrollable: find.byType(Scrollable),
+        scrollable: listaDeInicio,
       );
       final card = find.byKey(ValueKey(competition.id));
       expect(
@@ -60,7 +65,8 @@ void main() {
       expect(
         find.descendant(
           of: card,
-          matching: find.text('Ubicación: ${competition.ubicacion}'),
+          // La fila muestra «fecha · lugar» en una sola línea.
+          matching: find.textContaining(competition.ubicacion),
         ),
         findsOneWidget,
       );
@@ -95,6 +101,7 @@ void main() {
       await tester.scrollUntilVisible(
         find.byKey(ValueKey(competition.id)),
         150,
+        scrollable: listaDeInicio,
       );
       expect(tester.takeException(), isNull);
     }
@@ -256,7 +263,9 @@ void main() {
       );
 
       // Verificar la cantidad de elementos del feed.
-      final lista = tester.widget<ListView>(find.byType(ListView));
+      final lista = tester.widget<ListView>(
+        find.byKey(const ValueKey('inicio-lista')),
+      );
 
       expect(lista.childrenDelegate.estimatedChildCount, cantidad + 1);
 
@@ -265,6 +274,7 @@ void main() {
         await tester.scrollUntilVisible(
           find.byKey(ValueKey(competencia.id)),
           150,
+          scrollable: listaDeInicio,
         );
 
         final tarjeta = find.byKey(ValueKey(competencia.id));

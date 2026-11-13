@@ -28,6 +28,13 @@ final competenciaPorIdProvider = FutureProvider.family<Competencia?, String>((
   return repository.obtenerCompetenciaPorId(id);
 }, retry: (_, _) => null);
 
+// Ids de las competencias guardadas en «Mis eventos». Sin reintento
+// automático, como el resto.
+final guardadosProvider = FutureProvider<Set<String>>((ref) {
+  final repository = ref.watch(competenciasRepositoryProvider);
+  return repository.obtenerIdsGuardados();
+}, retry: (_, _) => null);
+
 final competenciasActionsProvider = Provider<CompetenciasActions>((ref) {
   return CompetenciasActions(ref, ref.watch(competenciasRepositoryProvider));
 });
@@ -55,5 +62,19 @@ class CompetenciasActions {
     await _repository.eliminarCompetencia(id);
     _ref.invalidate(competenciasProvider);
     _ref.invalidate(competenciaPorIdProvider(id));
+    // La base borra el guardado junto con la competencia.
+    _ref.invalidate(guardadosProvider);
+  }
+
+  // Guarda la competencia si no lo estaba, o la quita si ya lo estaba.
+  // Devuelve true si quedó guardada.
+  Future<bool> alternarGuardado(String id, {required bool guardada}) async {
+    if (guardada) {
+      await _repository.quitarGuardado(id);
+    } else {
+      await _repository.guardarCompetencia(id);
+    }
+    _ref.invalidate(guardadosProvider);
+    return !guardada;
   }
 }

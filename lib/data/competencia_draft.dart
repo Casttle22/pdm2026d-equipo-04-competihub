@@ -1,3 +1,6 @@
+import 'competencia.dart' show FormatoCompetencia;
+import 'etapa.dart';
+
 class CompetenciaDraft {
   const CompetenciaDraft({
     required this.titulo,
@@ -13,6 +16,15 @@ class CompetenciaDraft {
     this.inscripcionUrl,
     this.contacto,
     this.imagenUrl,
+    this.fechaLimiteInscripcion,
+    this.formato,
+    this.tamanoEquipoMin,
+    this.tamanoEquipoMax,
+    this.premios,
+    this.organizador,
+    this.etapas = const [],
+    this.latitud,
+    this.longitud,
   });
 
   final String titulo;
@@ -28,6 +40,75 @@ class CompetenciaDraft {
   final String? inscripcionUrl;
   final String? contacto;
   final String? imagenUrl;
+  final DateTime? fechaLimiteInscripcion;
+  final FormatoCompetencia? formato;
+  final int? tamanoEquipoMin;
+  final int? tamanoEquipoMax;
+  final String? premios;
+  final String? organizador;
+  final List<Etapa> etapas;
+  final double? latitud;
+  final double? longitud;
+
+  // Copia con otro cronograma; el resto de los datos no cambia.
+  CompetenciaDraft conEtapas(List<Etapa> etapas) {
+    return CompetenciaDraft(
+      titulo: titulo,
+      categoria: categoria,
+      fechaInicio: fechaInicio,
+      ubicacion: ubicacion,
+      modalidad: modalidad,
+      descripcion: descripcion,
+      reglas: reglas,
+      costo: costo,
+      instruccionesParticipacion: instruccionesParticipacion,
+      fechaFin: fechaFin,
+      inscripcionUrl: inscripcionUrl,
+      contacto: contacto,
+      imagenUrl: imagenUrl,
+      fechaLimiteInscripcion: fechaLimiteInscripcion,
+      formato: formato,
+      tamanoEquipoMin: tamanoEquipoMin,
+      tamanoEquipoMax: tamanoEquipoMax,
+      premios: premios,
+      organizador: organizador,
+      etapas: etapas,
+      latitud: latitud,
+      longitud: longitud,
+    );
+  }
+
+  // Copia con otras fechas; el resto de los datos no cambia.
+  CompetenciaDraft conFechas({
+    required DateTime fechaInicio,
+    required DateTime? fechaFin,
+    required DateTime? fechaLimiteInscripcion,
+  }) {
+    return CompetenciaDraft(
+      titulo: titulo,
+      categoria: categoria,
+      fechaInicio: fechaInicio,
+      ubicacion: ubicacion,
+      modalidad: modalidad,
+      descripcion: descripcion,
+      reglas: reglas,
+      costo: costo,
+      instruccionesParticipacion: instruccionesParticipacion,
+      fechaFin: fechaFin,
+      inscripcionUrl: inscripcionUrl,
+      contacto: contacto,
+      imagenUrl: imagenUrl,
+      fechaLimiteInscripcion: fechaLimiteInscripcion,
+      formato: formato,
+      tamanoEquipoMin: tamanoEquipoMin,
+      tamanoEquipoMax: tamanoEquipoMax,
+      premios: premios,
+      organizador: organizador,
+      etapas: etapas,
+      latitud: latitud,
+      longitud: longitud,
+    );
+  }
 }
 
 // Contrato de integración con los widgets asignados a José:

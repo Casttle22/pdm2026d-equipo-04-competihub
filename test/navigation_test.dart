@@ -22,7 +22,11 @@ void main() {
         await tester.scrollUntilVisible(
           find.byKey(ValueKey(competition.id)),
           200,
+          scrollable: listaDeInicio,
         );
+        // Redibuja tras desplazarse: si no, el toque usa la posición anterior
+        // y puede caer sobre la barra inferior.
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(ValueKey(competition.id)));
         await tester.pumpAndSettle();
 
@@ -58,7 +62,14 @@ void main() {
     final competition = competenciasMock.firstWhere(
       (item) => item.categoria == 'Esports',
     );
-    await tester.scrollUntilVisible(find.byKey(ValueKey(competition.id)), 200);
+    await tester.scrollUntilVisible(
+      find.byKey(ValueKey(competition.id)),
+      200,
+      scrollable: listaDeInicio,
+    );
+    // Redibuja tras desplazarse: si no, el toque usa la posición anterior
+    // y puede caer sobre la barra inferior.
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(ValueKey(competition.id)));
     await tester.pumpAndSettle();
     expect(find.text('Identificador: ${competition.id}'), findsOneWidget);
@@ -66,16 +77,33 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
+    // Los filtros están en el encabezado de la lista, que pudo quedar fuera
+    // de pantalla al desplazarse: se busca también fuera de escena.
     expect(
       tester
-          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Esports'))
+          .widget<ChoiceChip>(
+            // Explorar también tiene un filtro «Esports»: se busca el del
+            // Inicio.
+            find.descendant(
+              of: find.byType(HomeScreen, skipOffstage: false),
+              matching: find.widgetWithText(
+                ChoiceChip,
+                'Esports',
+                skipOffstage: false,
+              ),
+              skipOffstage: false,
+            ),
+          )
           .selected,
       isTrue,
     );
     final esportsCount = competenciasMock
         .where((item) => item.categoria == 'Esports')
         .length;
-    expect(find.text('$esportsCount competencias disponibles'), findsOneWidget);
+    expect(
+      find.text('$esportsCount competencias disponibles', skipOffstage: false),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -119,7 +147,13 @@ void main() {
 
     expect(find.text(competition.titulo), findsOneWidget);
     expect(find.text(competition.categoria), findsOneWidget);
+    // La portada de los ejemplos va arriba: se desplaza hasta la sección.
+    await tester.scrollUntilVisible(find.text('Información general'), 150);
     expect(find.text('Información general'), findsOneWidget);
+    // La fila de acciones (Guardar, Cómo llegar, Compartir) empuja los
+    // datos hacia abajo: se desplaza hasta la modalidad, como con la
+    // ubicación.
+    await tester.scrollUntilVisible(find.text(competition.modalidad), 150);
     expect(find.text(competition.modalidad), findsOneWidget);
     await tester.scrollUntilVisible(find.text(competition.ubicacion), 150);
     expect(find.text(competition.ubicacion), findsOneWidget);

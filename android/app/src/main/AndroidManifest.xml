@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Las teselas del mapa (OpenStreetMap) se descargan de internet. Sin
+         este permiso en el manifiesto principal, el mapa funcionaría en
+         depuración pero quedaría en blanco en la versión de publicación. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="competihub"
+        android:label="CompetiHub"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -40,6 +44,17 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- «Cómo llegar» (url_launcher): desde Android 11, la app debe
+             declarar qué otras apps necesita abrir. geo: la atiende la app
+             de mapas; https: es el respaldo con Google Maps en el navegador. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="geo"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>
