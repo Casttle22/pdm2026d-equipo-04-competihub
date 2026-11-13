@@ -44,4 +44,36 @@ void main() {
     // «dorsal» solo aparece en las instrucciones de la carrera.
     expect(coincideConBusqueda(carrera, 'dorsal'), isFalse);
   });
+
+  test('encuentra por organizador, como promete el buscador', () {
+    final copa = competenciasMock.firstWhere((c) => c.id == 'mock-esports-01');
+    expect(copa.organizador, 'Club ficticio de arena digital');
+    expect(coincideConBusqueda(copa, 'club arena'), isTrue);
+    expect(coincideConBusqueda(carrera, 'club arena'), isFalse);
+  });
+
+  test('el filtro de ubicación pone las híbridas en ambas opciones', () {
+    final porModalidad = {for (final c in competenciasMock) c.modalidad: c};
+    final presencial = porModalidad['Presencial']!;
+    final virtual = porModalidad['Virtual']!;
+    final hibrida = porModalidad['Híbrida']!;
+    for (final c in [presencial, virtual, hibrida]) {
+      expect(coincideConUbicacion(c, FiltroUbicacion.todas), isTrue);
+    }
+    expect(
+      coincideConUbicacion(presencial, FiltroUbicacion.quetzaltenango),
+      isTrue,
+    );
+    expect(
+      coincideConUbicacion(virtual, FiltroUbicacion.quetzaltenango),
+      isFalse,
+    );
+    expect(
+      coincideConUbicacion(hibrida, FiltroUbicacion.quetzaltenango),
+      isTrue,
+    );
+    expect(coincideConUbicacion(presencial, FiltroUbicacion.online), isFalse);
+    expect(coincideConUbicacion(virtual, FiltroUbicacion.online), isTrue);
+    expect(coincideConUbicacion(hibrida, FiltroUbicacion.online), isTrue);
+  });
 }

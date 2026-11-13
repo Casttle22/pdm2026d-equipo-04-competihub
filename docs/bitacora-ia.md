@@ -16,6 +16,28 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Rediseño 2/5: Inicio
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Encabezado con ícono de calendario azul y «CompetiHub» en negrita; a la derecha, un selector de ubicación en píldora («Quetzaltenango / Online») que filtre entre presencial y virtual. Buscador grande redondeado («Buscar torneos, hackathons, organizadores…»). Filtros en una fila con desplazamiento horizontal, píldoras con ícono; la seleccionada azul rellena con texto blanco. «Eventos destacados» con «Ver todos >»: carrusel de tarjetas grandes (~200 px) con imagen o degradado de la categoría con su ícono; encima título, subtítulo, organizador, fecha y modalidad con lugar, en blanco sobre un velo oscuro; puntos indicadores. «Próximos eventos» con «Ver todos >»: filas con cuadro de 64 px, título, fecha y lugar, etiquetas Individual/Equipos y Presencial/Virtual y botón azul «Detalles». Fechas «14 de nov, 2026» o «12 - 14 de nov, 2026»."
+- **Resultado:** `lib/screens/inicio_screen.dart` reescrito (encabezado, `_PildoraUbicacion`, buscador, `_PildoraFiltro`, `CarruselDestacados` con puntos, secciones con «Ver todos»), `lib/widgets/tarjeta_competencia.dart` (fila nueva con `CuadroDeCategoria` y tarjeta destacada grande), `formatearFechaCorta` y `formatearRangoCorto` en `lib/utils/fechas.dart`, y `FiltroUbicacion` en `lib/utils/busqueda.dart`.
+- **Aceptado (decisiones con Alex):**
+  - Píldora con 3 opciones: «Todas», «Quetzaltenango» (presenciales e híbridas) y «Online» (virtuales e híbridas).
+  - El buscador y los filtros filtran en el Inicio; «Ver todos >» llevará a Explorar (siguiente commit) y solo aparece si hay a dónde ir.
+  - Subtítulo de las destacadas: la primera línea de la descripción (no hay campo propio).
+  - La búsqueda ahora también mira el organizador, porque el texto del buscador lo promete.
+- **Rechazado / corregido (revisando en `flutter run -d windows`):**
+  - La ventana de «400 px» medía en realidad 252 dp: Windows está escalado a 1,5×. Se revisó con una ventana de 616 px físicos (≈410 dp), como un teléfono.
+  - El carrusel recortaba primero el título; ahora el bloque de texto va abajo y, si algo no cabe, se recorta por abajo. Las etiquetas de arriba ocupaban dos líneas y escondían la fecha y la modalidad: pasaron al bloque de texto («15 de nov, 2026 · Faltan 3 días» y la inscripción en la línea siguiente). Alto de ~240 dp, que crece con el texto del sistema.
+  - Con Guardar en la esquina de la fila, el título quedaba tan angosto que partía palabras («ilustració-n»): Guardar pasó a la fila de abajo, junto a «Detalles».
+  - El botón flotante «+» tapaba «Detalles»: «Nueva competencia» pasó al encabezado, junto a la píldora.
+  - La fila mostraba solo el ícono de la categoría; se agregó su nombre encima del título, porque el ícono solo es ambiguo.
+  - Pruebas ajustadas, verificando lo mismo: la marca ya no está en una `AppBar` (`widget_test`, `tema_test`); «Destacados»/«Próximos» pasan a «Eventos destacados»/«Próximos eventos» y las destacadas se leen de la lista del carrusel, que solo construye las páginas visibles (`inicio_nuevo_test`); la fila muestra «fecha · lugar» en una línea (`widget_test`, `feed_pulido_test`, que ahora filtra por categoría para verificar la fila en vez del carrusel); los filtros pueden quedar fuera de pantalla al volver del Detalle (`navigation_test`); el tiempo restante del carrusel va junto a la fecha (`ejemplos_vigentes_test`).
+  - Durante la revisión, la primera versión del script de captura mandaba rueda del ratón y capturaba la pantalla; con otra ventana delante, capturó y desplazó esa ventana. Las capturas se borraron y el script pasó a `PrintWindow` sin entradas de ratón.
+- **Verificación:** `test/inicio_rediseno_test.dart` (10 pruebas: encabezado, píldora con sus 3 opciones y conteos, píldora de categoría azul con texto blanco, puntos del carrusel al deslizar, datos de la tarjeta grande, etiquetas y «Detalles» de la fila, rango de fechas, «Ver todos» y 360 dp con texto 2.0), 5 casos de `formatearRangoCorto` en `test/fechas_test.dart` y 2 de búsqueda en `test/busqueda_test.dart`. Windows a ≈410 dp: revisado. Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 257/257.
+- **Commit / PR:** commit «feat: Inicio rediseñado según las maquetas» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Rediseño 1/5: estilo general
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

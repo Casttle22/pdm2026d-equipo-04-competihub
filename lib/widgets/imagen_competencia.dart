@@ -13,17 +13,23 @@ class ImagenCompetencia extends StatelessWidget {
     required this.imagenUrl,
     required this.categoria,
     this.alto = 120,
+    this.alineacionIcono = Alignment.center,
   });
 
   final String? imagenUrl;
   final String categoria;
   final double alto;
+  final Alignment alineacionIcono;
 
   @override
   Widget build(BuildContext context) {
     final url = imagenUrl?.trim();
     if (url == null || url.isEmpty) {
-      return FondoDeCategoria(categoria: categoria, alto: alto);
+      return FondoDeCategoria(
+        categoria: categoria,
+        alto: alto,
+        alineacionIcono: alineacionIcono,
+      );
     }
     return SizedBox(
       height: alto,
@@ -34,12 +40,17 @@ class ImagenCompetencia extends StatelessWidget {
         excludeFromSemantics: true,
         loadingBuilder: (context, child, progreso) => progreso == null
             ? child
-            : FondoDeCategoria(categoria: categoria, alto: alto),
+            : FondoDeCategoria(
+                categoria: categoria,
+                alto: alto,
+                alineacionIcono: alineacionIcono,
+              ),
         errorBuilder: (context, error, stackTrace) => FondoDeCategoria(
           key: const ValueKey('imagen-no-disponible'),
           categoria: categoria,
           alto: alto,
           imagenFallida: true,
+          alineacionIcono: alineacionIcono,
         ),
       ),
     );
@@ -52,6 +63,7 @@ class FondoDeCategoria extends StatelessWidget {
     required this.categoria,
     required this.alto,
     this.imagenFallida = false,
+    this.alineacionIcono = Alignment.center,
   });
 
   final String categoria;
@@ -60,6 +72,10 @@ class FondoDeCategoria extends StatelessWidget {
   // true cuando había una imagen y no se pudo cargar: se indica con un
   // ícono pequeño, sin tapar el marcador.
   final bool imagenFallida;
+
+  // Dónde va el ícono. En el carrusel se corre a la derecha para no quedar
+  // detrás del título.
+  final Alignment alineacionIcono;
 
   @override
   Widget build(BuildContext context) {
@@ -80,10 +96,11 @@ class FondoDeCategoria extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Center(
+            Align(
+              alignment: alineacionIcono,
               child: Icon(
                 estilo.icono,
-                size: alto * 0.45,
+                size: (alto.isFinite ? alto : 200) * 0.45,
                 color: Colors.white.withValues(alpha: 0.92),
               ),
             ),

@@ -150,4 +150,48 @@ void main() {
       ]);
     });
   });
+
+  group('formatearRangoCorto', () {
+    test('un solo día', () {
+      expect(
+        formatearRangoCorto(DateTime(2026, 11, 14, 9), null),
+        '14 de nov, 2026',
+      );
+      expect(
+        formatearRangoCorto(
+          DateTime(2026, 11, 14, 9),
+          DateTime(2026, 11, 14, 18),
+        ),
+        '14 de nov, 2026',
+      );
+    });
+
+    test('varios días del mismo mes', () {
+      expect(
+        formatearRangoCorto(DateTime(2026, 11, 12), DateTime(2026, 11, 14)),
+        '12 - 14 de nov, 2026',
+      );
+    });
+
+    test('meses distintos del mismo año', () {
+      expect(
+        formatearRangoCorto(DateTime(2026, 11, 30), DateTime(2026, 12, 2)),
+        '30 de nov - 2 de dic, 2026',
+      );
+    });
+
+    test('años distintos', () {
+      expect(
+        formatearRangoCorto(DateTime(2026, 12, 30), DateTime(2027, 1, 2)),
+        '30 de dic, 2026 - 2 de ene, 2027',
+      );
+    });
+
+    test('un fin anterior al inicio no se muestra', () {
+      expect(
+        formatearRangoCorto(DateTime(2026, 11, 14), DateTime(2026, 11, 10)),
+        '14 de nov, 2026',
+      );
+    });
+  });
 }

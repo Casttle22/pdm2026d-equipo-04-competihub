@@ -21,8 +21,13 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'CompetiHub'), findsOneWidget);
-    expect(find.text('Explora competencias'), findsOneWidget);
+    // La marca va en el encabezado del Inicio (ya no en una AppBar) y el
+    // buscador invita a explorar.
+    expect(find.text('CompetiHub'), findsOneWidget);
+    expect(
+      find.text('Buscar torneos, hackathons, organizadores…'),
+      findsOneWidget,
+    );
     expect(
       find.text(
         'Competencias ficticias para desarrollo y pruebas. No son eventos reales.',
@@ -60,7 +65,8 @@ void main() {
       expect(
         find.descendant(
           of: card,
-          matching: find.text('Ubicación: ${competition.ubicacion}'),
+          // La fila muestra «fecha · lugar» en una sola línea.
+          matching: find.textContaining(competition.ubicacion),
         ),
         findsOneWidget,
       );

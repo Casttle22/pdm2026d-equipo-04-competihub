@@ -52,14 +52,23 @@ void main() {
     );
     await tester.pumpWidget(feedCon([competencia]));
     await tester.pumpAndSettle();
+    // Al explorar, la única competencia próxima va al carrusel de
+    // destacadas; con el filtro de su categoría baja a la lista, que es la
+    // tarjeta que se verifica aquí.
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Otras'));
+    await tester.pumpAndSettle();
 
-    final tarjeta = find.byKey(ValueKey(competencia.id));
+    final tarjeta = find.byType(CompetitionCard);
+    expect(tarjeta, findsOneWidget);
     Finder enTarjeta(String texto) =>
         find.descendant(of: tarjeta, matching: find.text(texto));
 
     expect(enTarjeta('Faltan 4 días'), findsOneWidget);
-    expect(enTarjeta('sáb 14 nov 2026 · 14:00'), findsOneWidget);
-    expect(enTarjeta('Ubicación: ${competencia.ubicacion}'), findsOneWidget);
+    // Fecha legible y lugar en una sola línea.
+    expect(
+      enTarjeta('14 de nov, 2026 · ${competencia.ubicacion}'),
+      findsOneWidget,
+    );
     expect(enTarjeta('Costo: ${competencia.costo}'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

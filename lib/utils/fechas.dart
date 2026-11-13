@@ -45,6 +45,33 @@ String formatearHora(DateTime fecha) =>
 String formatearFechaHoraLegible(DateTime fecha) =>
     '${formatearFechaLegible(fecha)} · ${formatearHora(fecha)}';
 
+// Ejemplo: «14 de nov, 2026».
+String formatearFechaCorta(DateTime fecha) =>
+    '${fecha.day} de ${_mesesCortos[fecha.month - 1]}, ${fecha.year}';
+
+bool _mismoDia(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
+// Fecha o rango de fechas en formato corto, sin hora:
+// - un día: «14 de nov, 2026»;
+// - varios días del mismo mes: «12 - 14 de nov, 2026»;
+// - meses distintos del mismo año: «30 de nov - 2 de dic, 2026»;
+// - años distintos: «30 de dic, 2026 - 2 de ene, 2027».
+String formatearRangoCorto(DateTime inicio, DateTime? fin) {
+  if (fin == null || _mismoDia(inicio, fin) || fin.isBefore(inicio)) {
+    return formatearFechaCorta(inicio);
+  }
+  final mesInicio = _mesesCortos[inicio.month - 1];
+  final mesFin = _mesesCortos[fin.month - 1];
+  if (inicio.year != fin.year) {
+    return '${formatearFechaCorta(inicio)} - ${formatearFechaCorta(fin)}';
+  }
+  if (inicio.month != fin.month) {
+    return '${inicio.day} de $mesInicio - ${fin.day} de $mesFin, ${fin.year}';
+  }
+  return '${inicio.day} - ${fin.day} de $mesFin, ${fin.year}';
+}
+
 enum EstadoTemporal { proxima, enCurso, finalizada }
 
 // Una competencia con fecha de fin termina en ese momento. Si no tiene fin,

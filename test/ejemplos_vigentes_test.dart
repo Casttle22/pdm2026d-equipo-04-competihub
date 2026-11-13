@@ -36,8 +36,9 @@ void main() {
     expect(find.text('5 por venir · 1 ya finalizó'), findsOneWidget);
 
     final lista = find.byType(Scrollable).first;
+    // En el carrusel, el tiempo restante va en la misma línea que la fecha.
     await tester.scrollUntilVisible(
-      find.text('Faltan 3 días'),
+      find.textContaining('Faltan 3 días'),
       200,
       scrollable: lista,
     );

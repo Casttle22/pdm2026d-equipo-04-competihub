@@ -84,7 +84,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final contexto = tester.element(find.text('Explora competencias'));
+    final contexto = tester.element(find.text('CompetiHub'));
     expect(Theme.of(contexto).colorScheme.primary, azulCompetihub);
   });
 

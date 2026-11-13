@@ -77,16 +77,23 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
+    // Los filtros están en el encabezado de la lista, que pudo quedar fuera
+    // de pantalla al desplazarse: se busca también fuera de escena.
     expect(
       tester
-          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Esports'))
+          .widget<ChoiceChip>(
+            find.widgetWithText(ChoiceChip, 'Esports', skipOffstage: false),
+          )
           .selected,
       isTrue,
     );
     final esportsCount = competenciasMock
         .where((item) => item.categoria == 'Esports')
         .length;
-    expect(find.text('$esportsCount competencias disponibles'), findsOneWidget);
+    expect(
+      find.text('$esportsCount competencias disponibles', skipOffstage: false),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 

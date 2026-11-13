@@ -37,8 +37,8 @@ String normalizarTexto(String texto) {
 }
 
 // Una competencia coincide si cada palabra de la consulta aparece en su
-// título, su ubicación o su descripción. Una consulta vacía coincide con
-// todas.
+// título, su ubicación, su descripción o su organizador. Una consulta vacía
+// coincide con todas.
 bool coincideConBusqueda(Competencia competencia, String consulta) {
   final palabras = normalizarTexto(
     consulta,
@@ -48,7 +48,31 @@ bool coincideConBusqueda(Competencia competencia, String consulta) {
   }
   final contenido = normalizarTexto(
     '${competencia.titulo}\n${competencia.ubicacion}\n'
-    '${competencia.descripcion}',
+    '${competencia.descripcion}\n${competencia.organizador ?? ''}',
   );
   return palabras.every(contenido.contains);
+}
+
+// Píldora de ubicación del Inicio. Las híbridas aparecen en las dos
+// opciones, porque se puede asistir en persona o en línea.
+enum FiltroUbicacion {
+  todas('Todas', 'Todas las ubicaciones'),
+  quetzaltenango('Quetzaltenango', 'Quetzaltenango (presencial e híbrida)'),
+  online('Online', 'Online (virtual e híbrida)');
+
+  const FiltroUbicacion(this.etiqueta, this.descripcion);
+
+  final String etiqueta;
+  final String descripcion;
+}
+
+bool coincideConUbicacion(Competencia competencia, FiltroUbicacion filtro) {
+  return switch (filtro) {
+    FiltroUbicacion.todas => true,
+    FiltroUbicacion.quetzaltenango =>
+      competencia.modalidad == 'Presencial' ||
+          competencia.modalidad == 'Híbrida',
+    FiltroUbicacion.online =>
+      competencia.modalidad == 'Virtual' || competencia.modalidad == 'Híbrida',
+  };
 }

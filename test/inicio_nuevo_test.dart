@@ -2,6 +2,7 @@ import 'package:competihub/data/competencia.dart';
 import 'package:competihub/data/mock_competencias.dart';
 import 'package:competihub/main.dart';
 import 'package:competihub/screens/competition_detail_screen.dart';
+import 'package:competihub/screens/inicio_screen.dart' show CarruselDestacados;
 import 'package:competihub/tema.dart';
 import 'package:competihub/widgets/imagen_competencia.dart';
 import 'package:flutter/material.dart';
@@ -164,13 +165,16 @@ void main() {
       await tester.pumpWidget(inicio());
       await tester.pumpAndSettle();
 
-      expect(find.text('Destacados'), findsOneWidget);
-      expect(find.text('Próximos'), findsOneWidget);
+      expect(find.text('Eventos destacados'), findsOneWidget);
+      expect(find.text('Próximos eventos'), findsOneWidget);
       expect(find.text('Finalizadas'), findsNothing);
 
       final destacadas = tester
-          .widgetList<TarjetaDestacada>(find.byType(TarjetaDestacada))
-          .map((tarjeta) => tarjeta.competition.id)
+          // El carrusel solo construye las páginas visibles: las
+          // destacadas se leen de su lista.
+          .widget<CarruselDestacados>(find.byType(CarruselDestacados))
+          .competencias
+          .map((competencia) => competencia.id)
           .toList();
       expect(destacadas, idsDestacados);
 
@@ -193,10 +197,13 @@ void main() {
       await tester.pumpAndSettle();
 
       final destacadas = tester
-          .widgetList<TarjetaDestacada>(find.byType(TarjetaDestacada))
-          .map((tarjeta) => tarjeta.competition.id);
+          // El carrusel solo construye las páginas visibles: las
+          // destacadas se leen de su lista.
+          .widget<CarruselDestacados>(find.byType(CarruselDestacados))
+          .competencias
+          .map((competencia) => competencia.id);
       expect(destacadas, ['mock-other-01']);
-      expect(find.text('Próximos'), findsNothing);
+      expect(find.text('Próximos eventos'), findsNothing);
       expect(find.text('Finalizadas'), findsOneWidget);
       expect(find.byType(CompetitionCard), findsNWidgets(5));
     });
@@ -207,7 +214,7 @@ void main() {
       await tester.pumpWidget(inicio(ahora: DateTime(2026, 12, 1)));
       await tester.pumpAndSettle();
 
-      expect(find.text('Destacados'), findsNothing);
+      expect(find.text('Eventos destacados'), findsNothing);
       expect(find.byType(TarjetaDestacada), findsNothing);
     });
 
@@ -215,19 +222,19 @@ void main() {
         'lista', (tester) async {
       await tester.pumpWidget(inicio());
       await tester.pumpAndSettle();
-      expect(find.text('Destacados'), findsOneWidget);
+      expect(find.text('Eventos destacados'), findsOneWidget);
 
       await tester.tap(find.widgetWithText(ChoiceChip, 'Esports'));
       await tester.pumpAndSettle();
-      expect(find.text('Destacados'), findsNothing);
+      expect(find.text('Eventos destacados'), findsNothing);
       expect(find.byType(TarjetaDestacada), findsNothing);
 
       await tester.tap(find.widgetWithText(ChoiceChip, 'Todas'));
       await tester.pumpAndSettle();
-      expect(find.text('Destacados'), findsOneWidget);
+      expect(find.text('Eventos destacados'), findsOneWidget);
 
       await buscar(tester, 'copa');
-      expect(find.text('Destacados'), findsNothing);
+      expect(find.text('Eventos destacados'), findsNothing);
     });
 
     testWidgets('una tarjeta destacada abre el Detalle de su competencia', (
@@ -346,7 +353,7 @@ void main() {
 
     // La fila de Destacados se desliza de lado.
     await tester.scrollUntilVisible(
-      find.text('Destacados'),
+      find.text('Eventos destacados'),
       200,
       scrollable: listaDeInicio,
     );
