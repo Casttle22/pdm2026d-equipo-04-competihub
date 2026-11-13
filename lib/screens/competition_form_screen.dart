@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import '../data/competencia.dart';
 import '../data/competencia_draft.dart';
 import '../data/etapa.dart';
+import '../tema.dart';
+import '../widgets/decoracion_campo.dart';
 import '../widgets/editor_etapas.dart';
 import 'selector_ubicacion_screen.dart';
 
@@ -14,10 +16,8 @@ const List<String> _modalidades = ['Presencial', 'Virtual', 'Híbrida'];
 
 const String _campoObligatorio = 'Este campo es obligatorio.';
 
-// Los mensajes de error pueden ocupar varias líneas. Con una sola (el valor
-// por defecto), en pantallas angostas o con texto grande se cortaban con «…»
-// y no se leía qué faltaba.
-const int _lineasDeError = 6;
+// Los mensajes de error pueden ocupar varias líneas (ver decoracionCampo):
+// con una sola, en pantallas angostas o con texto grande se cortaban con «…».
 
 // Formulario reutilizable para crear (initial == null) o editar una
 // competencia. No guarda nada por sí mismo: arma un CompetenciaDraft y se lo
@@ -389,29 +389,52 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
             ),
           ),
         ),
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_errorGuardado != null) ...[
-                  _MensajeError(texto: _errorGuardado!),
-                  const SizedBox(height: 12),
+        // Barra inferior fija con el botón de guardar, de ancho completo.
+        bottomNavigationBar: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x1A102A43),
+                blurRadius: 12,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_errorGuardado != null) ...[
+                    _MensajeError(texto: _errorGuardado!),
+                    const SizedBox(height: 12),
+                  ],
+                  FilledButton(
+                    key: const ValueKey('competition-form-save'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(radioCampo),
+                      ),
+                    ),
+                    onPressed: _guardando ? null : _guardar,
+                    child: _guardando
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _esEdicion
+                                ? 'Guardar cambios'
+                                : 'Crear competencia',
+                          ),
+                  ),
                 ],
-                FilledButton(
-                  key: const ValueKey('competition-form-save'),
-                  onPressed: _guardando ? null : _guardar,
-                  child: _guardando
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_esEdicion ? 'Guardar cambios' : 'Guardar'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -431,51 +454,58 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         obligatorio: true,
       ),
       separacion,
-      DropdownButtonFormField<String>(
-        key: const ValueKey('competition-form-categoria'),
-        initialValue: _categoria,
-        // Ocupa el ancho disponible en vez del ancho de la opción más larga,
-        // que con texto grande no cabe en pantallas angostas.
-        isExpanded: true,
-        decoration: const InputDecoration(
-          labelText: 'Categoría *',
-          errorMaxLines: _lineasDeError,
-          border: OutlineInputBorder(),
+      CampoConEtiqueta(
+        etiqueta: 'Categoría *',
+        child: DropdownButtonFormField<String>(
+          key: const ValueKey('competition-form-categoria'),
+          initialValue: _categoria,
+          // Ocupa el ancho disponible en vez del ancho de la opción más larga,
+          // que con texto grande no cabe en pantallas angostas.
+          isExpanded: true,
+          decoration: decoracionCampo(context),
+          items: _opcionesCon(
+            _categorias,
+            widget.initial?.categoria,
+          ).map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+          onChanged: habilitado
+              ? (valor) => setState(() => _categoria = valor)
+              : null,
+          validator: (valor) =>
+              valor == null ? 'Selecciona una categoría.' : null,
         ),
-        items: _opcionesCon(
-          _categorias,
-          widget.initial?.categoria,
-        ).map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-        onChanged: habilitado
-            ? (valor) => setState(() => _categoria = valor)
-            : null,
-        validator: (valor) =>
-            valor == null ? 'Selecciona una categoría.' : null,
       ),
       separacion,
-      DropdownButtonFormField<String>(
-        key: const ValueKey('competition-form-modalidad'),
-        initialValue: _modalidad,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          labelText: 'Modalidad *',
-          errorMaxLines: _lineasDeError,
-          border: OutlineInputBorder(),
+      CampoConEtiqueta(
+        etiqueta: 'Modalidad *',
+        child: DropdownButtonFormField<String>(
+          key: const ValueKey('competition-form-modalidad'),
+          initialValue: _modalidad,
+          isExpanded: true,
+          decoration: decoracionCampo(context),
+          items: _opcionesCon(
+            _modalidades,
+            widget.initial?.modalidad,
+          ).map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+          onChanged: habilitado
+              ? (valor) => setState(() => _modalidad = valor)
+              : null,
+          validator: (valor) =>
+              valor == null ? 'Selecciona una modalidad.' : null,
         ),
-        items: _opcionesCon(
-          _modalidades,
-          widget.initial?.modalidad,
-        ).map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
-        onChanged: habilitado
-            ? (valor) => setState(() => _modalidad = valor)
-            : null,
-        validator: (valor) =>
-            valor == null ? 'Selecciona una modalidad.' : null,
       ),
       separacion,
+      _campoTexto(
+        clave: 'descripcion',
+        controller: _descripcionController,
+        etiqueta: 'Descripción *',
+        obligatorio: true,
+        multilinea: true,
+      ),
+      const SizedBox(height: 24),
+      const _Seccion(titulo: 'Fecha y hora'),
       _CampoFechaHora(
         key: const ValueKey('competition-form-fecha-inicio'),
-        etiqueta: 'Inicio *',
+        etiqueta: 'Fecha y hora de inicio *',
         valor: _fechaInicio,
         habilitado: habilitado,
         onElegir: () async {
@@ -492,7 +522,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       separacion,
       _CampoFechaHora(
         key: const ValueKey('competition-form-fecha-fin'),
-        etiqueta: 'Fin (opcional)',
+        etiqueta: 'Fecha y hora de fin (opcional)',
         valor: _fechaFin,
         habilitado: habilitado,
         onElegir: () async {
@@ -514,7 +544,8 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
           return null;
         },
       ),
-      separacion,
+      const SizedBox(height: 24),
+      const _Seccion(titulo: 'Ubicación'),
       _campoTexto(
         clave: 'ubicacion',
         controller: _ubicacionController,
@@ -537,16 +568,8 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         },
         onQuitar: () => setState(() => _punto = null),
       ),
-      separacion,
-      _campoTexto(
-        clave: 'descripcion',
-        controller: _descripcionController,
-        etiqueta: 'Descripción *',
-        obligatorio: true,
-        multilinea: true,
-      ),
       const SizedBox(height: 24),
-      const _Seccion(titulo: 'Información para participar'),
+      const _Seccion(titulo: 'Participación'),
       _CampoFechaHora(
         key: const ValueKey('competition-form-fecha-limite'),
         etiqueta: 'Límite de inscripción (opcional)',
@@ -626,29 +649,28 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
       ),
       const SizedBox(height: 24),
       const _Seccion(titulo: 'Formato y premios'),
-      DropdownButtonFormField<FormatoCompetencia?>(
-        key: const ValueKey('competition-form-formato'),
-        initialValue: _formato,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          labelText: 'Formato (opcional)',
-          errorMaxLines: _lineasDeError,
-          border: OutlineInputBorder(),
+      CampoConEtiqueta(
+        etiqueta: 'Formato (opcional)',
+        child: DropdownButtonFormField<FormatoCompetencia?>(
+          key: const ValueKey('competition-form-formato'),
+          initialValue: _formato,
+          isExpanded: true,
+          decoration: decoracionCampo(context),
+          items: const [
+            DropdownMenuItem(value: null, child: Text('Sin especificar')),
+            DropdownMenuItem(
+              value: FormatoCompetencia.individual,
+              child: Text('Individual'),
+            ),
+            DropdownMenuItem(
+              value: FormatoCompetencia.equipos,
+              child: Text('Por equipos'),
+            ),
+          ],
+          onChanged: habilitado
+              ? (valor) => setState(() => _formato = valor)
+              : null,
         ),
-        items: const [
-          DropdownMenuItem(value: null, child: Text('Sin especificar')),
-          DropdownMenuItem(
-            value: FormatoCompetencia.individual,
-            child: Text('Individual'),
-          ),
-          DropdownMenuItem(
-            value: FormatoCompetencia.equipos,
-            child: Text('Por equipos'),
-          ),
-        ],
-        onChanged: habilitado
-            ? (valor) => setState(() => _formato = valor)
-            : null,
       ),
       if (_formato == FormatoCompetencia.equipos) ...[
         separacion,
@@ -720,30 +742,28 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
     TextCapitalization capitalizacion = TextCapitalization.sentences,
     FormFieldValidator<String>? validator,
   }) {
-    return TextFormField(
-      key: ValueKey('competition-form-$clave'),
-      controller: controller,
-      enabled: !_guardando,
-      textCapitalization: capitalizacion,
-      keyboardType: multilinea ? TextInputType.multiline : teclado,
-      minLines: multilinea ? 2 : 1,
-      maxLines: multilinea ? 5 : 1,
-      textInputAction: multilinea
-          ? TextInputAction.newline
-          : TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: etiqueta,
-        hintText: ayuda,
-        errorMaxLines: _lineasDeError,
-        border: const OutlineInputBorder(),
+    return CampoConEtiqueta(
+      etiqueta: etiqueta,
+      child: TextFormField(
+        key: ValueKey('competition-form-$clave'),
+        controller: controller,
+        enabled: !_guardando,
+        textCapitalization: capitalizacion,
+        keyboardType: multilinea ? TextInputType.multiline : teclado,
+        minLines: multilinea ? 2 : 1,
+        maxLines: multilinea ? 5 : 1,
+        textInputAction: multilinea
+            ? TextInputAction.newline
+            : TextInputAction.next,
+        decoration: decoracionCampo(context, sugerencia: ayuda),
+        validator:
+            validator ??
+            (obligatorio
+                ? (valor) => (valor == null || valor.trim().isEmpty)
+                      ? _campoObligatorio
+                      : null
+                : null),
       ),
-      validator:
-          validator ??
-          (obligatorio
-              ? (valor) => (valor == null || valor.trim().isEmpty)
-                    ? _campoObligatorio
-                    : null
-              : null),
     );
   }
 }
@@ -800,7 +820,17 @@ class _Seccion extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Text(titulo, style: Theme.of(context).textTheme.titleMedium),
+      child: Semantics(
+        header: true,
+        child: Text(
+          titulo,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -823,41 +853,42 @@ class _PuntoEnMapa extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final punto = this.punto;
-    return InputDecorator(
-      key: const ValueKey('competition-form-punto'),
-      decoration: const InputDecoration(
-        labelText: 'Punto en el mapa (opcional)',
-        helperText: 'Sirve para el mapa y para «Cómo llegar».',
-        helperMaxLines: _lineasDeError,
-        border: OutlineInputBorder(),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(punto == null ? 'Sin punto elegido' : describirPunto(punto)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                key: const ValueKey('competition-form-elegir-punto'),
-                onPressed: habilitado ? onElegir : null,
-                icon: const Icon(Icons.map_outlined),
-                label: Text(
-                  punto == null ? 'Elegir en el mapa' : 'Cambiar punto',
+    return CampoConEtiqueta(
+      etiqueta: 'Punto en el mapa (opcional)',
+      child: InputDecorator(
+        key: const ValueKey('competition-form-punto'),
+        decoration: decoracionCampo(
+          context,
+          ayuda: 'Sirve para el mapa y para «Cómo llegar».',
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(punto == null ? 'Sin punto elegido' : describirPunto(punto)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  key: const ValueKey('competition-form-elegir-punto'),
+                  onPressed: habilitado ? onElegir : null,
+                  icon: const Icon(Icons.map_outlined),
+                  label: Text(
+                    punto == null ? 'Elegir en el mapa' : 'Cambiar punto',
+                  ),
                 ),
-              ),
-              if (punto != null)
-                TextButton.icon(
-                  key: const ValueKey('competition-form-quitar-punto'),
-                  onPressed: habilitado ? onQuitar : null,
-                  icon: const Icon(Icons.clear),
-                  label: const Text('Quitar punto'),
-                ),
-            ],
-          ),
-        ],
+                if (punto != null)
+                  TextButton.icon(
+                    key: const ValueKey('competition-form-quitar-punto'),
+                    onPressed: habilitado ? onQuitar : null,
+                    icon: const Icon(Icons.clear),
+                    label: const Text('Quitar punto'),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -922,29 +953,30 @@ class _CampoFechaHora extends StatelessWidget {
       validator: validator,
       builder: (field) {
         final actual = valor;
-        return InkWell(
-          onTap: habilitado ? onElegir : null,
-          borderRadius: BorderRadius.circular(4),
-          child: InputDecorator(
-            isEmpty: actual == null,
-            decoration: InputDecoration(
-              labelText: etiqueta,
-              enabled: habilitado,
-              errorText: field.errorText,
-              helperText: ayuda,
-              helperMaxLines: _lineasDeError,
-              errorMaxLines: _lineasDeError,
-              border: const OutlineInputBorder(),
-              suffixIcon: actual != null && onLimpiar != null
-                  ? IconButton(
-                      key: ValueKey('${_claveTexto(key)}-limpiar'),
-                      tooltip: 'Quitar fecha',
-                      icon: const Icon(Icons.clear),
-                      onPressed: habilitado ? onLimpiar : null,
-                    )
-                  : const Icon(Icons.calendar_today_outlined),
+        return CampoConEtiqueta(
+          etiqueta: etiqueta,
+          child: InkWell(
+            onTap: habilitado ? onElegir : null,
+            borderRadius: BorderRadius.circular(radioCampo),
+            child: InputDecorator(
+              isEmpty: actual == null,
+              decoration: decoracionCampo(
+                context,
+                sugerencia: 'Elegir fecha y hora',
+                habilitado: habilitado,
+                error: field.errorText,
+                ayuda: ayuda,
+                sufijo: actual != null && onLimpiar != null
+                    ? IconButton(
+                        key: ValueKey('${_claveTexto(key)}-limpiar'),
+                        tooltip: 'Quitar fecha',
+                        icon: const Icon(Icons.clear),
+                        onPressed: habilitado ? onLimpiar : null,
+                      )
+                    : const Icon(Icons.calendar_today_outlined),
+              ),
+              child: Text(actual == null ? '' : _formatearFechaHora(actual)),
             ),
-            child: Text(actual == null ? '' : _formatearFechaHora(actual)),
           ),
         );
       },

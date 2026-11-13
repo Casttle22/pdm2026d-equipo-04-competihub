@@ -16,6 +16,21 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Rediseño 5/5: formulario
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Campos con borde redondeado, agrupados bajo subtítulos en gris («Información general», «Participación», «Ubicación»…). «Fecha y hora» en un solo campo con ícono de calendario, que abra la fecha y luego la hora. Botón «Guardar cambios» (o «Crear competencia») azul, de ancho completo, fijo abajo."
+- **Resultado:** `lib/widgets/decoracion_campo.dart` (`decoracionCampo` con radio 12 y fondo blanco, y `CampoConEtiqueta`), formulario reorganizado en «Información general», «Fecha y hora», «Ubicación», «Participación», «Formato y premios» y «Etapas y cronograma», campos de fecha renombrados a «Fecha y hora de inicio *» y «Fecha y hora de fin (opcional)» con la sugerencia «Elegir fecha y hora», y botón fijo de 52 dp en una barra blanca con sombra. El diálogo de etapas usa la misma decoración.
+- **Aceptado:**
+  - La etiqueta de cada campo va encima del borde, como texto que puede ocupar varias líneas, unida al campo con `MergeSemantics` para que el lector de pantalla los anuncie juntos.
+  - La decoración se define en un helper y no solo en el tema, porque las pruebas montan el formulario sin el tema de la app.
+- **Rechazado / corregido:**
+  - Con las etiquetas dentro del borde, a 360 dp y texto 2.0 «Fecha y hora de…» se cortaba con «…» y no se sabía si era el inicio o el fin. Se probó una etiqueta de varias líneas dentro del borde: se salía del campo y se encimaba con el de arriba. Se descartó y la etiqueta pasó encima del campo.
+  - Las pruebas existentes del formulario pasaron sin cambios (buscan los campos por su clave).
+- **Verificación:** `test/formulario_rediseno_test.dart` (5 pruebas: subtítulos grises, «Crear competencia»/«Guardar cambios» de ancho completo, campo de fecha y hora con calendario que abre fecha y luego hora, borde redondeado y fondo blanco, y etiquetas completas a 360 dp con texto 2.0). Capturas generadas en pruebas a 400 dp y a 360 dp con texto 2.0, sin desbordes. Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 280/280.
+- **Commit / PR:** commit «feat: formulario rediseñado según las maquetas» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Rediseño 4/5: Detalle
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

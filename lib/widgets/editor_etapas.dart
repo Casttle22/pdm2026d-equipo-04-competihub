@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/etapa.dart';
 import '../utils/fechas.dart';
+import 'decoracion_campo.dart';
 
 // Editor del cronograma dentro del formulario: agregar, editar, reordenar y
 // quitar etapas. Reordenar usa botones Subir y Bajar en vez de arrastrar,
@@ -246,11 +247,7 @@ class _DialogoEtapaState extends State<_DialogoEtapa> {
               key: const ValueKey('etapa-nombre'),
               controller: _nombre,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Nombre *',
-                errorMaxLines: 4,
-                border: OutlineInputBorder(),
-              ),
+              decoration: decoracionCampo(context, etiqueta: 'Nombre *'),
               validator: (valor) => (valor == null || valor.trim().isEmpty)
                   ? 'Escribe el nombre de la etapa.'
                   : null,
@@ -264,12 +261,11 @@ class _DialogoEtapaState extends State<_DialogoEtapa> {
                 onTap: _elegirFecha,
                 child: InputDecorator(
                   isEmpty: fecha == null,
-                  decoration: InputDecoration(
-                    labelText: 'Fecha y hora *',
-                    errorText: campo.errorText,
-                    errorMaxLines: 4,
-                    border: const OutlineInputBorder(),
-                    suffixIcon: const Icon(Icons.calendar_today_outlined),
+                  decoration: decoracionCampo(
+                    context,
+                    etiqueta: 'Fecha y hora *',
+                    error: campo.errorText,
+                    sufijo: const Icon(Icons.calendar_today_outlined),
                   ),
                   child: Text(
                     fecha == null ? '' : formatearFechaHoraLegible(fecha),
@@ -284,9 +280,9 @@ class _DialogoEtapaState extends State<_DialogoEtapa> {
               textCapitalization: TextCapitalization.sentences,
               minLines: 1,
               maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Descripción (opcional)',
-                border: OutlineInputBorder(),
+              decoration: decoracionCampo(
+                context,
+                etiqueta: 'Descripción (opcional)',
               ),
             ),
           ],
