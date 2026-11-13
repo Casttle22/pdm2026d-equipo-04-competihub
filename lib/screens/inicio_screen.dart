@@ -8,6 +8,7 @@ import '../tema.dart';
 import '../utils/busqueda.dart';
 import '../utils/fechas.dart';
 import '../widgets/categoria_estilo.dart';
+import '../widgets/pildora_filtro.dart';
 import '../widgets/tarjeta_competencia.dart';
 import 'competition_detail_screen.dart';
 import 'competition_form_screen.dart';
@@ -321,7 +322,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             clipBehavior: Clip.none,
             child: Row(
               children: [
-                _PildoraFiltro(
+                PildoraFiltro(
                   icono: Icons.apps_outlined,
                   etiqueta: 'Todas',
                   seleccionada: categoriaSeleccionada == null,
@@ -329,7 +330,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       setState(() => categoriaSeleccionada = null),
                 ),
                 for (final categoria in categorias)
-                  _PildoraFiltro(
+                  PildoraFiltro(
                     icono: estiloDeCategoria(categoria, scheme).icono,
                     etiqueta: categoria,
                     seleccionada: categoriaSeleccionada == categoria,
@@ -544,50 +545,6 @@ class _PildoraUbicacion extends StatelessWidget {
     FiltroUbicacion.quetzaltenango => Icons.place_outlined,
     FiltroUbicacion.online => Icons.wifi,
   };
-}
-
-// Píldora de filtro de categoría: blanca con borde, o azul rellena con texto
-// blanco si está seleccionada.
-class _PildoraFiltro extends StatelessWidget {
-  const _PildoraFiltro({
-    required this.icono,
-    required this.etiqueta,
-    required this.seleccionada,
-    required this.onSeleccionar,
-  });
-
-  final IconData icono;
-  final String etiqueta;
-  final bool seleccionada;
-  final VoidCallback onSeleccionar;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colorContenido = seleccionada ? Colors.white : scheme.onSurface;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        avatar: Icon(icono, size: 18, color: colorContenido),
-        label: Text(etiqueta),
-        selected: seleccionada,
-        showCheckmark: false,
-        onSelected: (_) => onSeleccionar(),
-        selectedColor: scheme.primary,
-        backgroundColor: Colors.white,
-        labelStyle: TextStyle(
-          color: colorContenido,
-          fontWeight: FontWeight.w700,
-        ),
-        shape: StadiumBorder(
-          side: BorderSide(
-            color: seleccionada ? scheme.primary : scheme.outlineVariant,
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      ),
-    );
-  }
 }
 
 class _TituloDeSeccion extends StatelessWidget {

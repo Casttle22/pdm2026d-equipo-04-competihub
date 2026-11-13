@@ -2,6 +2,7 @@ import 'package:competihub/data/competencias_database.dart';
 import 'package:competihub/data/mock_competencias.dart';
 import 'package:competihub/main.dart';
 import 'package:competihub/screens/competition_detail_screen.dart';
+import 'package:competihub/screens/explorar_screen.dart';
 import 'package:competihub/screens/mis_eventos_screen.dart';
 import 'package:competihub/tema.dart';
 import 'package:competihub/utils/fechas.dart';
@@ -99,7 +100,7 @@ void main() {
   });
 
   group('Pestaña Mis eventos', () {
-    testWidgets('vacía, explica cómo guardar y lleva al Inicio', (
+    testWidgets('vacía, explica cómo guardar y lleva a Explorar', (
       tester,
     ) async {
       await tester.pumpWidget(app(repositorio()));
@@ -109,9 +110,10 @@ void main() {
       expect(find.text('Todavía no guardas competencias'), findsOneWidget);
       expect(find.textContaining('ícono de marcador'), findsOneWidget);
 
+      // Desde la barra con Explorar, el botón lleva a esa pestaña.
       await tester.tap(find.text('Explorar competencias'));
       await tester.pumpAndSettle();
-      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.byType(ExplorarScreen), findsOneWidget);
       expect(find.byType(MisEventosScreen), findsNothing);
     });
 

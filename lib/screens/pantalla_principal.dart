@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
+import 'explorar_screen.dart';
 import 'inicio_screen.dart';
 import 'mapa_screen.dart';
 import 'mis_eventos_screen.dart';
 
-// Pestañas de la barra inferior, en orden.
-enum Seccion { inicio, mapa, misEventos }
+// Pestañas de la barra inferior, en orden. No hay «Perfil»: la app no
+// tiene cuentas.
+enum Seccion { inicio, explorar, mapa, misEventos }
 
-// Pantalla principal con la barra inferior. Las tres secciones viven en un
+// Pantalla principal con la barra inferior. Las cuatro secciones viven en un
 // IndexedStack: al cambiar de pestaña no se destruyen, así que cada una
-// conserva su estado (búsqueda, filtro, posición de la lista, mapa).
+// conserva su estado (búsqueda, filtros, posición de la lista, mapa).
 //
 // El Detalle y el formulario se abren encima de toda la pantalla (sobre la
 // barra), con el navegador principal; así el botón Atrás del sistema se
@@ -26,24 +28,25 @@ class PantallaPrincipal extends StatefulWidget {
 class _PantallaPrincipalState extends State<PantallaPrincipal> {
   late Seccion _seccion = widget.seccionInicial;
 
+  void _ir(Seccion seccion) => setState(() => _seccion = seccion);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _seccion.index,
         children: [
-          const HomeScreen(),
+          HomeScreen(onVerTodos: () => _ir(Seccion.explorar)),
+          const ExplorarScreen(),
           const MapaScreen(),
-          MisEventosScreen(
-            onExplorar: () => setState(() => _seccion = Seccion.inicio),
-          ),
+          MisEventosScreen(onExplorar: () => _ir(Seccion.explorar)),
         ],
       ),
-      // Con texto muy grande, los rótulos de la barra se limitan a 1,3×
-      // para que quepan los tres en un teléfono angosto. Los íconos y el
-      // resto de la app siguen la escala del sistema.
+      // Con texto muy grande, los rótulos de la barra se limitan a 1,1×:
+      // con cuatro pestañas a 360 dp, «Mis eventos» se partía en dos líneas.
+      // Los íconos y el resto de la app siguen la escala del sistema.
       bottomNavigationBar: MediaQuery.withClampedTextScaling(
-        maxScaleFactor: 1.3,
+        maxScaleFactor: 1.1,
         child: NavigationBar(
           key: const ValueKey('barra-inferior'),
           selectedIndex: _seccion.index,
@@ -55,6 +58,11 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
               icon: Icon(Icons.home_outlined),
               selectedIcon: Icon(Icons.home),
               label: 'Inicio',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.search),
+              selectedIcon: Icon(Icons.saved_search),
+              label: 'Explorar',
             ),
             NavigationDestination(
               icon: Icon(Icons.map_outlined),

@@ -82,7 +82,17 @@ void main() {
     expect(
       tester
           .widget<ChoiceChip>(
-            find.widgetWithText(ChoiceChip, 'Esports', skipOffstage: false),
+            // Explorar también tiene un filtro «Esports»: se busca el del
+            // Inicio.
+            find.descendant(
+              of: find.byType(HomeScreen, skipOffstage: false),
+              matching: find.widgetWithText(
+                ChoiceChip,
+                'Esports',
+                skipOffstage: false,
+              ),
+              skipOffstage: false,
+            ),
           )
           .selected,
       isTrue,

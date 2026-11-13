@@ -16,6 +16,22 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Rediseño 3/5: barra inferior con Explorar
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Íconos con su texto y el activo en azul. Las secciones son Inicio, Explorar (búsqueda con todos los filtros), Mapa y Mis eventos. No agregues «Perfil»: la app no tiene cuentas."
+- **Resultado:** `PantallaPrincipal` con cuatro pestañas; `lib/screens/explorar_screen.dart` con buscador, filtros de categoría, modalidad, formato, «Inscripción abierta» e «Incluir finalizadas», conteo, «Quitar filtros» y estado vacío; `FiltrosExplorar` y `aplicarFiltros` en `lib/utils/busqueda.dart`; `PildoraFiltro` extraída a `lib/widgets/pildora_filtro.dart` para compartirla con el Inicio.
+- **Aceptado:**
+  - Lógica de filtros como función pura, probada sin interfaz. Explorar muestra por defecto solo lo que todavía se puede aprovechar; las finalizadas se incluyen con su filtro.
+  - «Ver todos >» del Inicio y «Explorar competencias» de Mis eventos llevan a la pestaña Explorar. Cada pestaña conserva sus filtros al cambiar de sección.
+- **Rechazado / corregido:**
+  - A 360 dp con texto 2.0, «Mis eventos» se partía en dos líneas con cuatro pestañas: el límite de escala de los rótulos de la barra bajó de 1,3× a 1,1× (los íconos y el resto de la app siguen la escala del sistema).
+  - No se pudo revisar Explorar en la ventana de Windows: Flutter no redibuja una ventana tapada y traerla al frente con foco habría interrumpido el trabajo de Alex. Se revisó con capturas generadas en pruebas (Roboto, 400 dp con texto normal y 360 dp con texto 2.0; sin desbordes).
+  - Pruebas ajustadas, verificando lo mismo: con Explorar, el filtro «Esports»/«Académica» existe en dos pestañas y la búsqueda se limita al Inicio (`navigation_test`, `barra_inferior_test`); «Explorar competencias» de Mis eventos ahora lleva a Explorar (`mis_eventos_test`); la barra tiene cuatro pestañas (`barra_inferior_test`).
+- **Verificación:** `test/explorar_test.dart` (11 pruebas: finalizadas fuera por defecto, cada filtro, inscripción abierta, combinación con búsqueda y orden, `hayFiltros`, grupos y conteo, «Quitar filtros», incluir finalizadas, sin resultados, abrir el Detalle y 360 dp con texto 2.0) y `test/barra_inferior_test.dart` (cuatro pestañas sin «Perfil», Explorar en el recorrido, «Ver todos» con filtros conservados). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 269/269.
+- **Commit / PR:** commit «feat: barra inferior con Explorar» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Rediseño 2/5: Inicio
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

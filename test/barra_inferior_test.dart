@@ -1,6 +1,7 @@
 import 'package:competihub/data/mock_competencias.dart';
 import 'package:competihub/main.dart';
 import 'package:competihub/screens/competition_detail_screen.dart';
+import 'package:competihub/screens/explorar_screen.dart';
 import 'package:competihub/screens/mapa_screen.dart';
 import 'package:competihub/screens/mis_eventos_screen.dart';
 import 'package:competihub/tema.dart';
@@ -40,7 +41,7 @@ void main() {
     return find.byType(pantalla).evaluate().isNotEmpty;
   }
 
-  testWidgets('la barra tiene las tres secciones y empieza en Inicio', (
+  testWidgets('la barra tiene las cuatro secciones y empieza en Inicio', (
     tester,
   ) async {
     await tester.pumpWidget(app());
@@ -50,7 +51,8 @@ void main() {
       find.byKey(const ValueKey('barra-inferior')),
     );
     expect(barra.selectedIndex, 0);
-    for (final pestana in ['Inicio', 'Mapa', 'Mis eventos']) {
+    expect(barra.destinations, hasLength(4));
+    for (final pestana in ['Inicio', 'Explorar', 'Mapa', 'Mis eventos']) {
       expect(
         find.descendant(
           of: find.byKey(const ValueKey('barra-inferior')),
@@ -61,11 +63,17 @@ void main() {
     }
     expect(visible(tester, HomeScreen), isTrue);
     expect(visible(tester, MapaScreen), isFalse);
+    // La app no tiene cuentas: no hay «Perfil».
+    expect(find.text('Perfil'), findsNothing);
   });
 
   testWidgets('cambia de sección al tocar cada pestaña', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
+
+    await irA(tester, 'Explorar');
+    expect(visible(tester, ExplorarScreen), isTrue);
+    expect(visible(tester, HomeScreen), isFalse);
 
     await irA(tester, 'Mapa');
     expect(visible(tester, MapaScreen), isTrue);
@@ -114,7 +122,17 @@ void main() {
     expect(
       tester
           .widget<ChoiceChip>(
-            find.widgetWithText(ChoiceChip, 'Académica', skipOffstage: false),
+            // Explorar también tiene un filtro «Académica»: se busca el del
+            // Inicio.
+            find.descendant(
+              of: find.byType(HomeScreen, skipOffstage: false),
+              matching: find.widgetWithText(
+                ChoiceChip,
+                'Académica',
+                skipOffstage: false,
+              ),
+              skipOffstage: false,
+            ),
           )
           .selected,
       isTrue,
@@ -123,6 +141,30 @@ void main() {
       tester.state<ScrollableState>(listaDeInicio).position.pixels,
       posicion,
     );
+  });
+
+  testWidgets('«Ver todos» del Inicio lleva a Explorar y Explorar conserva '
+      'sus filtros', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ver todos').first);
+    await tester.pumpAndSettle();
+    expect(visible(tester, ExplorarScreen), isTrue);
+    final barra = tester.widget<NavigationBar>(
+      find.byKey(const ValueKey('barra-inferior')),
+    );
+    expect(barra.selectedIndex, 1);
+
+    final presencial = find.descendant(
+      of: find.byType(ExplorarScreen),
+      matching: find.widgetWithText(ChoiceChip, 'Presencial'),
+    );
+    await tester.tap(presencial);
+    await tester.pumpAndSettle();
+    await irA(tester, 'Inicio');
+    await irA(tester, 'Explorar');
+    expect(tester.widget<ChoiceChip>(presencial).selected, isTrue);
   });
 
   testWidgets('el Detalle se abre sobre la barra y Atrás vuelve a la misma '
@@ -144,14 +186,14 @@ void main() {
     expect(visible(tester, HomeScreen), isTrue);
   });
 
-  testWidgets('a 360 dp y texto 2.0, la barra y las tres secciones no se '
+  testWidgets('a 360 dp y texto 2.0, la barra y las cuatro secciones no se '
       'desbordan', (tester) async {
     usarTelefono360(tester);
     await tester.pumpWidget(app(builder: textoGrande));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
-    for (final pestana in ['Mapa', 'Mis eventos', 'Inicio']) {
+    for (final pestana in ['Explorar', 'Mapa', 'Mis eventos', 'Inicio']) {
       await irA(tester, pestana);
       expect(tester.takeException(), isNull, reason: pestana);
     }

@@ -1,4 +1,5 @@
 import '../data/competencia.dart';
+import 'fechas.dart';
 
 // Búsqueda del Inicio: funciones puras para poder probarlas sin interfaz.
 
@@ -75,4 +76,89 @@ bool coincideConUbicacion(Competencia competencia, FiltroUbicacion filtro) {
     FiltroUbicacion.online =>
       competencia.modalidad == 'Virtual' || competencia.modalidad == 'Híbrida',
   };
+}
+
+// Filtros de la pestaña Explorar. Cada uno vacío (null o false) significa
+// «sin filtrar por eso».
+class FiltrosExplorar {
+  const FiltrosExplorar({
+    this.consulta = '',
+    this.categoria,
+    this.modalidad,
+    this.formato,
+    this.soloInscripcionAbierta = false,
+    this.incluirFinalizadas = false,
+  });
+
+  final String consulta;
+  final String? categoria;
+  final String? modalidad;
+  final FormatoCompetencia? formato;
+
+  // Solo las que tienen fecha límite y todavía aceptan inscripciones.
+  final bool soloInscripcionAbierta;
+
+  // Por defecto Explorar muestra solo lo que todavía se puede aprovechar.
+  final bool incluirFinalizadas;
+
+  // true si hay algún filtro distinto del estado inicial (la búsqueda no
+  // cuenta: tiene su propio botón para borrarla).
+  bool get hayFiltros =>
+      categoria != null ||
+      modalidad != null ||
+      formato != null ||
+      soloInscripcionAbierta ||
+      incluirFinalizadas;
+
+  FiltrosExplorar copiar({
+    String? consulta,
+    String? Function()? categoria,
+    String? Function()? modalidad,
+    FormatoCompetencia? Function()? formato,
+    bool? soloInscripcionAbierta,
+    bool? incluirFinalizadas,
+  }) {
+    return FiltrosExplorar(
+      consulta: consulta ?? this.consulta,
+      categoria: categoria == null ? this.categoria : categoria(),
+      modalidad: modalidad == null ? this.modalidad : modalidad(),
+      formato: formato == null ? this.formato : formato(),
+      soloInscripcionAbierta:
+          soloInscripcionAbierta ?? this.soloInscripcionAbierta,
+      incluirFinalizadas: incluirFinalizadas ?? this.incluirFinalizadas,
+    );
+  }
+}
+
+// Las competencias que pasan todos los filtros, próximas primero (y las
+// finalizadas al final, si se incluyen).
+List<Competencia> aplicarFiltros(
+  Iterable<Competencia> competencias,
+  FiltrosExplorar filtros,
+  DateTime ahora,
+) {
+  final resultado = competencias.where((competencia) {
+    if (!filtros.incluirFinalizadas && estaFinalizada(competencia, ahora)) {
+      return false;
+    }
+    if (filtros.categoria != null &&
+        competencia.categoria != filtros.categoria) {
+      return false;
+    }
+    if (filtros.modalidad != null &&
+        competencia.modalidad != filtros.modalidad) {
+      return false;
+    }
+    if (filtros.formato != null && competencia.formato != filtros.formato) {
+      return false;
+    }
+    if (filtros.soloInscripcionAbierta) {
+      final estado = estadoInscripcion(competencia, ahora);
+      if (estado == null || estado == EstadoInscripcion.cerradas) {
+        return false;
+      }
+    }
+    return coincideConBusqueda(competencia, filtros.consulta);
+  });
+  return ordenarPorCercania(resultado, ahora);
 }
