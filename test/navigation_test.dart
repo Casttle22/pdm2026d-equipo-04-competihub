@@ -147,6 +147,8 @@ void main() {
 
     expect(find.text(competition.titulo), findsOneWidget);
     expect(find.text(competition.categoria), findsOneWidget);
+    // La portada de los ejemplos va arriba: se desplaza hasta la sección.
+    await tester.scrollUntilVisible(find.text('Información general'), 150);
     expect(find.text('Información general'), findsOneWidget);
     // La fila de acciones (Guardar, Cómo llegar, Compartir) empuja los
     // datos hacia abajo: se desplaza hasta la modalidad, como con la

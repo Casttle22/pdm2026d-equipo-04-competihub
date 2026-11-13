@@ -645,7 +645,7 @@ class _CompetitionFormScreenState extends State<CompetitionFormScreen> {
         ayuda: 'https://…',
         teclado: TextInputType.url,
         capitalizacion: TextCapitalization.none,
-        validator: _validarEnlaceOpcional,
+        validator: _validarImagenOpcional,
       ),
       const SizedBox(height: 24),
       const _Seccion(titulo: 'Formato y premios'),
@@ -803,6 +803,17 @@ String? _validarEnlaceOpcional(String? valor) {
   return esValido
       ? null
       : 'Ingresa un enlace válido que empiece con http:// o https://.';
+}
+
+// Como _validarEnlaceOpcional, pero acepta también una imagen incluida en la
+// app («assets/imagenes/…»), que es lo que traen los ejemplos: sin esto, no
+// se podía guardar un ejemplo editado.
+String? _validarImagenOpcional(String? valor) {
+  final texto = valor?.trim() ?? '';
+  if (texto.startsWith('assets/imagenes/')) {
+    return null;
+  }
+  return _validarEnlaceOpcional(valor);
 }
 
 String _formatearFechaHora(DateTime fecha) {

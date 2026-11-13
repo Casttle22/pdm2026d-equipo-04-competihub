@@ -327,13 +327,14 @@ void main() {
         findsOneWidget,
       );
 
+      // Sin imagenUrl (los ejemplos ahora traen portada, así que se usa una
+      // competencia propia sin imagen).
+      final sinImagen = conImagen(null);
       await tester.pumpWidget(
         conRepositorio(
-          FakeCompetenciasRepository.conDatos(competenciasMock),
+          FakeCompetenciasRepository.conDatos([sinImagen]),
           MaterialApp(
-            home: CompetitionDetailScreen(
-              competitionId: competenciasMock.first.id,
-            ),
+            home: CompetitionDetailScreen(competitionId: sinImagen.id),
           ),
         ),
       );

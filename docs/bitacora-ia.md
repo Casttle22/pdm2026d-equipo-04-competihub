@@ -16,6 +16,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Imágenes de portada de las competencias de ejemplo
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Imágenes LOCALES en assets/imagenes/, declaradas en pubspec.yaml; una por competencia acorde a su categoría (esports, programación, carrera, lógica, ilustración y estrategia). Registra en docs/ la fuente y la licencia de cada imagen. Adapta imagen_competencia.dart para aceptar un asset local o una URL, con el fondo de categoría como respaldo. Que se vean bien en el carrusel, en las tarjetas y en el encabezado del Detalle."
+- **Resultado:** 9 fotos de Wikimedia Commons (6 portadas y 3 de galería para el siguiente cambio) en `assets/imagenes/`, reducidas a 1000 px y sin metadatos (~880 KB en total); `docs/creditos_imagenes.md` con autor, licencia y enlace de cada una; `lib/data/creditos_imagenes.dart`; `ImagenCompetencia` con `Image.asset` para «assets/…», `Image.network` para http(s) y el fondo de categoría para todo lo demás o si falla; portada en el cuadro de 64 dp de las filas; foto de 190 dp en el Detalle con su crédito debajo; migración v8 solo de datos.
+- **Aceptado:**
+  - Fuente: Wikimedia Commons, porque su API devuelve autor y licencia verificables de cada archivo (Unsplash y Pexels no los exponen sin clave). Solo dominio público, CC0 o CC BY; ninguna «compartir igual». Dos fotos son CC BY 4.0: la app muestra el crédito visible bajo la imagen, como pide esa licencia.
+  - Migración v8 (sin cambio de esquema): pone la portada a las filas de ejemplo que no tengan imagen; no pisa una imagen elegida al editar un ejemplo ni toca las competencias creadas en la app.
+  - El campo «Enlace de imagen» del formulario acepta también «assets/imagenes/…»: sin eso, no se podía guardar un ejemplo editado.
+  - En el carrusel, el velo oscurece desde antes de la mitad para que el título blanco se lea también sobre fotos claras.
+- **Rechazado / corregido:**
+  - Se revisó cada foto antes de usarla. Se descartaron: un control con la marca M-TECH y otros de marcas conocidas (para no sugerir patrocinio), una foto de código que mostraba en pantalla un texto poco apropiado, dibujos de un artista real (darían a entender que participó en el concurso ficticio) y fichas antiguas de go que no se reconocen como juego.
+  - Pruebas ajustadas porque los ejemplos ahora tienen portada, verificando lo mismo: «limpiar opcionales» también vacía el campo de imagen (`competition_form_screen_test`); la prueba de «sin imagen» usa una competencia propia sin imagen (`inicio_nuevo_test`); la foto empuja «Información general» y la prueba se desplaza hasta ella (`navigation_test`).
+- **Verificación:** `test/imagenes_test.dart` (10 pruebas: cada ejemplo con portada local existente, distinta y con crédito; cada imagen incluida en los créditos y en docs; assets declarados; migración v7→v8 que respeta una imagen elegida y no toca a la persona; asset vs. URL vs. fuente inválida; crédito en el Detalle; portada en el cuadro de 64 dp; el formulario guarda un ejemplo con portada local; 360 dp con texto 2.0). Capturas generadas en pruebas del carrusel, las filas y el Detalle. Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 290/290.
+- **Commit / PR:** commit «feat: portadas locales para las competencias de ejemplo» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Filtro de modalidad en el Inicio
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

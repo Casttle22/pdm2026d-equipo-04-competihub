@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../data/creditos_imagenes.dart';
 import 'categoria_estilo.dart';
 
-// Imagen de una competencia para Destacados y el Detalle.
-// - Con imagenUrl: muestra la imagen. Mientras carga, o si falla, deja el
-//   fondo de la categoría como marcador de posición.
+// Imagen de una competencia para Destacados, las filas y el Detalle.
+// - Con imagenUrl: muestra la imagen, sea un asset incluido en la app
+//   («assets/imagenes/…») o una URL http(s). Mientras carga, o si falla,
+//   deja el fondo de la categoría como marcador de posición.
 // - Sin imagenUrl: fondo con el color y el ícono de la categoría.
 // Es decorativa: el título y los datos ya están en texto junto a ella.
 class ImagenCompetencia extends StatelessWidget {
@@ -25,6 +27,35 @@ class ImagenCompetencia extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = imagenUrl?.trim();
     if (url == null || url.isEmpty) {
+      return FondoDeCategoria(
+        categoria: categoria,
+        alto: alto,
+        alineacionIcono: alineacionIcono,
+      );
+    }
+    Widget alFallar(BuildContext context, Object error, StackTrace? pila) =>
+        FondoDeCategoria(
+          key: const ValueKey('imagen-no-disponible'),
+          categoria: categoria,
+          alto: alto,
+          imagenFallida: true,
+          alineacionIcono: alineacionIcono,
+        );
+    if (esAssetLocal(url)) {
+      return SizedBox(
+        height: alto,
+        width: double.infinity,
+        child: Image.asset(
+          url,
+          key: const ValueKey('imagen-asset'),
+          fit: BoxFit.cover,
+          excludeFromSemantics: true,
+          errorBuilder: alFallar,
+        ),
+      );
+    }
+    final uri = Uri.tryParse(url);
+    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https')) {
       return FondoDeCategoria(
         categoria: categoria,
         alto: alto,

@@ -8,6 +8,8 @@ import 'etapa.dart';
 // Las coordenadas de los ejemplos presenciales e híbridos son ficticias: son
 // puntos elegidos alrededor del centro de Quetzaltenango (centroDeEjemplo),
 // no la ubicación de ningún evento. El mapa lo avisa.
+// Las portadas son fotos con licencia libre incluidas en la app
+// (assets/imagenes/); fuente y licencia en docs/creditos_imagenes.md.
 // No representan eventos reales ni evidencia de investigación de usuarios.
 final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
   Competencia(
@@ -31,6 +33,7 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     tamanoEquipoMax: 3,
     premios: 'Trofeo simbólico de prueba (ficticio)',
     organizador: 'Club ficticio de arena digital',
+    imagenUrl: 'assets/imagenes/portada_esports.jpg',
   ),
   Competencia(
     id: 'mock-academic-01',
@@ -50,6 +53,7 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     organizador: 'Laboratorio ficticio Prisma',
     latitud: 14.8405,
     longitud: -91.5235,
+    imagenUrl: 'assets/imagenes/portada_programacion.jpg',
   ),
   Competencia(
     id: 'mock-sports-01',
@@ -68,6 +72,7 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     contacto: 'carrera@example.com',
     latitud: 14.829,
     longitud: -91.512,
+    imagenUrl: 'assets/imagenes/portada_carrera.jpg',
   ),
   Competencia(
     id: 'mock-academic-02',
@@ -90,6 +95,7 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     premios: 'Diplomas simbólicos (ficticios)',
     latitud: 14.8372,
     longitud: -91.5098,
+    imagenUrl: 'assets/imagenes/portada_logica.jpg',
   ),
   Competencia(
     id: 'mock-other-01',
@@ -107,6 +113,7 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
         'En este escenario, enviar una ilustración al correo de ejemplo. No se reciben obras reales.',
     contacto: 'ilustracion@example.com',
     formato: FormatoCompetencia.individual,
+    imagenUrl: 'assets/imagenes/portada_ilustracion.jpg',
   ),
   Competencia(
     id: 'mock-esports-02',
@@ -125,6 +132,7 @@ final List<Competencia> competenciasMock = List<Competencia>.unmodifiable([
     formato: FormatoCompetencia.individual,
     latitud: 14.8318,
     longitud: -91.5262,
+    imagenUrl: 'assets/imagenes/portada_estrategia.jpg',
   ),
 ]);
 

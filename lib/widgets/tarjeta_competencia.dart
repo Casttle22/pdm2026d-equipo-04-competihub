@@ -110,14 +110,31 @@ class EtiquetaDeInscripcion extends StatelessWidget {
   }
 }
 
-// Cuadro de 64 dp con el ícono de la categoría sobre su color suave.
+// Cuadro de 64 dp: la portada de la competencia si tiene, o el ícono de la
+// categoría sobre su color suave.
 class CuadroDeCategoria extends StatelessWidget {
-  const CuadroDeCategoria({super.key, required this.categoria});
+  const CuadroDeCategoria({super.key, required this.categoria, this.imagen});
 
   final String categoria;
+  final String? imagen;
 
   @override
   Widget build(BuildContext context) {
+    final imagen = this.imagen?.trim();
+    if (imagen != null && imagen.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(radioCampo),
+        child: SizedBox(
+          width: 64,
+          height: 64,
+          child: ImagenCompetencia(
+            imagenUrl: imagen,
+            categoria: categoria,
+            alto: 64,
+          ),
+        ),
+      );
+    }
     final estilo = estiloDeCategoria(categoria, Theme.of(context).colorScheme);
     return Container(
       width: 64,
@@ -181,7 +198,10 @@ class CompetitionCard extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CuadroDeCategoria(categoria: competition.categoria),
+                          CuadroDeCategoria(
+                            categoria: competition.categoria,
+                            imagen: competition.imagenUrl,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -333,8 +353,14 @@ class TarjetaDestacada extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0x1A000000), Color(0xD9000000)],
-                  stops: [0.15, 0.75],
+                  // Oscuro desde antes de la mitad: el título va ahí y debe
+                  // leerse también sobre fotos claras.
+                  colors: [
+                    Color(0x14000000),
+                    Color(0xA6000000),
+                    Color(0xE6000000),
+                  ],
+                  stops: [0.0, 0.4, 0.75],
                 ),
               ),
             ),

@@ -19,7 +19,8 @@ import 'mock_competencias.dart';
 // 5: tabla etapas (cronograma), que se borra junto con su competencia.
 // 6: tabla guardados (Mis eventos), que también se borra con su competencia.
 // 7: columnas latitud y longitud (opcionales) para el mapa.
-const int versionEsquema = 7;
+// 8: portadas de los ejemplos (solo datos, el esquema no cambia).
+const int versionEsquema = 8;
 
 const String _tablaCompetencias = 'competencias';
 const String _tablaEtapas = 'etapas';
@@ -119,6 +120,8 @@ Future<void> _migrar(
         await _migrarAV6(database);
       case 7:
         await _migrarAV7(database);
+      case 8:
+        await _migrarAV8(database);
     }
   }
 }
@@ -301,6 +304,26 @@ Future<void> _migrarAV7(Database database) async {
         'longitud': ejemplo.longitud,
       },
       where: 'id = ?',
+      whereArgs: [ejemplo.id],
+    );
+  }
+  await batch.commit(noResult: true);
+}
+
+// v8: portada de cada ejemplo (una imagen incluida en la app). Solo se pone
+// si la fila no tiene imagen, para no pisar una que la persona haya elegido
+// al editar el ejemplo. Las competencias creadas en la app no se tocan.
+Future<void> _migrarAV8(Database database) async {
+  final batch = database.batch();
+  for (final ejemplo in competenciasMock) {
+    final imagen = ejemplo.imagenUrl;
+    if (imagen == null) {
+      continue;
+    }
+    batch.update(
+      _tablaCompetencias,
+      <String, Object?>{'imagen_url': imagen},
+      where: "id = ? AND (imagen_url IS NULL OR imagen_url = '')",
       whereArgs: [ejemplo.id],
     );
   }

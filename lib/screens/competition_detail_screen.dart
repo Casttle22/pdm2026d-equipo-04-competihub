@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../data/competencia.dart';
+import '../data/creditos_imagenes.dart';
 import '../providers/competencias_providers.dart';
 import '../providers/reloj_provider.dart';
 import '../tema.dart';
@@ -320,9 +321,20 @@ class _DetalleContenido extends StatelessWidget {
             key: const ValueKey('detalle-imagen'),
             imagenUrl: competition.imagenUrl,
             categoria: competition.categoria,
-            alto: 160,
+            alto: 190,
           ),
         ),
+        if (creditoDeImagen(competition.imagenUrl) case final credito?)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+            child: Text(
+              credito,
+              key: const ValueKey('detalle-credito-imagen'),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ),
         const SizedBox(height: 12),
       ],
       _Cabecera(competition: competition, ahora: ahora),
