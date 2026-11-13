@@ -16,6 +16,23 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Rediseño 4/5: Detalle
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "Cabecera en tarjeta con degradado azul: etiqueta de categoría arriba a la izquierda, ícono grande a la derecha, título en blanco grande y debajo «Competencia ficticia de prueba», solo en las de ejemplo. Secciones «Información general» e «Información para participar». Tarjetas blancas en dos columnas, con el ícono dentro de un círculo azul claro, la etiqueta en negrita y el valor debajo; una tarjeta ocupa el ancho completo si su texto es largo. Conservar el resumen, Guardar, Cómo llegar, Compartir, Copiar, el mapa pequeño, las etapas y el estado de inscripción, con el mismo estilo. El título de la barra debe caber."
+- **Resultado:** `_Cabecera` con degradado azul, `_DetailInfoCard` como `TarjetaBlanca` con círculo azul claro, `_Rejilla` (dos tarjetas cortas por fila con la misma altura), `_TituloSeccion`, resumen como tarjeta blanca y cronograma dentro de una tarjeta. Se quitó el ícono pintado de fondo de la cabecera anterior.
+- **Aceptado:**
+  - Regla de la rejilla: una tarjeta es corta si su valor tiene hasta 24 caracteres, una sola línea y no tiene botón. Dos cortas seguidas comparten fila; el resto va a ancho completo.
+  - Con texto del sistema de 1,6× o más, todas las tarjetas van en una columna: dos columnas de 150 dp no alcanzan para texto a 2.0.
+  - El ícono de las tarjetas pasa al azul de la marca (antes usaba el color de la categoría); el color de la categoría queda en su etiqueta de la cabecera.
+  - Se conservan las dos columnas de página desde 600 dp, el «Identificador» de los ejemplos (lo usan las pruebas de navegación) y el título «Detalle».
+- **Rechazado / corregido:**
+  - Las pruebas existentes del Detalle pasaron sin cambios: se conservaron los textos de cada etiqueta y valor.
+  - Revisión con capturas generadas en pruebas (Roboto, 400 dp y 360 dp con texto 2.0) en lugar de la ventana de Windows, por la misma razón que en el commit anterior; sin desbordes.
+- **Verificación:** `test/detalle_rediseno_test.dart` (6 pruebas: rótulo de ficticia solo en ejemplos, títulos de sección, tarjetas cortas en la misma fila y largas a ancho completo, una columna con texto 2.0, círculo azul claro del ícono, y 360 dp con texto 2.0 recorriendo todo el Detalle). Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 275/275.
+- **Commit / PR:** commit «feat: Detalle rediseñado según las maquetas» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Rediseño 3/5: barra inferior con Explorar
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

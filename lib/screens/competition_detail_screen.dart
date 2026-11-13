@@ -300,8 +300,6 @@ class _DetalleContenido extends StatelessWidget {
     final accentColor = estilo.color;
     final esEjemplo = competition.esDeEjemplo;
 
-    final formattedDate = _formatDate(competition.fechaInicio);
-    final formattedTime = _formatTime(competition.fechaInicio);
     final endDate = competition.fechaFin;
     final formattedEnd = endDate == null
         ? null
@@ -311,28 +309,13 @@ class _DetalleContenido extends StatelessWidget {
     final tieneImagen = competition.imagenUrl?.trim().isNotEmpty ?? false;
     final limiteInscripcion = competition.fechaLimiteInscripcion;
 
-    final fecha = _DetailInfoCard(
-      icon: Icons.calendar_month_outlined,
-      label: 'Fecha',
-      value: formattedDate,
-      accentColor: accentColor,
-    );
-    final hora = _DetailInfoCard(
-      icon: Icons.schedule_outlined,
-      label: 'Hora',
-      value: formattedTime,
-      accentColor: accentColor,
-    );
-
     // El contenido se arma en tres bloques. En pantallas angostas van uno
     // debajo del otro; desde 600 dp, en dos columnas.
     final cabecera = <Widget>[
-      // Con imagen, va arriba (si no carga, queda el fondo de la
-      // categoría). Sin imagen, la cabecera de color ya cumple ese papel y
-      // lleva el ícono de la categoría de fondo.
+      // Con imagen, va arriba (si no carga, queda el fondo de la categoría).
       if (tieneImagen) ...[
         ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(radioTarjeta),
           child: ImagenCompetencia(
             key: const ValueKey('detalle-imagen'),
             imagenUrl: competition.imagenUrl,
@@ -342,71 +325,9 @@ class _DetalleContenido extends StatelessWidget {
         ),
         const SizedBox(height: 12),
       ],
-      // Cabecera visual: misma pantalla para todas las competencias.
-      Container(
-        padding: const EdgeInsets.all(20),
-        foregroundDecoration: tieneImagen ? null : _IconoDeFondo(estilo.icono),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [accentColor, Color.lerp(accentColor, Colors.black, 0.48)!],
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                Etiqueta(
-                  texto: competition.categoria,
-                  icono: estilo.icono,
-                  colorTexto: accentColor,
-                  colorFondo: Colors.white,
-                ),
-                Etiqueta(
-                  texto: etiquetaTemporal(competition, ahora),
-                  icono: Icons.schedule_outlined,
-                  colorTexto: accentColor,
-                  colorFondo: Colors.white,
-                ),
-                if (limiteInscripcion != null)
-                  EtiquetaDeInscripcion(competition: competition, ahora: ahora),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Text(
-              competition.titulo,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                height: 1.2,
-              ),
-            ),
-            // El rótulo y el identificador técnico solo acompañan a las
-            // competencias de ejemplo, no a las creadas en la app.
-            if (esEjemplo) ...[
-              const SizedBox(height: 10),
-              const Text(
-                'Competencia ficticia de prueba',
-                style: TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 14),
-              Divider(color: Colors.white.withValues(alpha: 0.28)),
-              const SizedBox(height: 6),
-              Text(
-                'Identificador: ${competition.id}',
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ],
-          ],
-        ),
-      ),
+      _Cabecera(competition: competition, ahora: ahora),
       const SizedBox(height: 16),
-      _ResumenClave(competition: competition, accentColor: accentColor),
+      _ResumenClave(competition: competition),
       const SizedBox(height: 12),
       // Acciones principales. En un Wrap: con texto grande pasan a otra
       // línea en vez de desbordarse.
@@ -424,57 +345,36 @@ class _DetalleContenido extends StatelessWidget {
     ];
 
     final general = <Widget>[
-      Text(
-        'Información general',
-        style: Theme.of(
-          context,
-        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-      ),
-      const SizedBox(height: 12),
-      // Fecha y hora van lado a lado; en pantallas muy angostas, una
-      // debajo de la otra para que el texto no se parta.
-      LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth < 340) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [fecha, const SizedBox(height: 12), hora],
-            );
-          }
-          return IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: fecha),
-                const SizedBox(width: 12),
-                Expanded(child: hora),
-              ],
+      const _TituloSeccion('Información general'),
+      _Rejilla(
+        tarjetas: [
+          _DetailInfoCard(
+            icon: Icons.calendar_month_outlined,
+            label: 'Fecha',
+            value: _formatDate(competition.fechaInicio),
+          ),
+          _DetailInfoCard(
+            icon: Icons.schedule_outlined,
+            label: 'Hora',
+            value: _formatTime(competition.fechaInicio),
+          ),
+          if (formattedEnd != null)
+            _DetailInfoCard(
+              icon: Icons.event_outlined,
+              label: 'Finaliza',
+              value: formattedEnd,
             ),
-          );
-        },
-      ),
-      if (formattedEnd != null) ...[
-        const SizedBox(height: 12),
-        _DetailInfoCard(
-          icon: Icons.event_outlined,
-          label: 'Finaliza',
-          value: formattedEnd,
-          accentColor: accentColor,
-        ),
-      ],
-      const SizedBox(height: 12),
-      _DetailInfoCard(
-        icon: Icons.devices_outlined,
-        label: 'Modalidad',
-        value: competition.modalidad,
-        accentColor: accentColor,
-      ),
-      const SizedBox(height: 12),
-      _DetailInfoCard(
-        icon: Icons.location_on_outlined,
-        label: 'Ubicación o acceso',
-        value: competition.ubicacion,
-        accentColor: accentColor,
+          _DetailInfoCard(
+            icon: Icons.devices_outlined,
+            label: 'Modalidad',
+            value: competition.modalidad,
+          ),
+          _DetailInfoCard(
+            icon: Icons.location_on_outlined,
+            label: 'Ubicación o acceso',
+            value: competition.ubicacion,
+          ),
+        ],
       ),
       if (competition.tieneCoordenadas) ...[
         const SizedBox(height: 12),
@@ -485,103 +385,79 @@ class _DetalleContenido extends StatelessWidget {
         icon: Icons.description_outlined,
         label: 'Descripción',
         value: competition.descripcion,
-        accentColor: accentColor,
       ),
       if (competition.etapas.isNotEmpty) ...[
         const SizedBox(height: 24),
-        Semantics(
-          header: true,
-          child: Text(
-            'Etapas y cronograma',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        const _TituloSeccion('Etapas y cronograma'),
+        TarjetaBlanca(
+          child: LineaDeTiempo(
+            key: const ValueKey('detalle-cronograma'),
+            etapas: competition.etapas,
+            ahora: ahora,
+            competenciaFinalizada: estaFinalizada(competition, ahora),
+            colorAcento: scheme.primary,
           ),
-        ),
-        const SizedBox(height: 12),
-        LineaDeTiempo(
-          key: const ValueKey('detalle-cronograma'),
-          etapas: competition.etapas,
-          ahora: ahora,
-          competenciaFinalizada: estaFinalizada(competition, ahora),
-          colorAcento: accentColor,
         ),
       ],
     ];
 
     final participar = <Widget>[
-      Text(
-        'Información para participar',
-        style: Theme.of(
-          context,
-        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-      ),
-      const SizedBox(height: 12),
-      if (limiteInscripcion != null) ...[
-        _DetailInfoCard(
-          key: const ValueKey('detalle-inscripcion'),
-          icon: Icons.how_to_reg_outlined,
-          label: 'Inscripción',
-          value:
-              '${etiquetaInscripcion(competition, ahora)}\n'
-              'Fecha límite: ${_formatDate(limiteInscripcion)} a las '
-              '${_formatTime(limiteInscripcion)}',
-          accentColor: accentColor,
-        ),
-        const SizedBox(height: 12),
-      ],
-      _DetailInfoCard(
-        icon: Icons.rule_outlined,
-        label: 'Requisitos y reglas',
-        value: competition.reglas,
-        accentColor: accentColor,
-      ),
-      const SizedBox(height: 12),
-      _DetailInfoCard(
-        icon: Icons.payments_outlined,
-        label: 'Costo',
-        value: competition.costo,
-        accentColor: accentColor,
-      ),
-      const SizedBox(height: 12),
-      _DetailInfoCard(
-        icon: Icons.how_to_reg_outlined,
-        label: 'Cómo participar',
-        value: competition.instruccionesParticipacion,
-        accentColor: accentColor,
-      ),
-      if (inscriptionUrl != null && inscriptionUrl.isNotEmpty) ...[
-        const SizedBox(height: 12),
-        _DetailInfoCard(
-          icon: Icons.link_outlined,
-          label: 'Enlace de referencia',
-          value: inscriptionUrl,
-          accentColor: accentColor,
-          action: IconButton(
-            tooltip: 'Copiar enlace',
-            icon: const Icon(Icons.copy_outlined),
-            onPressed: () =>
-                _copiar(context, inscriptionUrl, 'Enlace copiado.'),
+      const _TituloSeccion('Información para participar'),
+      _Rejilla(
+        tarjetas: [
+          if (limiteInscripcion != null)
+            _DetailInfoCard(
+              key: const ValueKey('detalle-inscripcion'),
+              icon: Icons.how_to_reg_outlined,
+              label: 'Inscripción',
+              value:
+                  '${etiquetaInscripcion(competition, ahora)}\n'
+                  'Fecha límite: ${_formatDate(limiteInscripcion)} a las '
+                  '${_formatTime(limiteInscripcion)}',
+            ),
+          _DetailInfoCard(
+            icon: Icons.payments_outlined,
+            label: 'Costo',
+            value: competition.costo,
           ),
-        ),
-      ],
-      if (contact != null && contact.isNotEmpty) ...[
-        const SizedBox(height: 12),
-        _DetailInfoCard(
-          icon: Icons.alternate_email_outlined,
-          label: 'Contacto',
-          value: contact,
-          accentColor: accentColor,
-          action: IconButton(
-            tooltip: 'Copiar contacto',
-            icon: const Icon(Icons.copy_outlined),
-            onPressed: () => _copiar(context, contact, 'Contacto copiado.'),
+          _DetailInfoCard(
+            icon: Icons.rule_outlined,
+            label: 'Requisitos y reglas',
+            value: competition.reglas,
           ),
-        ),
-      ],
+          _DetailInfoCard(
+            icon: Icons.how_to_reg_outlined,
+            label: 'Cómo participar',
+            value: competition.instruccionesParticipacion,
+          ),
+          if (inscriptionUrl != null && inscriptionUrl.isNotEmpty)
+            _DetailInfoCard(
+              icon: Icons.link_outlined,
+              label: 'Enlace de referencia',
+              value: inscriptionUrl,
+              action: IconButton(
+                tooltip: 'Copiar enlace',
+                icon: const Icon(Icons.copy_outlined),
+                onPressed: () =>
+                    _copiar(context, inscriptionUrl, 'Enlace copiado.'),
+              ),
+            ),
+          if (contact != null && contact.isNotEmpty)
+            _DetailInfoCard(
+              icon: Icons.alternate_email_outlined,
+              label: 'Contacto',
+              value: contact,
+              action: IconButton(
+                tooltip: 'Copiar contacto',
+                icon: const Icon(Icons.copy_outlined),
+                onPressed: () => _copiar(context, contact, 'Contacto copiado.'),
+              ),
+            ),
+        ],
+      ),
       if (competition.tieneFichaDeTorneo) ...[
         const SizedBox(height: 24),
-        _FormatoYPremios(competition: competition, accentColor: accentColor),
+        _FormatoYPremios(competition: competition),
       ],
       if (esEjemplo) ...[
         const SizedBox(height: 20),
@@ -589,7 +465,7 @@ class _DetalleContenido extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: scheme.secondaryContainer,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(radioTarjeta),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -678,7 +554,7 @@ class _MapaPequeno extends StatelessWidget {
           ? 'Mapa con la ubicación ficticia de la competencia.'
           : 'Mapa con la ubicación de la competencia.',
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(radioTarjeta),
         child: SizedBox(
           key: const ValueKey('detalle-mapa'),
           height: 200,
@@ -710,66 +586,114 @@ class _MapaPequeno extends StatelessWidget {
   }
 }
 
-// Dibuja el ícono de la categoría, grande y casi transparente, en la esquina
-// inferior derecha de la cabecera. Es decoración: no ocupa espacio ni cambia
-// el tamaño de la cabecera.
-class _IconoDeFondo extends Decoration {
-  const _IconoDeFondo(this.icono);
+// Cabecera del Detalle: tarjeta con degradado azul, la etiqueta de la
+// categoría arriba a la izquierda, su ícono grande a la derecha y el título
+// en blanco. Debajo, cuánto falta y la inscripción; en los ejemplos, el
+// rótulo de ficticia y el identificador técnico.
+class _Cabecera extends StatelessWidget {
+  const _Cabecera({required this.competition, required this.ahora});
 
-  final IconData icono;
-
-  @override
-  BoxPainter createBoxPainter([VoidCallback? onChanged]) =>
-      _PintorDeIcono(icono);
-}
-
-class _PintorDeIcono extends BoxPainter {
-  _PintorDeIcono(this.icono);
-
-  final IconData icono;
+  final Competencia competition;
+  final DateTime ahora;
 
   @override
-  void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
-    final size = configuration.size;
-    if (size == null) {
-      return;
-    }
-    const lado = 112.0;
-    final pintor = TextPainter(
-      text: TextSpan(
-        text: String.fromCharCode(icono.codePoint),
-        style: TextStyle(
-          fontSize: lado,
-          fontFamily: icono.fontFamily,
-          package: icono.fontPackage,
-          color: Colors.white.withValues(alpha: 0.14),
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final estilo = estiloDeCategoria(competition.categoria, scheme);
+    final esEjemplo = competition.esDeEjemplo;
+    const blanco = Colors.white;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radioTarjeta),
+        boxShadow: sombraSuave,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [azulCompetihub, Color(0xFF0B3A75)],
         ),
       ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    canvas.save();
-    canvas.clipRRect(
-      RRect.fromRectAndRadius(offset & size, const Radius.circular(24)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Etiqueta(
+                    texto: competition.categoria,
+                    icono: estilo.icono,
+                    colorTexto: estilo.color,
+                    colorFondo: blanco,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ExcludeSemantics(
+                child: Icon(
+                  estilo.icono,
+                  size: 56,
+                  color: blanco.withValues(alpha: 0.9),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            competition.titulo,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: blanco,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+            ),
+          ),
+          // El rótulo y el identificador técnico solo acompañan a las
+          // competencias de ejemplo, no a las creadas en la app.
+          if (esEjemplo) ...[
+            const SizedBox(height: 6),
+            const Text(
+              'Competencia ficticia de prueba',
+              style: TextStyle(color: blanco, fontWeight: FontWeight.w600),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Etiqueta(
+                texto: etiquetaTemporal(competition, ahora),
+                icono: Icons.schedule_outlined,
+                colorTexto: azulCompetihub,
+                colorFondo: blanco,
+              ),
+              if (competition.fechaLimiteInscripcion != null)
+                EtiquetaDeInscripcion(competition: competition, ahora: ahora),
+            ],
+          ),
+          if (esEjemplo) ...[
+            const SizedBox(height: 12),
+            Divider(color: blanco.withValues(alpha: 0.28), height: 1),
+            const SizedBox(height: 8),
+            Text(
+              'Identificador: ${competition.id}',
+              style: const TextStyle(color: blanco, fontSize: 12),
+            ),
+          ],
+        ],
+      ),
     );
-    pintor.paint(
-      canvas,
-      offset + Offset(size.width - lado + 12, size.height - lado + 16),
-    );
-    canvas.restore();
-    pintor.dispose();
   }
 }
 
-// Ficha de torneo: solo las filas con dato. Si no hay ninguno, la sección
+// Ficha de torneo: solo las tarjetas con dato. Si no hay ninguno, la sección
 // completa no se dibuja (lo decide quien la usa con tieneFichaDeTorneo).
 class _FormatoYPremios extends StatelessWidget {
-  const _FormatoYPremios({
-    required this.competition,
-    required this.accentColor,
-  });
+  const _FormatoYPremios({required this.competition});
 
   final Competencia competition;
-  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
@@ -782,52 +706,41 @@ class _FormatoYPremios extends StatelessWidget {
         : null;
     final premios = competition.premios?.trim();
     final organizador = competition.organizador?.trim();
-    final filas = <Widget>[
-      if (formato != null)
-        _DetailInfoCard(
-          icon: formato == FormatoCompetencia.equipos
-              ? Icons.groups_outlined
-              : Icons.person_outline,
-          label: 'Formato',
-          value: formato.etiqueta,
-          accentColor: accentColor,
-        ),
-      if (tamano != null)
-        _DetailInfoCard(
-          icon: Icons.group_add_outlined,
-          label: 'Tamaño del equipo',
-          value: tamano,
-          accentColor: accentColor,
-        ),
-      if (premios != null && premios.isNotEmpty)
-        _DetailInfoCard(
-          icon: Icons.emoji_events_outlined,
-          label: 'Premios',
-          value: premios,
-          accentColor: accentColor,
-        ),
-      if (organizador != null && organizador.isNotEmpty)
-        _DetailInfoCard(
-          icon: Icons.apartment_outlined,
-          label: 'Organizador',
-          value: organizador,
-          accentColor: accentColor,
-        ),
-    ];
     return Column(
       key: const ValueKey('detalle-formato-premios'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Semantics(
-          header: true,
-          child: Text(
-            'Formato y premios',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
+        const _TituloSeccion('Formato y premios'),
+        _Rejilla(
+          tarjetas: [
+            if (formato != null)
+              _DetailInfoCard(
+                icon: formato == FormatoCompetencia.equipos
+                    ? Icons.groups_outlined
+                    : Icons.person_outline,
+                label: 'Formato',
+                value: formato.etiqueta,
+              ),
+            if (tamano != null)
+              _DetailInfoCard(
+                icon: Icons.group_add_outlined,
+                label: 'Tamaño del equipo',
+                value: tamano,
+              ),
+            if (premios != null && premios.isNotEmpty)
+              _DetailInfoCard(
+                icon: Icons.emoji_events_outlined,
+                label: 'Premios',
+                value: premios,
+              ),
+            if (organizador != null && organizador.isNotEmpty)
+              _DetailInfoCard(
+                icon: Icons.apartment_outlined,
+                label: 'Organizador',
+                value: organizador,
+              ),
+          ],
         ),
-        for (final fila in filas) ...[const SizedBox(height: 12), fila],
       ],
     );
   }
@@ -837,20 +750,13 @@ class _FormatoYPremios extends StatelessWidget {
 // visible sin desplazarse. Cada fila es un solo texto con etiqueta y valor,
 // así un lector de pantalla lo anuncia completo.
 class _ResumenClave extends StatelessWidget {
-  const _ResumenClave({required this.competition, required this.accentColor});
+  const _ResumenClave({required this.competition});
 
   final Competencia competition;
-  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(18),
-      ),
+    return TarjetaBlanca(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -858,21 +764,18 @@ class _ResumenClave extends StatelessWidget {
             icon: Icons.event_outlined,
             etiqueta: 'Cuándo',
             valor: formatearFechaHoraLegible(competition.fechaInicio),
-            accentColor: accentColor,
           ),
           const SizedBox(height: 10),
           _FilaResumen(
             icon: Icons.location_on_outlined,
             etiqueta: 'Dónde',
             valor: '${competition.ubicacion} (${competition.modalidad})',
-            accentColor: accentColor,
           ),
           const SizedBox(height: 10),
           _FilaResumen(
             icon: Icons.payments_outlined,
             etiqueta: 'Costo',
             valor: competition.costo,
-            accentColor: accentColor,
           ),
         ],
       ),
@@ -885,13 +788,11 @@ class _FilaResumen extends StatelessWidget {
     required this.icon,
     required this.etiqueta,
     required this.valor,
-    required this.accentColor,
   });
 
   final IconData icon;
   final String etiqueta;
   final String valor;
-  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
@@ -900,7 +801,7 @@ class _FilaResumen extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: accentColor, size: 22),
+        Icon(icon, color: scheme.primary, size: 22),
         const SizedBox(width: 12),
         Expanded(
           child: Text.rich(
@@ -928,40 +829,128 @@ class _FilaResumen extends StatelessWidget {
   }
 }
 
-// Fila de información: ícono a la izquierda, etiqueta y valor a la derecha.
-// `action` permite agregar un botón al final (por ejemplo, Copiar).
+// Título de sección del Detalle («Información general»…), anunciado como
+// encabezado.
+class _TituloSeccion extends StatelessWidget {
+  const _TituloSeccion(this.texto);
+
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Semantics(
+        header: true,
+        child: Text(
+          texto,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ),
+    );
+  }
+}
+
+// Tarjetas en dos columnas: dos tarjetas cortas seguidas comparten fila (con
+// la misma altura); una larga, con botón (Copiar) o con el texto del sistema
+// muy grande, ocupa el ancho completo.
+class _Rejilla extends StatelessWidget {
+  const _Rejilla({required this.tarjetas});
+
+  final List<_DetailInfoCard> tarjetas;
+
+  static const double _separacion = 12;
+
+  @override
+  Widget build(BuildContext context) {
+    final textoGrande = MediaQuery.textScalerOf(context).scale(1) >= 1.6;
+    return LayoutBuilder(
+      builder: (context, restricciones) {
+        final dosColumnas = !textoGrande && restricciones.maxWidth >= 300;
+        final filas = <Widget>[];
+        var i = 0;
+        while (i < tarjetas.length) {
+          final actual = tarjetas[i];
+          final siguiente = i + 1 < tarjetas.length ? tarjetas[i + 1] : null;
+          if (dosColumnas &&
+              actual.esCorta &&
+              siguiente != null &&
+              siguiente.esCorta) {
+            filas.add(
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: actual),
+                    const SizedBox(width: _separacion),
+                    Expanded(child: siguiente),
+                  ],
+                ),
+              ),
+            );
+            i += 2;
+          } else {
+            filas.add(actual);
+            i += 1;
+          }
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (indice, fila) in filas.indexed) ...[
+              if (indice > 0) const SizedBox(height: _separacion),
+              fila,
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+// Tarjeta de dato: ícono en un círculo azul claro, etiqueta en negrita y el
+// valor debajo. `action` permite agregar un botón al final (por ejemplo,
+// Copiar).
 class _DetailInfoCard extends StatelessWidget {
   const _DetailInfoCard({
     super.key,
     required this.icon,
     required this.label,
     required this.value,
-    required this.accentColor,
     this.action,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final Color accentColor;
   final Widget? action;
+
+  // Cabe en media fila: valor corto, de una línea y sin botón.
+  bool get esCorta =>
+      action == null && value.length <= 24 && !value.contains('\n');
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final action = this.action;
 
-    return Container(
+    return TarjetaBlanca(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        border: Border.all(color: scheme.outlineVariant),
-        borderRadius: BorderRadius.circular(18),
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: accentColor, size: 24),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: scheme.primary, size: 22),
+          ),
           const SizedBox(width: 12),
           Expanded(
             // Etiqueta y valor se anuncian juntos en un lector de pantalla.
@@ -971,15 +960,17 @@ class _DetailInfoCard extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                    style: textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurface,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     value,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
