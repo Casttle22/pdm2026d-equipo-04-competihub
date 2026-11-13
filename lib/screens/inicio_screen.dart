@@ -477,8 +477,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-// Píldora «Quetzaltenango / Online» del encabezado. Abre un menú con las
-// tres opciones; las híbridas aparecen en las dos.
+// Píldora de modalidad del encabezado. Abre un menú con «Todas las
+// modalidades», «Presencial», «Virtual» e «Híbrida».
 class _PildoraUbicacion extends StatelessWidget {
   const _PildoraUbicacion({required this.valor, required this.onCambio});
 
@@ -490,7 +490,7 @@ class _PildoraUbicacion extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return PopupMenuButton<FiltroUbicacion>(
       key: const ValueKey('inicio-ubicacion'),
-      tooltip: 'Ubicación: ${valor.descripcion}',
+      tooltip: 'Modalidad: ${valor.descripcion}',
       initialValue: valor,
       onSelected: onCambio,
       position: PopupMenuPosition.under,
@@ -542,8 +542,9 @@ class _PildoraUbicacion extends StatelessWidget {
 
   static IconData _iconoDe(FiltroUbicacion filtro) => switch (filtro) {
     FiltroUbicacion.todas => Icons.public,
-    FiltroUbicacion.quetzaltenango => Icons.place_outlined,
-    FiltroUbicacion.online => Icons.wifi,
+    FiltroUbicacion.presencial => Icons.place_outlined,
+    FiltroUbicacion.virtual => Icons.laptop,
+    FiltroUbicacion.hibrida => Icons.sync_alt,
   };
 }
 

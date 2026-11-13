@@ -52,7 +52,7 @@ void main() {
     expect(coincideConBusqueda(carrera, 'club arena'), isFalse);
   });
 
-  test('el filtro de ubicación pone las híbridas en ambas opciones', () {
+  test('cada opción del filtro de modalidad deja solo su modalidad', () {
     final porModalidad = {for (final c in competenciasMock) c.modalidad: c};
     final presencial = porModalidad['Presencial']!;
     final virtual = porModalidad['Virtual']!;
@@ -60,20 +60,19 @@ void main() {
     for (final c in [presencial, virtual, hibrida]) {
       expect(coincideConUbicacion(c, FiltroUbicacion.todas), isTrue);
     }
-    expect(
-      coincideConUbicacion(presencial, FiltroUbicacion.quetzaltenango),
-      isTrue,
-    );
-    expect(
-      coincideConUbicacion(virtual, FiltroUbicacion.quetzaltenango),
-      isFalse,
-    );
-    expect(
-      coincideConUbicacion(hibrida, FiltroUbicacion.quetzaltenango),
-      isTrue,
-    );
-    expect(coincideConUbicacion(presencial, FiltroUbicacion.online), isFalse);
-    expect(coincideConUbicacion(virtual, FiltroUbicacion.online), isTrue);
-    expect(coincideConUbicacion(hibrida, FiltroUbicacion.online), isTrue);
+    final esperado = {
+      FiltroUbicacion.presencial: presencial,
+      FiltroUbicacion.virtual: virtual,
+      FiltroUbicacion.hibrida: hibrida,
+    };
+    esperado.forEach((filtro, unica) {
+      for (final c in [presencial, virtual, hibrida]) {
+        expect(
+          coincideConUbicacion(c, filtro),
+          identical(c, unica),
+          reason: '${filtro.name} con ${c.modalidad}',
+        );
+      }
+    });
   });
 }

@@ -16,6 +16,19 @@ qué especificaste, qué revisaste y qué rechazaste.
 | Commit / PR | Enlace |
 
 ---
+## 2026-11-12 · @AlexDLG1 — Filtro de modalidad en el Inicio
+
+- **Herramienta:** Claude Code (Claude Opus 5.5).
+- **Especificación:** "En FiltroUbicacion y la píldora del Inicio, cambia las opciones a «Todas las modalidades», «Presencial», «Virtual» e «Híbrida». Cada opción muestra solo las competencias de esa modalidad; la híbrida ya no aparece en Presencial ni en Virtual. Íconos: public, place_outlined, laptop y sync_alt. Quita la mención a Quetzaltenango de la píldora; la ciudad sigue en los datos de ejemplo y en el mapa."
+- **Resultado:** `FiltroUbicacion` con cuatro opciones y la modalidad exacta que deja pasar; `coincideConUbicacion` compara la modalidad sin casos especiales; la píldora muestra «Todas», «Presencial», «Virtual» o «Híbrida» y el menú «Todas las modalidades» y las tres modalidades.
+- **Aceptado:** La píldora sigue mostrando un texto corto («Todas») y el menú el texto completo («Todas las modalidades»), para que quepa en el encabezado a 360 dp.
+- **Rechazado / corregido:**
+  - Se reemplaza la decisión anterior (Quetzaltenango = presencial e híbrida; Online = virtual e híbrida) por la nueva indicación de Alex. Las dos pruebas que verificaban la regla vieja ahora verifican la nueva: cada opción deja solo su modalidad (`test/busqueda_test.dart`, `test/inicio_rediseno_test.dart`).
+  - No se renombró `FiltroUbicacion` a «FiltroModalidad» para no tocar más archivos de los pedidos; queda anotado como posible limpieza.
+- **Verificación:** Prueba unitaria con las tres modalidades contra cada opción; prueba de widget que elige cada opción y comprueba el conteo, que todas las filas son de esa modalidad, que Destacados se oculta y que no aparece «Quetzaltenango». La prueba de 360 dp con texto 2.0 abre el menú sin desbordes. Formato sin cambios, `flutter analyze` sin observaciones, `flutter test` 280/280.
+- **Commit / PR:** commit «feat: filtro de modalidad en el Inicio» en `feat/fases-2-3` (sin PR).
+
+---
 ## 2026-11-12 · @AlexDLG1 — Rediseño 5/5: formulario
 
 - **Herramienta:** Claude Code (Claude Opus 5.5).

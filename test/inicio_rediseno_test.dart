@@ -53,8 +53,9 @@ void main() {
     expect(find.byTooltip('Nueva competencia'), findsOneWidget);
   });
 
-  testWidgets('la píldora filtra presenciales (Quetzaltenango) y virtuales '
-      '(Online), con las híbridas en ambas', (tester) async {
+  testWidgets('cada opción de la píldora muestra solo su modalidad', (
+    tester,
+  ) async {
     await tester.pumpWidget(inicio());
     await tester.pumpAndSettle();
     final pildora = find.byKey(const ValueKey('inicio-ubicacion'));
@@ -66,24 +67,41 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    // 4 presenciales/híbridas (academic-01, sports-01, academic-02 y
-    // esports-02) y 3 virtuales/híbridas (esports-01, other-01 y
-    // academic-02).
-    await elegir('Quetzaltenango (presencial e híbrida)');
-    expect(find.text('4 competencias disponibles'), findsOneWidget);
-    expect(
-      find.descendant(of: pildora, matching: find.text('Quetzaltenango')),
-      findsOneWidget,
-    );
-    // Con un filtro, Destacados se oculta.
-    expect(find.text('Eventos destacados'), findsNothing);
+    Set<String> modalidadesEnLista() => tester
+        .widgetList<CompetitionCard>(find.byType(CompetitionCard))
+        .map((tarjeta) => tarjeta.competition.modalidad)
+        .toSet();
 
-    await elegir('Online (virtual e híbrida)');
-    expect(find.text('3 competencias disponibles'), findsOneWidget);
+    // Presencial: academic-01, sports-01 y esports-02. Virtual: esports-01
+    // y other-01. Híbrida: academic-02.
+    for (final (opcion, cantidad) in [
+      ('Presencial', 3),
+      ('Virtual', 2),
+      ('Híbrida', 1),
+    ]) {
+      await elegir(opcion);
+      expect(
+        find.text(
+          cantidad == 1
+              ? '1 competencia disponible'
+              : '$cantidad competencias disponibles',
+        ),
+        findsOneWidget,
+        reason: opcion,
+      );
+      expect(
+        find.descendant(of: pildora, matching: find.text(opcion)),
+        findsOneWidget,
+      );
+      // Con un filtro, Destacados se oculta y todo va en la lista.
+      expect(find.text('Eventos destacados'), findsNothing);
+      expect(modalidadesEnLista(), {opcion}, reason: opcion);
+    }
 
-    await elegir('Todas las ubicaciones');
+    await elegir('Todas las modalidades');
     expect(find.text('6 competencias disponibles'), findsOneWidget);
     expect(find.text('Eventos destacados'), findsOneWidget);
+    expect(find.textContaining('Quetzaltenango'), findsNothing);
   });
 
   testWidgets('la categoría seleccionada va azul rellena con texto blanco', (

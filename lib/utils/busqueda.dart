@@ -54,28 +54,27 @@ bool coincideConBusqueda(Competencia competencia, String consulta) {
   return palabras.every(contenido.contains);
 }
 
-// Píldora de ubicación del Inicio. Las híbridas aparecen en las dos
-// opciones, porque se puede asistir en persona o en línea.
+// Píldora de modalidad del Inicio. Cada opción muestra solo las
+// competencias de esa modalidad: una híbrida aparece únicamente en «Híbrida».
 enum FiltroUbicacion {
-  todas('Todas', 'Todas las ubicaciones'),
-  quetzaltenango('Quetzaltenango', 'Quetzaltenango (presencial e híbrida)'),
-  online('Online', 'Online (virtual e híbrida)');
+  todas('Todas', 'Todas las modalidades', null),
+  presencial('Presencial', 'Presencial', 'Presencial'),
+  virtual('Virtual', 'Virtual', 'Virtual'),
+  hibrida('Híbrida', 'Híbrida', 'Híbrida');
 
-  const FiltroUbicacion(this.etiqueta, this.descripcion);
+  const FiltroUbicacion(this.etiqueta, this.descripcion, this.modalidad);
 
+  // Texto corto de la píldora y texto del menú.
   final String etiqueta;
   final String descripcion;
+
+  // Modalidad que deja pasar; null en «Todas».
+  final String? modalidad;
 }
 
 bool coincideConUbicacion(Competencia competencia, FiltroUbicacion filtro) {
-  return switch (filtro) {
-    FiltroUbicacion.todas => true,
-    FiltroUbicacion.quetzaltenango =>
-      competencia.modalidad == 'Presencial' ||
-          competencia.modalidad == 'Híbrida',
-    FiltroUbicacion.online =>
-      competencia.modalidad == 'Virtual' || competencia.modalidad == 'Híbrida',
-  };
+  final modalidad = filtro.modalidad;
+  return modalidad == null || competencia.modalidad == modalidad;
 }
 
 // Filtros de la pestaña Explorar. Cada uno vacío (null o false) significa
